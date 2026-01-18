@@ -6,13 +6,14 @@ import { POS } from './components/POS';
 import { CRM } from './components/CRM';
 import { Projects } from './components/Projects';
 import { Logistics } from './components/Logistics';
+import { Warehouse } from './components/Warehouse';
 import { Admin } from './components/Admin';
 import { Finance } from './components/Finance';
 import { HR } from './components/HR';
 import { Integrations } from './components/Integrations';
 import { ActivityLog } from './components/ActivityLog';
-import { AppModule } from './types';
-import { LayoutDashboard, ShoppingCart, Users, HardHat, Truck, Settings, Share2, LogOut, Bell, DollarSign, UserCheck, X, FileText, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AppModule, Notification } from './types';
+import { LayoutDashboard, ShoppingCart, Users, HardHat, Truck, Settings, Share2, LogOut, Bell, DollarSign, UserCheck, X, FileText, Menu, ChevronLeft, ChevronRight, Package, Box } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const { userRole, setUserRole, notifications, markNotificationRead, currency, setCurrency } = useGlobal();
@@ -30,10 +31,11 @@ const MainLayout: React.FC = () => {
     { id: AppModule.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard, roles: ['Super Admin', 'Architect', 'Sales'] },
     { id: AppModule.POS, label: 'Point of Sale', icon: ShoppingCart, roles: ['Super Admin', 'Sales'] },
     { id: AppModule.CRM, label: 'CRM & Sales', icon: Users, roles: ['Super Admin', 'Sales'] },
-    { id: AppModule.FINANCE, label: 'Finance & Accounts', icon: DollarSign, roles: ['Super Admin'] },
+    { id: AppModule.FINANCE, label: 'Finance', icon: DollarSign, roles: ['Super Admin'] },
     { id: AppModule.HR, label: 'HR & Team', icon: UserCheck, roles: ['Super Admin'] },
+    { id: AppModule.WAREHOUSE, label: 'Warehouse', icon: Box, roles: ['Super Admin', 'Logistics', 'Architect'] },
     { id: AppModule.PROJECTS, label: 'Projects', icon: HardHat, roles: ['Super Admin', 'Architect'] },
-    { id: AppModule.LOGISTICS, label: 'Logistics', icon: Truck, roles: ['Super Admin', 'Sales'] },
+    { id: AppModule.LOGISTICS, label: 'Logistics', icon: Truck, roles: ['Super Admin', 'Sales', 'Logistics'] },
     { id: AppModule.ACTIVITY, label: 'Activity Logs', icon: FileText, roles: ['Super Admin'] },
     { id: AppModule.ADMIN, label: 'Admin & RBAC', icon: Settings, roles: ['Super Admin'] },
     { id: AppModule.BRIDGE, label: 'Integrations', icon: Share2, roles: ['Super Admin'] },
@@ -42,6 +44,16 @@ const MainLayout: React.FC = () => {
   const navItems = allNavItems.filter(item => item.roles.includes(userRole));
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const handleNotificationClick = (n: Notification) => {
+    markNotificationRead(n.id);
+    setShowNotifications(false);
+    
+    // Deep Linking Logic
+    if (n.type === 'order') setActiveModule(AppModule.POS);
+    else if (n.type === 'lead') setActiveModule(AppModule.CRM);
+    else if (n.message.includes('stock')) setActiveModule(AppModule.WAREHOUSE);
+  };
+
   const renderModule = () => {
     switch (activeModule) {
       case AppModule.DASHBOARD: return <Dashboard />;
@@ -49,6 +61,7 @@ const MainLayout: React.FC = () => {
       case AppModule.CRM: return <CRM />;
       case AppModule.FINANCE: return <Finance />;
       case AppModule.HR: return <HR />;
+      case AppModule.WAREHOUSE: return <Warehouse />;
       case AppModule.PROJECTS: return <Projects />;
       case AppModule.LOGISTICS: return <Logistics />;
       case AppModule.ACTIVITY: return <ActivityLog />;
@@ -166,7 +179,7 @@ const MainLayout: React.FC = () => {
                          notifications.map(n => (
                            <div 
                              key={n.id} 
-                             onClick={() => markNotificationRead(n.id)}
+                             onClick={() => handleNotificationClick(n)}
                              className={`p-4 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors ${!n.read ? 'bg-indigo-50/50' : ''}`}
                            >
                               <div className="flex justify-between items-start mb-1">

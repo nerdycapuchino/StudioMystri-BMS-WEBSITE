@@ -5,18 +5,13 @@ import { DollarSign, Briefcase, AlertTriangle, Truck, TrendingUp, Users, Clipboa
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const Dashboard: React.FC = () => {
-  const { salesToday, projects, activities, inventory, updateInventoryStock, leads } = useGlobal();
+  const { salesToday, projects, activities, inventory, updateInventoryStock, leads, currency, formatCurrency } = useGlobal();
 
   const lowStockItems = inventory.filter(i => i.quantity <= i.reorderLevel);
   const pendingShipments = MOCK_SHIPMENTS.filter(s => s.status === 'Pending').length;
   const newLeadsToday = leads.filter(l => l.status === 'New').length;
-  const criticalProjects = projects.filter(p => p.progress < 50 && new Date(p.dueDate) < new Date('2024-03-01')); 
-
-  const handleRestock = (id: string, currentQty: number) => {
-     // Quick restock action
-     updateInventoryStock(id, currentQty + 50);
-  };
-
+  
+  // Use salesToday for the 'current' day in the chart to show live sync feel
   const chartData = [
     { day: 'Mon', pos: 4000, web: 2400 },
     { day: 'Tue', pos: 3000, web: 1398 },
@@ -24,8 +19,12 @@ export const Dashboard: React.FC = () => {
     { day: 'Thu', pos: 2780, web: 3908 },
     { day: 'Fri', pos: 1890, web: 4800 },
     { day: 'Sat', pos: 2390, web: 3800 },
-    { day: 'Sun', pos: 3490, web: 4300 },
+    { day: 'Today', pos: salesToday, web: 1200 }, // Sync with context
   ];
+
+  const handleRestock = (id: string, currentQty: number) => {
+     updateInventoryStock(id, currentQty + 50);
+  };
 
   return (
     <div className="h-full overflow-y-auto pr-2 pb-6">
@@ -34,7 +33,7 @@ export const Dashboard: React.FC = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          { title: 'Total Revenue (Today)', value: `$${salesToday.toLocaleString()}`, icon: DollarSign, color: 'indigo' },
+          { title: 'Total Revenue (Today)', value: formatCurrency(salesToday), icon: DollarSign, color: 'indigo' },
           { title: 'Active Projects', value: projects.length, icon: Briefcase, color: 'blue' },
           { title: 'Pending Shipments', value: pendingShipments, icon: Truck, color: 'orange' },
           { title: 'New Leads (Today)', value: newLeadsToday, icon: Users, color: 'green' },
@@ -63,7 +62,7 @@ export const Dashboard: React.FC = () => {
               <span className="text-xs font-medium px-2 py-1 bg-emerald-50 text-emerald-600 rounded">Web</span>
             </div>
           </div>
-          <div className="h-64">
+          <div className="h-64 min-w-0"> {/* min-w-0 fixes flex child overflow issues for Recharts */}
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />

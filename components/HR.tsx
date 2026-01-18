@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { Users, UserCheck, Clock, Plus, X, Phone, Mail, Calendar, DollarSign, FileText, Home, AlertCircle, Award, Edit, Shield, FilePlus, Download } from 'lucide-react';
+import { Users, UserCheck, Clock, Plus, X, Phone, Mail, Calendar, DollarSign, FileText, Home, AlertCircle, Award, Edit, Shield, FilePlus, Download, Printer, Save } from 'lucide-react';
 import { Employee, Policy } from '../types';
 
 export const HR: React.FC = () => {
-  const { employees, addEmployee, updateEmployee, policies, addPolicy } = useGlobal();
+  const { employees, addEmployee, updateEmployee, policies, addPolicy, formatCurrency, currency } = useGlobal();
   const [showModal, setShowModal] = useState(false);
+  const [showPayslipModal, setShowPayslipModal] = useState<Employee | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [viewProfile, setViewProfile] = useState<Employee | null>(null);
+  
+  // Policies State
+  const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
+  const [editPolicyContent, setEditPolicyContent] = useState('');
   
   const initialFormState: Partial<Employee> = { 
     name: '', role: 'Designer', status: 'Active', attendance: 'Absent', salary: 0, leavesRemaining: 0, leavePolicy: 24, 
@@ -41,7 +46,7 @@ export const HR: React.FC = () => {
         emergencyContact: formData.emergencyContact || '',
         qualifications: formData.qualifications || '',
         documents: []
-      }, createSystemUser, 'Sales'); // Default role if creating user
+      }, createSystemUser, 'Sales'); 
     }
     setShowModal(false);
     setFormData(initialFormState);
@@ -79,6 +84,22 @@ export const HR: React.FC = () => {
     setShowModal(true);
   };
 
+  const printPolicy = (policy: Policy) => {
+     const printContent = `
+       <html><body>
+       <h1>${policy.title}</h1>
+       <p><strong>Category:</strong> ${policy.category}</p>
+       <p><strong>Last Updated:</strong> ${policy.lastUpdated}</p>
+       <hr/>
+       <p>${policy.content}</p>
+       </body></html>
+     `;
+     const win = window.open('', '', 'width=600,height=600');
+     win?.document.write(printContent);
+     win?.document.close();
+     win?.print();
+  };
+
   return (
     <div className="h-full flex flex-col relative">
       <div className="flex justify-between items-center mb-6">
@@ -99,7 +120,6 @@ export const HR: React.FC = () => {
       {activeTab === 'Employees' ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-             {/* ... stats cards unchanged ... */}
              <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
                 <div className="p-3 bg-blue-50 text-blue-600 rounded-full"><Users className="w-6 h-6" /></div>
                 <div><p className="text-sm text-slate-500">Total Staff</p><p className="text-2xl font-bold">{employees.length}</p></div>
@@ -121,7 +141,7 @@ export const HR: React.FC = () => {
                       <th className="px-6 py-4">Name</th>
                       <th className="px-6 py-4">Role</th>
                       <th className="px-6 py-4">Contacts</th>
-                      <th className="px-6 py-4">Salary</th>
+                      <th className="px-6 py-4">Salary (Annual)</th>
                       <th className="px-6 py-4">Leaves</th>
                       <th className="px-6 py-4">Status</th>
                       <th className="px-6 py-4 text-right">Actions</th>
@@ -139,10 +159,11 @@ export const HR: React.FC = () => {
                             <p className="text-xs">{emp.email}</p>
                             <p className="text-xs text-slate-500">{emp.phone}</p>
                          </td>
-                         <td className="px-6 py-4 font-mono">${emp.salary.toLocaleString()}</td>
+                         <td className="px-6 py-4 font-mono font-medium">{formatCurrency(emp.salary)}</td>
                          <td className="px-6 py-4 text-center font-bold text-slate-600">{emp.leavesRemaining} / {emp.leavePolicy}</td>
                          <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs ${emp.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{emp.status}</span></td>
                          <td className="px-6 py-4 text-right flex justify-end gap-2">
+                            <button onClick={() => setShowPayslipModal(emp)} className="p-1.5 text-slate-500 hover:text-green-600 bg-slate-50 rounded" title="Generate Payslip"><DollarSign className="w-4 h-4"/></button>
                             <button onClick={() => setViewProfile(emp)} className="p-1.5 text-slate-500 hover:text-indigo-600 bg-slate-50 rounded" title="View Profile"><FileText className="w-4 h-4"/></button>
                          </td>
                       </tr>
@@ -169,12 +190,27 @@ export const HR: React.FC = () => {
            </div>
            <div className="flex-1 space-y-4 overflow-y-auto">
               {policies.map(pol => (
-                 <div key={pol.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                 <div key={pol.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative group">
                     <div className="flex justify-between items-start mb-2">
                        <h4 className="font-bold text-lg text-slate-800">{pol.title}</h4>
-                       <span className="text-xs bg-slate-100 px-2 py-1 rounded">{pol.category}</span>
+                       <div className="flex items-center gap-2">
+                          <span className="text-xs bg-slate-100 px-2 py-1 rounded">{pol.category}</span>
+                          <button onClick={() => printPolicy(pol)} className="text-slate-400 hover:text-slate-600 p-1" title="Print"><Printer className="w-4 h-4"/></button>
+                          <button onClick={() => alert('Download simulated: policy.pdf')} className="text-slate-400 hover:text-slate-600 p-1" title="Download"><Download className="w-4 h-4"/></button>
+                          <button onClick={() => { setEditingPolicyId(pol.id); setEditPolicyContent(pol.content); }} className="text-slate-400 hover:text-indigo-600 p-1" title="Edit"><Edit className="w-4 h-4"/></button>
+                       </div>
                     </div>
-                    <p className="text-slate-600 text-sm mb-2">{pol.content}</p>
+                    {editingPolicyId === pol.id ? (
+                       <div className="mt-2">
+                          <textarea className="w-full border p-2 rounded mb-2 text-sm" rows={4} value={editPolicyContent} onChange={e => setEditPolicyContent(e.target.value)} />
+                          <div className="flex justify-end gap-2">
+                             <button onClick={() => setEditingPolicyId(null)} className="text-xs text-slate-500">Cancel</button>
+                             <button onClick={() => { /* Mock update logic */ setEditingPolicyId(null); }} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded">Save</button>
+                          </div>
+                       </div>
+                    ) : (
+                       <p className="text-slate-600 text-sm mb-2 whitespace-pre-wrap">{pol.content}</p>
+                    )}
                     <p className="text-xs text-slate-400">Last Updated: {pol.lastUpdated}</p>
                  </div>
               ))}
@@ -204,7 +240,10 @@ export const HR: React.FC = () => {
                  <input className="border p-2 rounded" type="date" placeholder="DOB" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
                  <input className="border p-2 rounded" placeholder="Qualifications" value={formData.qualifications} onChange={e => setFormData({...formData, qualifications: e.target.value})} />
 
-                 <input className="border p-2 rounded" type="number" placeholder="Annual Salary" value={formData.salary || ''} onChange={e => setFormData({...formData, salary: parseFloat(e.target.value)})} />
+                 <div>
+                    <label className="text-xs text-slate-500">Annual Salary (Base INR)</label>
+                    <input className="w-full border p-2 rounded" type="number" placeholder="0" value={formData.salary || ''} onChange={e => setFormData({...formData, salary: parseFloat(e.target.value)})} />
+                 </div>
                  <div>
                     <label className="text-xs text-slate-500">Leave Policy (Days/Year)</label>
                     <input className="w-full border p-2 rounded" type="number" value={formData.leavePolicy || ''} onChange={e => setFormData({...formData, leavePolicy: parseInt(e.target.value)})} />
@@ -229,7 +268,49 @@ export const HR: React.FC = () => {
         </div>
       )}
 
-      {/* View Deep Profile Modal */}
+      {/* Payslip Modal */}
+      {showPayslipModal && (
+         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+            <div className="bg-white w-[500px] p-8 rounded-xl shadow-2xl relative">
+               <button onClick={() => setShowPayslipModal(null)} className="absolute top-4 right-4"><X className="w-5 h-5 text-slate-400"/></button>
+               <div className="text-center mb-6">
+                  <div className="w-12 h-12 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-xl font-bold mx-auto mb-2">M</div>
+                  <h2 className="text-xl font-bold text-slate-800">Payslip Generation</h2>
+                  <p className="text-sm text-slate-500">Confidential • For {showPayslipModal.name}</p>
+               </div>
+               
+               <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 mb-6 space-y-3">
+                  <div className="flex justify-between text-sm">
+                     <span className="text-slate-600">Base Salary (Annual)</span>
+                     <span className="font-bold">{formatCurrency(showPayslipModal.salary)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                     <span className="text-slate-600">Monthly Gross</span>
+                     <span className="font-bold">{formatCurrency(showPayslipModal.salary / 12)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                     <span className="text-slate-600">Deductions (Tax/PF)</span>
+                     <span className="font-bold text-red-600">-{formatCurrency((showPayslipModal.salary / 12) * 0.1)}</span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-lg">
+                     <span>Net Pay</span>
+                     <span className="text-indigo-600">{formatCurrency((showPayslipModal.salary / 12) * 0.9)}</span>
+                  </div>
+               </div>
+
+               <div className="flex gap-2">
+                  <button onClick={() => alert('Download Simulated')} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-slate-50">
+                     <Download className="w-4 h-4"/> PDF
+                  </button>
+                  <button onClick={() => setShowPayslipModal(null)} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">
+                     Done
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* View Deep Profile Modal (kept as is but ensured documents are shown) */}
       {viewProfile && (
          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden h-[80vh] flex flex-col">
@@ -261,7 +342,7 @@ export const HR: React.FC = () => {
                      <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><Award className="w-4 h-4"/> Professional Details</h4>
                      <div className="space-y-2 text-sm text-slate-600">
                         <p className="flex justify-between border-b pb-1"><span>Joined:</span> <span className="font-medium">{viewProfile.joinDate}</span></p>
-                        <p className="flex justify-between border-b pb-1"><span>Salary:</span> <span className="font-medium">${viewProfile.salary?.toLocaleString()}</span></p>
+                        <p className="flex justify-between border-b pb-1"><span>Salary:</span> <span className="font-medium">{formatCurrency(viewProfile.salary)}</span></p>
                         <p className="flex justify-between border-b pb-1"><span>Leaves:</span> <span className="font-medium">{viewProfile.leavesRemaining} / {viewProfile.leavePolicy}</span></p>
                         <p className="flex justify-between border-b pb-1"><span>Qualifications:</span> <span className="font-medium">{viewProfile.qualifications || 'N/A'}</span></p>
                      </div>

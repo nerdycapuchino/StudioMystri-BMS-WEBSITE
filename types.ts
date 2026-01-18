@@ -39,7 +39,10 @@ export interface Lead {
   type: 'Inbound' | 'Outbound' | 'Referral';
   source: string;
   lastContact: string;
-  value: number;
+  value: number; // Base Currency (INR)
+  requirements?: string;
+  notes?: string;
+  files?: { name: string; url: string }[]; // New: Files/References
 }
 
 export interface InventoryItem {
@@ -50,6 +53,8 @@ export interface InventoryItem {
   unit: string;
   reorderLevel: number;
   cost: number;
+  location?: string; 
+  supplier?: string;
 }
 
 export interface Project {
@@ -81,7 +86,7 @@ export interface User {
   role: 'Super Admin' | 'Architect' | 'Sales' | 'Logistics' | 'HR' | 'Finance';
   email: string;
   status: 'Active' | 'Inactive';
-  linkedEmployeeId?: string; // Link to HR
+  linkedEmployeeId?: string; 
 }
 
 export interface IntegrationStatus {
@@ -97,6 +102,8 @@ export interface Invoice {
   amount: number; 
   baseAmount: number; 
   taxAmount: number; 
+  taxRate: number; 
+  gstNumber?: string; 
   paidAmount: number;
   type: 'Income' | 'Expense';
   date: string;
@@ -111,7 +118,7 @@ export interface Employee {
   role: string;
   email: string;
   phone: string;
-  salary: number;
+  salary: number; // Base INR
   joinDate: string;
   status: 'Active' | 'Leave' | 'Terminated';
   attendance: 'Present' | 'Absent' | 'Half-Day';
@@ -121,7 +128,7 @@ export interface Employee {
   address: string;
   emergencyContact: string;
   qualifications: string;
-  documents: { name: string; url: string; date: string }[]; // New
+  documents: { name: string; url: string; date: string }[]; 
 }
 
 export interface Policy {
@@ -138,6 +145,8 @@ export interface Notification {
   message: string;
   time: string;
   read: boolean;
+  type: 'order' | 'lead' | 'alert'; // For linking
+  targetId?: string;
 }
 
 export interface Order {
@@ -148,7 +157,7 @@ export interface Order {
   items: number;
   status: 'Completed' | 'Refunded';
   paymentMethod: string;
-  currency: 'INR' | 'USD'; // Track currency at time of sale
+  currency: 'INR' | 'USD'; 
 }
 
 export interface SystemLog {
@@ -166,6 +175,7 @@ export enum AppModule {
   POS = 'POS',
   CRM = 'CRM',
   PROJECTS = 'PROJECTS',
+  WAREHOUSE = 'WAREHOUSE', // Dedicated Module
   LOGISTICS = 'LOGISTICS',
   FINANCE = 'FINANCE',
   HR = 'HR',

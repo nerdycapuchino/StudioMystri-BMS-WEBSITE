@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Search, ShoppingCart, Plus, Minus, Trash2, CreditCard, X, Check, Smartphone, Mail, Wallet, LogOut, ScanBarcode, TicketPercent, Lock, Tag, Clock, Package, FileText, Info, Camera, RefreshCcw } from 'lucide-react';
 import { MOCK_PRODUCTS, MOCK_CUSTOMERS } from '../constants';
 import { Product, CartItem, Customer } from '../types';
@@ -37,10 +37,12 @@ export const POS: React.FC = () => {
   const [tempDiscount, setTempDiscount] = useState(discount);
   const [couponCode, setCouponCode] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [taxRate, setTaxRate] = useState(18); // Default 18% for INR
 
   // Barcode Camera
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(false);
 
   // Customer
   const [customerPhone, setCustomerPhone] = useState('');
@@ -57,8 +59,15 @@ export const POS: React.FC = () => {
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discountAmount = discount.type === 'percent' ? (subtotal * discount.value) / 100 : discount.value;
   const taxableAmount = Math.max(0, subtotal - discountAmount);
-  const tax = taxableAmount * 0.18; // 18% GST standard logic
+  const tax = taxableAmount * (taxRate / 100);
   const total = taxableAmount + tax;
+
+  // Effects
+  useEffect(() => {
+    // Update tax defaults based on currency
+    if (currency === 'INR') setTaxRate(18);
+    else setTaxRate(0);
+  }, [currency]);
 
   // Handlers
   const handleStartShift = () => { if (localOpeningBalance) startShift(localOpeningBalance); };
@@ -141,6 +150,7 @@ export const POS: React.FC = () => {
       amount: total,
       baseAmount: taxableAmount,
       taxAmount: tax,
+      taxRate: taxRate,
       paidAmount: total,
       type: 'Income',
       date: new Date().toLocaleDateString(),
@@ -190,14 +200,16 @@ export const POS: React.FC = () => {
 
   const startCamera = async () => {
     setCameraActive(true);
+    setCameraError(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      console.error("Camera access denied", err);
-      alert("Could not access camera. Ensure permissions are granted.");
+      // Fail silently for user but set state to show fallback UI
+      console.warn("Camera access denied or unavailable", err);
+      setCameraError(true);
       setCameraActive(false);
     }
   };
@@ -214,7 +226,6 @@ export const POS: React.FC = () => {
   const generateBarcode = () => {
     const randomSku = `SKU-${Math.floor(Math.random() * 100000)}`;
     setNewProd({...newProd, sku: randomSku});
-    alert(`Barcode Generated for ${randomSku}`);
   };
 
   if (!isShiftOpen) {
@@ -234,12 +245,12 @@ export const POS: React.FC = () => {
   }
 
   return (
-    <div className="flex h-full gap-4 relative">
+    <div className="flex flex-col md:flex-row h-full gap-4 relative">
       <div className="flex-1 flex flex-col gap-4">
         {/* Cleaner Header */}
-        <div className="flex justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-           <div className="flex-1 flex items-center gap-3">
-              <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+           <div className="flex-1 flex items-center gap-3 w-full">
+              <div className="relative flex-1">
                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                  <input 
                    type="text" 
@@ -257,12 +268,12 @@ export const POS: React.FC = () => {
               </button>
            </div>
            
-           <div className="flex items-center gap-4">
+           <div className="flex items-center gap-4 w-full md:w-auto justify-end">
               <div className="text-right">
                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Start Balance</p>
                  <p className="text-sm font-bold text-slate-700">{formatCurrency(parseFloat(openingBalance))}</p>
               </div>
-              <div className="h-8 w-[1px] bg-slate-200"></div>
+              <div className="h-8 w-[1px] bg-slate-200 hidden md:block"></div>
               <button onClick={() => setShowOrdersModal(true)} className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">
                  <Clock className="w-4 h-4" /> History
               </button>
@@ -309,7 +320,7 @@ export const POS: React.FC = () => {
       </div>
 
       {/* Cart Sidebar */}
-      <div className="w-80 bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col z-10 shrink-0">
+      <div className="w-full md:w-80 bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col z-10 shrink-0 h-[400px] md:h-full">
          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
             <h3 className="font-bold text-slate-800 flex items-center gap-2"><ShoppingCart className="w-4 h-4"/> Current Order</h3>
             <button onClick={() => setCart([])} className="text-slate-400 hover:text-red-500"><Trash2 className="w-4 h-4"/></button>
@@ -348,12 +359,13 @@ export const POS: React.FC = () => {
                <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-slate-50 rounded-lg">
                   <div className="flex-1 truncate pr-2">
                      <p className="font-medium text-slate-800 truncate">{item.name}</p>
-                     <p className="text-xs text-slate-500">{formatCurrency(item.price)}</p>
+                     <p className="text-xs text-slate-500 flex items-center gap-1">{item.sku}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                     <button onClick={() => updateQuantity(item.id, -1)} className="p-1 bg-white border rounded"><Minus className="w-3 h-3"/></button>
+                  <div className="flex items-center gap-1 text-right">
+                     <p className="text-xs text-slate-600 font-medium mr-2">{formatCurrency(item.price)}</p>
+                     <button onClick={() => updateQuantity(item.id, -1)} className="p-1 bg-white border rounded hover:bg-slate-100"><Minus className="w-3 h-3"/></button>
                      <span className="w-4 text-center font-bold">{item.quantity}</span>
-                     <button onClick={() => updateQuantity(item.id, 1)} className="p-1 bg-white border rounded"><Plus className="w-3 h-3"/></button>
+                     <button onClick={() => updateQuantity(item.id, 1)} className="p-1 bg-white border rounded hover:bg-slate-100"><Plus className="w-3 h-3"/></button>
                   </div>
                </div>
             ))}
@@ -368,7 +380,20 @@ export const POS: React.FC = () => {
                </button>
             </div>
             {discount.value > 0 && <div className="flex justify-between text-sm text-green-600 mb-1"><span>Applied</span><span>-{formatCurrency(discountAmount)}</span></div>}
-            <div className="flex justify-between text-sm mb-1"><span>Tax (18% GST)</span><span>{formatCurrency(tax)}</span></div>
+            
+            <div className="flex justify-between text-sm mb-1 items-center">
+               <span className="flex items-center gap-1">
+                  {currency === 'INR' ? 'GST' : 'Tax'}
+                  <input 
+                     type="number" 
+                     className="w-10 bg-white border rounded px-1 text-xs ml-1" 
+                     value={taxRate} 
+                     onChange={(e) => setTaxRate(parseFloat(e.target.value))} 
+                  />%
+               </span>
+               <span>{formatCurrency(tax)}</span>
+            </div>
+            
             <div className="flex justify-between text-lg font-bold mb-4 pt-2 border-t"><span>Total</span><span>{formatCurrency(total)}</span></div>
             <button onClick={() => setShowPaymentModal(true)} disabled={cart.length === 0} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50">Pay Now</button>
          </div>
@@ -377,7 +402,7 @@ export const POS: React.FC = () => {
       {/* Add Product Modal */}
       {showAddProductModal && (
          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-            <div className="bg-white p-6 rounded-xl w-[600px] shadow-2xl">
+            <div className="bg-white p-6 rounded-xl w-[90%] max-w-[600px] shadow-2xl overflow-y-auto max-h-[90vh]">
                <h3 className="font-bold mb-4 text-lg">Add New Product Details</h3>
                <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
@@ -393,7 +418,14 @@ export const POS: React.FC = () => {
                   </div>
                   <div>
                      <label className="text-xs text-slate-500">Category</label>
-                     <input className="w-full border p-2 rounded" value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})} />
+                     <select className="w-full border p-2 rounded" value={newProd.category} onChange={e => setNewProd({...newProd, category: e.target.value})}>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Lighting">Lighting</option>
+                        <option value="Textiles">Textiles</option>
+                        <option value="Decor">Decor</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Other">Other</option>
+                     </select>
                   </div>
                   <div>
                      <label className="text-xs text-slate-500">Price (Base INR)</label>
@@ -455,8 +487,56 @@ export const POS: React.FC = () => {
          </div>
       )}
 
-      {/* Barcode Scanner, Discount, Payment, Receipt Modals (unchanged logic) */}
-      {/* ... keeping payment modal structure same, just ensuring z-index ... */}
+      {/* Barcode Scanner with Camera */}
+      {showBarcodeScanner && (
+         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="bg-white p-6 rounded-xl w-[400px] text-center relative">
+               <button onClick={stopCamera} className="absolute top-2 right-2"><X className="w-5 h-5"/></button>
+               <h3 className="font-bold text-lg mb-4">Scan Barcode</h3>
+               <div className="bg-black w-full h-64 rounded-lg overflow-hidden relative mb-4 flex items-center justify-center">
+                  {cameraActive && !cameraError ? (
+                     <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
+                  ) : (
+                     <div className="text-white text-sm p-4">
+                        {cameraError ? "Camera unavailable. Permission denied or system error." : "Starting Camera..."}
+                     </div>
+                  )}
+                  <div className="absolute inset-0 border-2 border-red-500 opacity-50 m-12 rounded pointer-events-none"></div>
+               </div>
+               <p className="text-sm text-slate-500 mb-4">Align barcode within frame</p>
+               <button onClick={() => { alert('Scanned: SKU-12345 (Simulated)'); stopCamera(); }} className="w-full py-2 bg-slate-100 rounded mb-2 font-medium">Simulate Successful Scan</button>
+               <button onClick={stopCamera} className="w-full py-2 bg-red-50 text-red-600 rounded">Close</button>
+            </div>
+         </div>
+      )}
+
+      {/* Discount Modal */}
+      {showDiscountModal && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+              <h3 className="font-bold text-lg mb-4 text-slate-800">Add Discount</h3>
+              <div className="space-y-4">
+                 <div className="flex gap-2">
+                    <input placeholder="Coupon Code" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="flex-1 border p-2 rounded" />
+                    <button onClick={applyCoupon} className="bg-slate-800 text-white px-3 rounded text-sm">Apply</button>
+                 </div>
+                 <hr />
+                 <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                    <button onClick={() => setTempDiscount(d => ({...d, type: 'percent'}))} className={`flex-1 py-2 text-sm rounded-md font-medium transition-all ${tempDiscount.type === 'percent' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>Percentage (%)</button>
+                    <button onClick={() => setTempDiscount(d => ({...d, type: 'fixed'}))} className={`flex-1 py-2 text-sm rounded-md font-medium transition-all ${tempDiscount.type === 'fixed' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>Fixed ({currency === 'INR' ? '₹' : '$'})</button>
+                 </div>
+                 <input type="number" value={tempDiscount.value} onChange={e => setTempDiscount(d => ({...d, value: parseFloat(e.target.value) || 0}))} className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-lg" placeholder="0" />
+                 
+                 <div className="flex gap-3 pt-2">
+                    <button onClick={() => setShowDiscountModal(false)} className="flex-1 py-2.5 text-slate-600 bg-slate-100 font-bold rounded-lg hover:bg-slate-200 transition-colors">Cancel</button>
+                    <button onClick={confirmDiscount} className="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-colors">Apply Discount</button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Payment Method Modal */}
       {showPaymentModal && (
          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
             <div className="bg-white p-6 rounded-xl w-96 shadow-2xl text-center">
@@ -474,8 +554,8 @@ export const POS: React.FC = () => {
             </div>
          </div>
       )}
-      
-      {/* ... other modals (Receipt, RazorpayMock, Discount) same as previous ... */}
+
+      {/* Razorpay Mock Modal */}
       {showRazorpayMock && (
          <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-lg shadow-2xl w-[400px] overflow-hidden">
@@ -492,6 +572,7 @@ export const POS: React.FC = () => {
          </div>
       )}
 
+      {/* Receipt Modal */}
       {showReceiptModal && (
          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
             <div className="bg-white p-8 rounded-xl w-80 text-center shadow-2xl">
@@ -499,6 +580,7 @@ export const POS: React.FC = () => {
                   <Check className="w-8 h-8" />
                </div>
                <h3 className="font-bold text-xl mb-2">Payment Successful!</h3>
+               <p className="text-slate-500 text-sm mb-6">Stock deducted & Invoice generated.</p>
                <button onClick={() => setShowReceiptModal(false)} className="w-full py-2 bg-slate-900 text-white rounded-lg">New Sale</button>
             </div>
          </div>

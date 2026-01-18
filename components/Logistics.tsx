@@ -8,6 +8,7 @@ export const Logistics: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingShipment, setEditingShipment] = useState<Shipment | null>(null);
   const [newShipment, setNewShipment] = useState<Partial<Shipment>>({ customer: '', orderId: '', courier: 'BlueDart', eta: '', trackingUrl: '' });
+  const [customCourier, setCustomCourier] = useState(false);
 
   const handleCreate = () => {
     if(newShipment.customer && newShipment.orderId) {
@@ -15,7 +16,7 @@ export const Logistics: React.FC = () => {
          id: Math.random().toString(36).substr(2, 9),
          customer: newShipment.customer,
          orderId: newShipment.orderId,
-         courier: newShipment.courier || 'BlueDart',
+         courier: customCourier ? newShipment.courier! : (newShipment.courier || 'BlueDart'),
          trackingNumber: `TRK-${Math.floor(Math.random() * 10000)}`,
          trackingUrl: newShipment.trackingUrl,
          status: 'Pending',
@@ -23,6 +24,7 @@ export const Logistics: React.FC = () => {
        });
        setShowCreateModal(false);
        setNewShipment({ customer: '', orderId: '', courier: 'BlueDart', eta: '', trackingUrl: '' });
+       setCustomCourier(false);
     }
   };
 
@@ -102,12 +104,33 @@ export const Logistics: React.FC = () => {
               <div className="space-y-3">
                  <input className="w-full border p-2 rounded" placeholder="Order ID" value={newShipment.orderId} onChange={e => setNewShipment({...newShipment, orderId: e.target.value})} />
                  <input className="w-full border p-2 rounded" placeholder="Customer Name" value={newShipment.customer} onChange={e => setNewShipment({...newShipment, customer: e.target.value})} />
-                 <select className="w-full border p-2 rounded" value={newShipment.courier} onChange={e => setNewShipment({...newShipment, courier: e.target.value})}>
-                    <option value="BlueDart">BlueDart</option>
-                    <option value="Delhivery">Delhivery</option>
-                    <option value="Dunzo">Dunzo</option>
-                    <option value="Internal Fleet">Internal Fleet</option>
-                 </select>
+                 
+                 {!customCourier ? (
+                    <select 
+                      className="w-full border p-2 rounded" 
+                      value={newShipment.courier} 
+                      onChange={e => {
+                         if (e.target.value === 'Other') {
+                            setCustomCourier(true);
+                            setNewShipment({...newShipment, courier: ''});
+                         } else {
+                            setNewShipment({...newShipment, courier: e.target.value});
+                         }
+                      }}
+                    >
+                       <option value="BlueDart">BlueDart</option>
+                       <option value="Delhivery">Delhivery</option>
+                       <option value="Dunzo">Dunzo</option>
+                       <option value="Internal Fleet">Internal Fleet</option>
+                       <option value="Other">Other (Custom)</option>
+                    </select>
+                 ) : (
+                    <div className="flex gap-2">
+                       <input className="flex-1 border p-2 rounded" placeholder="Enter Courier Name" value={newShipment.courier} onChange={e => setNewShipment({...newShipment, courier: e.target.value})} />
+                       <button onClick={() => setCustomCourier(false)} className="px-3 bg-slate-100 rounded text-xs">Reset</button>
+                    </div>
+                 )}
+
                  <input className="w-full border p-2 rounded" placeholder="Tracking URL (Optional)" value={newShipment.trackingUrl} onChange={e => setNewShipment({...newShipment, trackingUrl: e.target.value})} />
                  <div className="flex gap-2">
                     <button onClick={() => setShowCreateModal(false)} className="flex-1 py-2 bg-slate-100 rounded">Cancel</button>

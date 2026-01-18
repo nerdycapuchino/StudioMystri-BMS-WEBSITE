@@ -15,13 +15,13 @@ export const MOCK_CUSTOMERS: Customer[] = [
 ];
 
 export const MOCK_LEADS: Lead[] = [
-  { id: '1', companyName: 'TechPark Solutions', pocName: 'Vikram Singh', phone: '9898989898', email: 'vikram@techpark.com', website: 'www.techpark.com', status: 'Negotiation', type: 'Inbound', source: 'Referral', lastContact: '2023-11-06', value: 45000 },
-  { id: '2', companyName: 'Iyer Residence', pocName: 'Mrs. Iyer', phone: '7766554433', email: 'iyer@gmail.com', status: 'New', type: 'Referral', source: 'Instagram', lastContact: '2023-11-07', value: 12000 },
+  { id: '1', companyName: 'TechPark Solutions', pocName: 'Vikram Singh', phone: '9898989898', email: 'vikram@techpark.com', website: 'www.techpark.com', status: 'Negotiation', type: 'Inbound', source: 'Referral', lastContact: '2023-11-06', value: 45000, requirements: 'Full office renovation, 12000 sqft', notes: 'Budget flexible, deadline strict.' },
+  { id: '2', companyName: 'Iyer Residence', pocName: 'Mrs. Iyer', phone: '7766554433', email: 'iyer@gmail.com', status: 'New', type: 'Referral', source: 'Instagram', lastContact: '2023-11-07', value: 12000, requirements: 'Kitchen and Living Room redesign', notes: 'Likes minimal aesthetics.' },
 ];
 
 export const MOCK_INVENTORY: InventoryItem[] = [
-  { id: '1', name: 'Teak Wood (Grade A)', type: 'Raw Material', quantity: 45, unit: 'sqft', reorderLevel: 50, cost: 24 },
-  { id: '2', name: 'Italian Marble Slab', type: 'Raw Material', quantity: 12, unit: 'slabs', reorderLevel: 5, cost: 450 },
+  { id: '1', name: 'Teak Wood (Grade A)', type: 'Raw Material', quantity: 45, unit: 'sqft', reorderLevel: 50, cost: 24, location: 'Warehouse A - Bin 12', supplier: 'Timber Mart' },
+  { id: '2', name: 'Italian Marble Slab', type: 'Raw Material', quantity: 12, unit: 'slabs', reorderLevel: 5, cost: 450, location: 'Warehouse B - Zone 1', supplier: 'Stone World' },
 ];
 
 export const MOCK_PROJECTS: Project[] = [
@@ -34,9 +34,9 @@ export const MOCK_SHIPMENTS: Shipment[] = [
 ];
 
 export const MOCK_USERS: User[] = [
-  { id: '1', name: 'Vikram Malhotra', role: 'Super Admin', email: 'admin@studiomystri.com', status: 'Active' },
-  { id: '2', name: 'Ananya Singh', role: 'Architect', email: 'ananya@studiomystri.com', status: 'Active' },
-  { id: '3', name: 'Kabir Khan', role: 'Sales', email: 'kabir@studiomystri.com', status: 'Active' },
+  { id: '1', name: 'Vikram Malhotra', role: 'Super Admin', email: 'admin@studiomystri.com', status: 'Active', linkedEmployeeId: '1' },
+  { id: '2', name: 'Ananya Singh', role: 'Architect', email: 'ananya@studiomystri.com', status: 'Active', linkedEmployeeId: '2' },
+  { id: '3', name: 'Kabir Khan', role: 'Sales', email: 'kabir@studiomystri.com', status: 'Active', linkedEmployeeId: '3' },
 ];
 
 export const MOCK_INTEGRATIONS: IntegrationStatus[] = [
@@ -50,18 +50,19 @@ export const MOCK_ACTIVITIES: Activity[] = [
 ];
 
 export const MOCK_INVOICES: Invoice[] = [
-  { id: 'INV-201', client: 'Oberoi Project', amount: 25000, baseAmount: 21186.44, taxAmount: 3813.56, paidAmount: 25000, type: 'Income', date: '2023-11-01', status: 'Paid', currency: 'INR', history: [] },
-  { id: 'EXP-001', client: 'Timber Mart', amount: 8000, baseAmount: 6779.66, taxAmount: 1220.34, paidAmount: 8000, type: 'Expense', date: '2023-11-02', status: 'Paid', currency: 'INR', history: [] },
-  { id: 'INV-202', client: 'Razorpay', amount: 75000, baseAmount: 63559.32, taxAmount: 11440.68, paidAmount: 0, type: 'Income', date: '2023-11-05', status: 'Pending', currency: 'INR', history: [] },
+  { id: 'INV-201', client: 'Oberoi Project', amount: 25000, baseAmount: 21186.44, taxAmount: 3813.56, taxRate: 18, gstNumber: '27AAAAA0000A1Z5', paidAmount: 25000, type: 'Income', date: '2023-11-01', status: 'Paid', currency: 'INR', history: [] },
+  { id: 'EXP-001', client: 'Timber Mart', amount: 8000, baseAmount: 6779.66, taxAmount: 1220.34, taxRate: 18, paidAmount: 8000, type: 'Expense', date: '2023-11-02', status: 'Paid', currency: 'INR', history: [] },
+  { id: 'INV-202', client: 'Razorpay', amount: 75000, baseAmount: 63559.32, taxAmount: 11440.68, taxRate: 18, gstNumber: '29ABCDE1234F2Z5', paidAmount: 0, type: 'Income', date: '2023-11-05', status: 'Pending', currency: 'INR', history: [] },
 ];
 
 export const MOCK_EMPLOYEES: Employee[] = [
   { id: '1', name: 'Vikram Malhotra', role: 'Principal Architect', email: 'vikram@studio.com', phone: '9998887776', salary: 150000, joinDate: '2020-01-15', status: 'Active', attendance: 'Present', leavePolicy: 30, leavesRemaining: 15, dob: '1985-05-15', address: 'Mumbai', emergencyContact: 'Wife: 9999999999', qualifications: 'M.Arch', documents: [] },
   { id: '2', name: 'Ananya Singh', role: 'Senior Designer', email: 'ananya@studio.com', phone: '8887776665', salary: 95000, joinDate: '2021-03-10', status: 'Active', attendance: 'Present', leavePolicy: 24, leavesRemaining: 20, dob: '1992-08-20', address: 'Delhi', emergencyContact: 'Father: 8888888888', qualifications: 'B.Des', documents: [] },
+  { id: '3', name: 'Kabir Khan', role: 'Sales Manager', email: 'kabir@studiomystri.com', phone: '7776665554', salary: 85000, joinDate: '2022-06-01', status: 'Active', attendance: 'Present', leavePolicy: 20, leavesRemaining: 18, dob: '1995-02-10', address: 'Bangalore', emergencyContact: 'Mother: 7777777777', qualifications: 'MBA Sales', documents: [] },
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: '1', title: 'New Web Order', message: 'Order #ORD-8825 received', time: '2m ago', read: false },
+  { id: '1', title: 'New Web Order', message: 'Order #ORD-8825 received', time: '2m ago', read: false, type: 'order' },
 ];
 
 export const MOCK_ORDERS: Order[] = [

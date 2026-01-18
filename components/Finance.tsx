@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Plus, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Edit2, X, History } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -12,10 +12,15 @@ export const Finance: React.FC = () => {
   
   // New Transaction Form State
   const [newInvoice, setNewInvoice] = useState<Partial<Invoice>>({ 
-    client: '', amount: 0, baseAmount: 0, taxAmount: 0, date: '', status: 'Pending', type: 'Income' 
+    client: '', amount: 0, baseAmount: 0, taxAmount: 0, taxRate: 18, gstNumber: '', date: '', status: 'Pending', type: 'Income' 
   });
 
   const currencySymbol = currency === 'INR' ? '₹' : '$';
+
+  // Update default tax rate when currency changes
+  useEffect(() => {
+    setNewInvoice(prev => ({...prev, taxRate: currency === 'INR' ? 18 : 0}));
+  }, [currency]);
 
   // Logic
   const income = invoices.filter(i => i.type === 'Income').reduce((acc, curr) => acc + curr.paidAmount, 0);
@@ -23,15 +28,11 @@ export const Finance: React.FC = () => {
   const receivables = invoices.filter(i => i.type === 'Income').reduce((acc, curr) => acc + (curr.amount - curr.paidAmount), 0);
   const netProfit = income - expenses;
 
-  const handleAmountChange = (val: string) => {
-    const amt = parseFloat(val) || 0;
-    const isINR = currency === 'INR';
-    const taxRate = isINR ? 0.18 : 0; // 18% GST for INR, 0 for USD mock
-    const base = amt; 
-    const tax = amt * taxRate;
+  // Recalculate totals when Amount or Tax Rate changes
+  const updateCalculations = (base: number, rate: number) => {
+    const tax = base * (rate / 100);
     const total = base + tax;
-    
-    setNewInvoice({ ...newInvoice, baseAmount: base, taxAmount: tax, amount: total });
+    setNewInvoice(prev => ({ ...prev, baseAmount: base, taxAmount: tax, amount: total, taxRate: rate }));
   };
 
   const handleCreate = () => {
@@ -42,6 +43,8 @@ export const Finance: React.FC = () => {
         amount: newInvoice.amount!,
         baseAmount: newInvoice.baseAmount || 0,
         taxAmount: newInvoice.taxAmount || 0,
+        taxRate: newInvoice.taxRate || 0,
+        gstNumber: newInvoice.gstNumber,
         paidAmount: newInvoice.status === 'Paid' ? newInvoice.amount! : 0,
         type: newInvoice.type || 'Income',
         date: newInvoice.date || new Date().toLocaleDateString(),
@@ -50,7 +53,7 @@ export const Finance: React.FC = () => {
         history: []
       });
       setShowModal(false);
-      setNewInvoice({ client: '', amount: 0, baseAmount: 0, taxAmount: 0, date: '', status: 'Pending', type: 'Income' });
+      setNewInvoice({ client: '', amount: 0, baseAmount: 0, taxAmount: 0, taxRate: currency === 'INR' ? 18 : 0, gstNumber: '', date: '', status: 'Pending', type: 'Income' });
     }
   };
 
@@ -104,7 +107,7 @@ export const Finance: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:col-span-1">
             <h3 className="font-bold text-slate-800 mb-4">Financial Snapshot</h3>
-            <div className="h-64">
+            <div className="h-64 min-w-0">
                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{left: 10}}>
                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -180,7 +183,8 @@ export const Finance: React.FC = () => {
 
                <div className="mb-4 bg-slate-50 p-3 rounded text-sm">
                   <p className="flex justify-between mb-1"><span>Base:</span> <span>{currencySymbol}{showEditModal.baseAmount}</span></p>
-                  <p className="flex justify-between mb-1"><span>Tax:</span> <span>{currencySymbol}{showEditModal.taxAmount}</span></p>
+                  <p className="flex justify-between mb-1"><span>Tax ({showEditModal.taxRate}%):</span> <span>{currencySymbol}{showEditModal.taxAmount}</span></p>
+                  {showEditModal.gstNumber && <p className="flex justify-between mb-1 text-xs text-slate-500"><span>GST #:</span> <span>{showEditModal.gstNumber}</span></p>}
                   <p className="flex justify-between mb-1 border-t pt-1 font-bold"><span>Total:</span> <strong>{currencySymbol}{showEditModal.amount}</strong></p>
                   <p className="flex justify-between mb-1"><span>Paid:</span> <strong>{currencySymbol}{showEditModal.paidAmount}</strong></p>
                   <p className="flex justify-between text-orange-600 font-bold"><span>Pending:</span> <span>{currencySymbol}{showEditModal.amount - showEditModal.paidAmount}</span></p>
@@ -221,16 +225,32 @@ export const Finance: React.FC = () => {
               <input className="w-full border p-2 mb-3 rounded" placeholder="Client / Vendor Name" value={newInvoice.client} onChange={e => setNewInvoice({...newInvoice, client: e.target.value})} />
               
               <div className="mb-3">
+                 <label className="text-xs text-slate-500">GST Number (Optional)</label>
+                 <input className="w-full border p-2 rounded" placeholder="22AAAAA0000A1Z5" value={newInvoice.gstNumber} onChange={e => setNewInvoice({...newInvoice, gstNumber: e.target.value})} />
+              </div>
+
+              <div className="mb-3">
                  <label className="text-xs text-slate-500">Base Amount (Before Tax)</label>
-                 <input className="w-full border p-2 rounded" type="number" placeholder="0.00" value={newInvoice.baseAmount || ''} onChange={e => handleAmountChange(e.target.value)} />
+                 <input className="w-full border p-2 rounded" type="number" placeholder="0.00" value={newInvoice.baseAmount || ''} onChange={e => updateCalculations(parseFloat(e.target.value) || 0, newInvoice.taxRate || 0)} />
               </div>
               
-              <div className="flex gap-2 mb-3 text-sm text-slate-600 bg-slate-50 p-2 rounded">
+              <div className="flex gap-2 mb-3 text-sm text-slate-600 bg-slate-50 p-2 rounded items-center">
                  <div className="flex-1">
-                    <span className="block text-xs">GST ({currency === 'INR' ? '18%' : '0%'})</span>
+                    <span className="block text-xs">
+                        {currency === 'INR' ? 'GST' : 'Tax'} %
+                    </span>
+                    <input 
+                        type="number" 
+                        className="w-12 p-1 border rounded text-xs" 
+                        value={newInvoice.taxRate} 
+                        onChange={e => updateCalculations(newInvoice.baseAmount || 0, parseFloat(e.target.value))} 
+                    />
+                 </div>
+                 <div className="flex-1 text-right">
+                    <span className="block text-xs">Tax Amt</span>
                     <span className="font-bold">{currencySymbol}{newInvoice.taxAmount?.toFixed(2)}</span>
                  </div>
-                 <div className="flex-1">
+                 <div className="flex-1 text-right">
                     <span className="block text-xs">Total</span>
                     <span className="font-bold text-indigo-600">{currencySymbol}{newInvoice.amount?.toFixed(2)}</span>
                  </div>
