@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Invoice } from '../types';
 
 export const Finance: React.FC = () => {
-  const { invoices, addInvoice, updateInvoicePayment, updateInvoice, currency } = useGlobal();
+  const { invoices, addInvoice, updateInvoicePayment, updateInvoice, currency, formatCurrency, convertAmount } = useGlobal();
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState(0);
@@ -14,8 +14,6 @@ export const Finance: React.FC = () => {
   const [newInvoice, setNewInvoice] = useState<Partial<Invoice>>({ 
     client: '', amount: 0, baseAmount: 0, taxAmount: 0, taxRate: 18, gstNumber: '', date: '', status: 'Pending', type: 'Income' 
   });
-
-  const currencySymbol = currency === 'INR' ? '₹' : '$';
 
   // Update default tax rate when currency changes
   useEffect(() => {
@@ -72,10 +70,11 @@ export const Finance: React.FC = () => {
     }
   };
 
+  // Convert for Charts
   const chartData = [
-    { name: 'Income', amount: income, fill: '#10b981' },
-    { name: 'Expense', amount: expenses, fill: '#ef4444' },
-    { name: 'Net', amount: netProfit, fill: '#6366f1' },
+    { name: 'Income', amount: Math.round(convertAmount(income)), fill: '#10b981' },
+    { name: 'Expense', amount: Math.round(convertAmount(expenses)), fill: '#ef4444' },
+    { name: 'Net', amount: Math.round(convertAmount(netProfit)), fill: '#6366f1' },
   ];
 
   return (
@@ -88,45 +87,45 @@ export const Finance: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
          <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
             <p className="text-sm text-slate-500 mb-1">Total Paid Income</p>
-            <p className="text-2xl font-bold text-green-600 flex items-center gap-2"><ArrowUpRight className="w-5 h-5"/> {currencySymbol}{income.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-green-600 flex items-center gap-2"><ArrowUpRight className="w-5 h-5"/> {formatCurrency(income)}</p>
          </div>
          <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
             <p className="text-sm text-slate-500 mb-1">Total Paid Expenses</p>
-            <p className="text-2xl font-bold text-red-600 flex items-center gap-2"><ArrowDownRight className="w-5 h-5"/> {currencySymbol}{expenses.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-red-600 flex items-center gap-2"><ArrowDownRight className="w-5 h-5"/> {formatCurrency(expenses)}</p>
          </div>
          <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
             <p className="text-sm text-slate-500 mb-1">Net Profit</p>
-            <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-indigo-600' : 'text-orange-600'}`}>{currencySymbol}{netProfit.toLocaleString()}</p>
+            <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-indigo-600' : 'text-orange-600'}`}>{formatCurrency(netProfit)}</p>
          </div>
          <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-orange-400">
             <p className="text-sm text-slate-500 mb-1">Pending Receivables</p>
-            <p className="text-2xl font-bold text-slate-700">{currencySymbol}{receivables.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-slate-700">{formatCurrency(receivables)}</p>
          </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
-         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:col-span-1">
-            <h3 className="font-bold text-slate-800 mb-4">Financial Snapshot</h3>
-            <div className="h-64 min-w-0">
+         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:col-span-1 h-[340px]">
+            <h3 className="font-bold text-slate-800 mb-4">Financial Snapshot ({currency})</h3>
+            <div className="h-full pb-8">
                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{left: 10}}>
                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                      <XAxis type="number" hide />
                      <YAxis dataKey="name" type="category" width={60} />
-                     <Tooltip cursor={{fill: 'transparent'}} />
+                     <Tooltip cursor={{fill: 'transparent'}} formatter={(value) => formatCurrency(value as number)} />
                      <Bar dataKey="amount" radius={[0, 4, 4, 0]} barSize={40} />
                   </BarChart>
                </ResponsiveContainer>
             </div>
          </div>
 
-         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:col-span-2 flex flex-col">
+         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:col-span-2 flex flex-col h-[340px]">
             <div className="p-4 border-b border-slate-100">
                <h3 className="font-bold text-slate-800">Recent Transactions</h3>
             </div>
             <div className="flex-1 overflow-y-auto">
                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-slate-500 font-medium">
+                  <thead className="bg-slate-50 text-slate-500 font-medium sticky top-0">
                      <tr>
                         <th className="px-6 py-3">ID</th>
                         <th className="px-6 py-3">Entity</th>
@@ -143,8 +142,8 @@ export const Finance: React.FC = () => {
                            <td className="px-6 py-3 font-mono text-xs text-slate-500">{inv.id}</td>
                            <td className="px-6 py-3 font-medium text-slate-800">{inv.client}</td>
                            <td className="px-6 py-3"><span className={`px-2 py-1 rounded text-xs ${inv.type === 'Income' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{inv.type}</span></td>
-                           <td className="px-6 py-3 font-bold">{currencySymbol}{inv.amount.toLocaleString()}</td>
-                           <td className="px-6 py-3 text-slate-600">{currencySymbol}{inv.paidAmount.toLocaleString()}</td>
+                           <td className="px-6 py-3 font-bold">{formatCurrency(inv.amount)}</td>
+                           <td className="px-6 py-3 text-slate-600">{formatCurrency(inv.paidAmount)}</td>
                            <td className="px-6 py-3">
                               <span className={`px-2 py-1 rounded text-xs font-bold ${inv.status === 'Paid' ? 'bg-green-100 text-green-700' : inv.status === 'Partial' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
                                  {inv.status}
@@ -182,12 +181,12 @@ export const Finance: React.FC = () => {
                </div>
 
                <div className="mb-4 bg-slate-50 p-3 rounded text-sm">
-                  <p className="flex justify-between mb-1"><span>Base:</span> <span>{currencySymbol}{showEditModal.baseAmount}</span></p>
-                  <p className="flex justify-between mb-1"><span>Tax ({showEditModal.taxRate}%):</span> <span>{currencySymbol}{showEditModal.taxAmount}</span></p>
+                  <p className="flex justify-between mb-1"><span>Base:</span> <span>{formatCurrency(showEditModal.baseAmount)}</span></p>
+                  <p className="flex justify-between mb-1"><span>Tax ({showEditModal.taxRate}%):</span> <span>{formatCurrency(showEditModal.taxAmount)}</span></p>
                   {showEditModal.gstNumber && <p className="flex justify-between mb-1 text-xs text-slate-500"><span>GST #:</span> <span>{showEditModal.gstNumber}</span></p>}
-                  <p className="flex justify-between mb-1 border-t pt-1 font-bold"><span>Total:</span> <strong>{currencySymbol}{showEditModal.amount}</strong></p>
-                  <p className="flex justify-between mb-1"><span>Paid:</span> <strong>{currencySymbol}{showEditModal.paidAmount}</strong></p>
-                  <p className="flex justify-between text-orange-600 font-bold"><span>Pending:</span> <span>{currencySymbol}{showEditModal.amount - showEditModal.paidAmount}</span></p>
+                  <p className="flex justify-between mb-1 border-t pt-1 font-bold"><span>Total:</span> <strong>{formatCurrency(showEditModal.amount)}</strong></p>
+                  <p className="flex justify-between mb-1"><span>Paid:</span> <strong>{formatCurrency(showEditModal.paidAmount)}</strong></p>
+                  <p className="flex justify-between text-orange-600 font-bold"><span>Pending:</span> <span>{formatCurrency(showEditModal.amount - showEditModal.paidAmount)}</span></p>
                </div>
                
                {showEditModal.status !== 'Paid' && (
@@ -204,7 +203,7 @@ export const Finance: React.FC = () => {
                      {showEditModal.history.map((h, i) => (
                         <div key={i} className="flex justify-between text-slate-600">
                            <span>{h.date}</span>
-                           <span>{currencySymbol}{h.amount}</span>
+                           <span>{formatCurrency(h.amount)}</span>
                         </div>
                      ))}
                   </div>
@@ -248,11 +247,11 @@ export const Finance: React.FC = () => {
                  </div>
                  <div className="flex-1 text-right">
                     <span className="block text-xs">Tax Amt</span>
-                    <span className="font-bold">{currencySymbol}{newInvoice.taxAmount?.toFixed(2)}</span>
+                    <span className="font-bold">{formatCurrency(newInvoice.taxAmount || 0)}</span>
                  </div>
                  <div className="flex-1 text-right">
                     <span className="block text-xs">Total</span>
-                    <span className="font-bold text-indigo-600">{currencySymbol}{newInvoice.amount?.toFixed(2)}</span>
+                    <span className="font-bold text-indigo-600">{formatCurrency(newInvoice.amount || 0)}</span>
                  </div>
               </div>
 

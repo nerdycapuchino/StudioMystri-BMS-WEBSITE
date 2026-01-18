@@ -50,12 +50,13 @@ interface GlobalContextType {
   updateInvoice: (id: string, updates: Partial<Invoice>) => void; 
   
   employees: Employee[];
-  addEmployee: (employee: Employee, createSystemUser?: boolean, userRole?: string) => void; // Updated signature
+  addEmployee: (employee: Employee, createSystemUser?: boolean, userRole?: string) => void; 
   updateEmployee: (id: string, updates: Partial<Employee>) => void; 
   policies: Policy[];
   addPolicy: (policy: Policy) => void;
   
   inventory: InventoryItem[];
+  addInventoryItem: (item: InventoryItem) => void; // New
   updateInventoryStock: (id: string, qty: number) => void;
   
   shipments: Shipment[];
@@ -304,6 +305,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     logAction('Add Policy', `Added policy: ${policy.title}`, 'HR');
   }
 
+  const addInventoryItem = (item: InventoryItem) => {
+    setInventory(prev => [item, ...prev]);
+    logAction('Add Stock', `Added master stock: ${item.name}`, 'ERP');
+  }
+
   const updateInventoryStock = (id: string, qty: number) => {
     setInventory(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
     logAction('Update Stock', `Updated stock for item ID ${id} to ${qty}`, 'ERP');
@@ -349,7 +355,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       notifications, markNotificationRead,
       invoices, addInvoice, updateInvoicePayment, updateInvoice,
       employees, addEmployee, updateEmployee, policies, addPolicy,
-      inventory, updateInventoryStock,
+      inventory, addInventoryItem, updateInventoryStock,
       shipments, addShipment, updateShipment,
       users, addUser, updateUserStatus, deleteUser,
       orders, addOrder,

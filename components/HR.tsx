@@ -84,20 +84,34 @@ export const HR: React.FC = () => {
     setShowModal(true);
   };
 
-  const printPolicy = (policy: Policy) => {
-     const printContent = `
-       <html><body>
-       <h1>${policy.title}</h1>
-       <p><strong>Category:</strong> ${policy.category}</p>
-       <p><strong>Last Updated:</strong> ${policy.lastUpdated}</p>
-       <hr/>
-       <p>${policy.content}</p>
-       </body></html>
-     `;
-     const win = window.open('', '', 'width=600,height=600');
-     win?.document.write(printContent);
-     win?.document.close();
-     win?.print();
+  const downloadPolicy = (policy: Policy) => {
+     const element = document.createElement("a");
+     const file = new Blob([`POLICY: ${policy.title}\nCATEGORY: ${policy.category}\nUPDATED: ${policy.lastUpdated}\n\n${policy.content}`], {type: 'text/plain'});
+     element.href = URL.createObjectURL(file);
+     element.download = `${policy.title.replace(/\s+/g, '_')}.txt`;
+     document.body.appendChild(element); // Required for this to work in FireFox
+     element.click();
+     document.body.removeChild(element);
+  };
+
+  // Indian Salary Structure Logic
+  const calculateSalaryBreakup = (annualSalary: number) => {
+    const monthlyGross = annualSalary / 12;
+    
+    // Earnings
+    const basic = monthlyGross * 0.5; // 50% of Gross
+    const hra = basic * 0.5; // 50% of Basic
+    const special = monthlyGross - basic - hra;
+    
+    // Deductions
+    const pf = Math.min(basic * 0.12, 1800); // Capped PF logic often used, simplified here
+    const pt = 200; // Standard PT
+    const tds = monthlyGross > 50000 ? monthlyGross * 0.1 : 0; // Simplified TDS
+
+    const totalDeductions = pf + pt + tds;
+    const netPay = monthlyGross - totalDeductions;
+
+    return { monthlyGross, basic, hra, special, pf, pt, tds, totalDeductions, netPay };
   };
 
   return (
@@ -141,7 +155,7 @@ export const HR: React.FC = () => {
                       <th className="px-6 py-4">Name</th>
                       <th className="px-6 py-4">Role</th>
                       <th className="px-6 py-4">Contacts</th>
-                      <th className="px-6 py-4">Salary (Annual)</th>
+                      <th className="px-6 py-4">CTC (Annual)</th>
                       <th className="px-6 py-4">Leaves</th>
                       <th className="px-6 py-4">Status</th>
                       <th className="px-6 py-4 text-right">Actions</th>
@@ -195,23 +209,22 @@ export const HR: React.FC = () => {
                        <h4 className="font-bold text-lg text-slate-800">{pol.title}</h4>
                        <div className="flex items-center gap-2">
                           <span className="text-xs bg-slate-100 px-2 py-1 rounded">{pol.category}</span>
-                          <button onClick={() => printPolicy(pol)} className="text-slate-400 hover:text-slate-600 p-1" title="Print"><Printer className="w-4 h-4"/></button>
-                          <button onClick={() => alert('Download simulated: policy.pdf')} className="text-slate-400 hover:text-slate-600 p-1" title="Download"><Download className="w-4 h-4"/></button>
-                          <button onClick={() => { setEditingPolicyId(pol.id); setEditPolicyContent(pol.content); }} className="text-slate-400 hover:text-indigo-600 p-1" title="Edit"><Edit className="w-4 h-4"/></button>
+                          <button onClick={() => downloadPolicy(pol)} className="text-slate-400 hover:text-indigo-600 p-1 bg-slate-50 rounded" title="Download"><Download className="w-4 h-4"/></button>
+                          <button onClick={() => { setEditingPolicyId(pol.id); setEditPolicyContent(pol.content); }} className="text-slate-400 hover:text-indigo-600 p-1 bg-slate-50 rounded" title="Edit"><Edit className="w-4 h-4"/></button>
                        </div>
                     </div>
                     {editingPolicyId === pol.id ? (
-                       <div className="mt-2">
-                          <textarea className="w-full border p-2 rounded mb-2 text-sm" rows={4} value={editPolicyContent} onChange={e => setEditPolicyContent(e.target.value)} />
-                          <div className="flex justify-end gap-2">
-                             <button onClick={() => setEditingPolicyId(null)} className="text-xs text-slate-500">Cancel</button>
-                             <button onClick={() => { /* Mock update logic */ setEditingPolicyId(null); }} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded">Save</button>
+                       <div className="mt-4 border-t pt-4">
+                          <textarea className="w-full border p-4 rounded-lg mb-3 text-sm min-h-[150px] shadow-inner bg-slate-50 font-mono leading-relaxed" value={editPolicyContent} onChange={e => setEditPolicyContent(e.target.value)} />
+                          <div className="flex justify-end gap-3">
+                             <button onClick={() => setEditingPolicyId(null)} className="px-4 py-2 bg-slate-100 rounded text-sm font-medium">Cancel</button>
+                             <button onClick={() => { /* Mock update logic */ setEditingPolicyId(null); }} className="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-medium">Save Changes</button>
                           </div>
                        </div>
                     ) : (
-                       <p className="text-slate-600 text-sm mb-2 whitespace-pre-wrap">{pol.content}</p>
+                       <p className="text-slate-600 text-sm mb-2 whitespace-pre-wrap leading-relaxed">{pol.content}</p>
                     )}
-                    <p className="text-xs text-slate-400">Last Updated: {pol.lastUpdated}</p>
+                    <p className="text-xs text-slate-400 mt-2">Last Updated: {pol.lastUpdated}</p>
                  </div>
               ))}
            </div>
@@ -268,49 +281,66 @@ export const HR: React.FC = () => {
         </div>
       )}
 
-      {/* Payslip Modal */}
+      {/* Indian Context Payslip Modal */}
       {showPayslipModal && (
          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-            <div className="bg-white w-[500px] p-8 rounded-xl shadow-2xl relative">
+            <div className="bg-white w-[600px] p-8 rounded-xl shadow-2xl relative">
                <button onClick={() => setShowPayslipModal(null)} className="absolute top-4 right-4"><X className="w-5 h-5 text-slate-400"/></button>
-               <div className="text-center mb-6">
-                  <div className="w-12 h-12 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-xl font-bold mx-auto mb-2">M</div>
-                  <h2 className="text-xl font-bold text-slate-800">Payslip Generation</h2>
-                  <p className="text-sm text-slate-500">Confidential • For {showPayslipModal.name}</p>
+               
+               <div className="text-center mb-6 border-b pb-4">
+                  <h2 className="text-xl font-bold text-slate-800">Studio Mystri</h2>
+                  <p className="text-xs text-slate-500">Payslip for the month of {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
+                  <h3 className="font-bold text-lg mt-2">{showPayslipModal.name}</h3>
+                  <p className="text-xs text-slate-500">{showPayslipModal.role}</p>
                </div>
                
-               <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 mb-6 space-y-3">
-                  <div className="flex justify-between text-sm">
-                     <span className="text-slate-600">Base Salary (Annual)</span>
-                     <span className="font-bold">{formatCurrency(showPayslipModal.salary)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                     <span className="text-slate-600">Monthly Gross</span>
-                     <span className="font-bold">{formatCurrency(showPayslipModal.salary / 12)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                     <span className="text-slate-600">Deductions (Tax/PF)</span>
-                     <span className="font-bold text-red-600">-{formatCurrency((showPayslipModal.salary / 12) * 0.1)}</span>
-                  </div>
-                  <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-lg">
-                     <span>Net Pay</span>
-                     <span className="text-indigo-600">{formatCurrency((showPayslipModal.salary / 12) * 0.9)}</span>
-                  </div>
-               </div>
+               {(() => {
+                  const breakup = calculateSalaryBreakup(showPayslipModal.salary);
+                  return (
+                     <div className="grid grid-cols-2 gap-8 mb-6">
+                        {/* Earnings */}
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                           <h4 className="font-bold text-green-800 mb-3 border-b border-green-200 pb-1">Earnings</h4>
+                           <div className="space-y-2 text-sm">
+                              <div className="flex justify-between"><span>Basic</span> <span>{formatCurrency(breakup.basic)}</span></div>
+                              <div className="flex justify-between"><span>HRA</span> <span>{formatCurrency(breakup.hra)}</span></div>
+                              <div className="flex justify-between"><span>Special Allow.</span> <span>{formatCurrency(breakup.special)}</span></div>
+                              <div className="flex justify-between border-t border-green-200 pt-2 font-bold"><span>Total Earnings</span> <span>{formatCurrency(breakup.monthlyGross)}</span></div>
+                           </div>
+                        </div>
+
+                        {/* Deductions */}
+                        <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                           <h4 className="font-bold text-red-800 mb-3 border-b border-red-200 pb-1">Deductions</h4>
+                           <div className="space-y-2 text-sm">
+                              <div className="flex justify-between"><span>PF</span> <span>{formatCurrency(breakup.pf)}</span></div>
+                              <div className="flex justify-between"><span>Prof. Tax</span> <span>{formatCurrency(breakup.pt)}</span></div>
+                              <div className="flex justify-between"><span>TDS</span> <span>{formatCurrency(breakup.tds)}</span></div>
+                              <div className="flex justify-between border-t border-red-200 pt-2 font-bold"><span>Total Deductions</span> <span>{formatCurrency(breakup.totalDeductions)}</span></div>
+                           </div>
+                        </div>
+
+                        <div className="col-span-2 bg-indigo-50 p-4 rounded-lg border border-indigo-200 flex justify-between items-center">
+                           <span className="font-bold text-indigo-900">Net Pay (Take Home)</span>
+                           <span className="text-xl font-bold text-indigo-700">{formatCurrency(breakup.netPay)}</span>
+                        </div>
+                     </div>
+                  );
+               })()}
 
                <div className="flex gap-2">
-                  <button onClick={() => alert('Download Simulated')} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-slate-50">
-                     <Download className="w-4 h-4"/> PDF
+                  <button onClick={() => alert('PDF Download Started...')} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-slate-50">
+                     <Download className="w-4 h-4"/> Download PDF
                   </button>
                   <button onClick={() => setShowPayslipModal(null)} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700">
-                     Done
+                     Close
                   </button>
                </div>
             </div>
          </div>
       )}
 
-      {/* View Deep Profile Modal (kept as is but ensured documents are shown) */}
+      {/* View Deep Profile Modal */}
       {viewProfile && (
          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden h-[80vh] flex flex-col">

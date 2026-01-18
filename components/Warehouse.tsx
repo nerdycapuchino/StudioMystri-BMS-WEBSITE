@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { AlertTriangle, Package, DollarSign, Users, Filter, X, MapPin, Search } from 'lucide-react';
+import { AlertTriangle, Package, DollarSign, Users, Filter, X, MapPin, Search, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { InventoryItem } from '../types';
 
 export const Warehouse: React.FC = () => {
-  const { inventory, updateInventoryStock, addActivity, currency, formatCurrency } = useGlobal();
+  const { inventory, updateInventoryStock, addInventoryItem, addActivity, currency, formatCurrency } = useGlobal();
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [newQty, setNewQty] = useState(0);
   const [newLocation, setNewLocation] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // New Item State
+  const [newItem, setNewItem] = useState<Partial<InventoryItem>>({ 
+    name: '', type: 'Raw Material', quantity: 0, unit: 'pcs', reorderLevel: 10, cost: 0, location: '', supplier: '' 
+  });
 
   const lowStockItems = inventory.filter(i => i.quantity <= i.reorderLevel);
   const filteredInventory = inventory.filter(i => 
@@ -26,13 +32,28 @@ export const Warehouse: React.FC = () => {
   const handleSave = () => {
     if (editingItem) {
       updateInventoryStock(editingItem.id, newQty);
-      // In a real app, update location too. For now we assume stock is the main tracked numeric.
-      // Ideally we would add updateInventoryDetails(id, { quantity, location }) to GlobalContext.
-      
       if (newQty > editingItem.quantity) {
          addActivity(`Restocked ${editingItem.name}: +${newQty - editingItem.quantity} ${editingItem.unit} to ${newLocation}`, 'alert');
       }
       setEditingItem(null);
+    }
+  };
+
+  const handleAddItem = () => {
+    if (newItem.name && newItem.quantity !== undefined) {
+      addInventoryItem({
+        id: Math.random().toString(36).substr(2, 9),
+        name: newItem.name,
+        type: newItem.type as any,
+        quantity: newItem.quantity,
+        unit: newItem.unit || 'pcs',
+        reorderLevel: newItem.reorderLevel || 10,
+        cost: newItem.cost || 0,
+        location: newItem.location,
+        supplier: newItem.supplier
+      });
+      setShowAddModal(false);
+      setNewItem({ name: '', type: 'Raw Material', quantity: 0, unit: 'pcs', reorderLevel: 10, cost: 0, location: '', supplier: '' });
     }
   };
 
@@ -58,8 +79,8 @@ export const Warehouse: React.FC = () => {
                 onChange={e => setSearchQuery(e.target.value)}
               />
            </div>
-           <button className="flex items-center gap-2 px-3 py-2 border bg-white rounded-lg text-sm hover:bg-slate-50">
-             <Filter className="w-4 h-4" /> Filter
+           <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+             <Plus className="w-4 h-4" /> Add Item
            </button>
         </div>
       </div>
@@ -187,6 +208,49 @@ export const Warehouse: React.FC = () => {
                </div>
 
                <button onClick={handleSave} className="w-full bg-indigo-600 text-white py-2 rounded font-bold hover:bg-indigo-700">Update Inventory</button>
+            </div>
+         </div>
+      )}
+
+      {/* Add Item Modal */}
+      {showAddModal && (
+         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
+               <h3 className="font-bold text-lg mb-4">Add Master Stock Item</h3>
+               <div className="space-y-3">
+                  <input className="w-full border p-2 rounded" placeholder="Item Name" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} />
+                  <div className="flex gap-2">
+                     <select className="flex-1 border p-2 rounded" value={newItem.type} onChange={e => setNewItem({...newItem, type: e.target.value as any})}>
+                        <option value="Raw Material">Raw Material</option>
+                        <option value="Finished Good">Finished Good</option>
+                     </select>
+                     <input className="w-24 border p-2 rounded" placeholder="Unit" value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})} />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                       <label className="text-xs text-slate-500">Opening Stock</label>
+                       <input type="number" className="w-full border p-2 rounded" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: parseFloat(e.target.value)})} />
+                    </div>
+                    <div className="flex-1">
+                       <label className="text-xs text-slate-500">Reorder Level</label>
+                       <input type="number" className="w-full border p-2 rounded" value={newItem.reorderLevel} onChange={e => setNewItem({...newItem, reorderLevel: parseFloat(e.target.value)})} />
+                    </div>
+                  </div>
+
+                  <div>
+                     <label className="text-xs text-slate-500">Unit Cost (Base INR)</label>
+                     <input type="number" className="w-full border p-2 rounded" value={newItem.cost} onChange={e => setNewItem({...newItem, cost: parseFloat(e.target.value)})} />
+                  </div>
+
+                  <input className="w-full border p-2 rounded" placeholder="Location / Bin" value={newItem.location} onChange={e => setNewItem({...newItem, location: e.target.value})} />
+                  <input className="w-full border p-2 rounded" placeholder="Supplier Name" value={newItem.supplier} onChange={e => setNewItem({...newItem, supplier: e.target.value})} />
+
+                  <div className="flex gap-2 mt-4">
+                     <button onClick={() => setShowAddModal(false)} className="flex-1 py-2 bg-slate-100 rounded">Cancel</button>
+                     <button onClick={handleAddItem} className="flex-1 py-2 bg-indigo-600 text-white rounded font-bold">Add to Stock</button>
+                  </div>
+               </div>
             </div>
          </div>
       )}

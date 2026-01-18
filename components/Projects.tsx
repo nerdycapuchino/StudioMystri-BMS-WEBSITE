@@ -4,7 +4,7 @@ import { Clock, CheckCircle, FileText, Upload, MoreVertical, X, Calendar, Edit2,
 import { Project } from '../types';
 
 export const Projects: React.FC = () => {
-  const { projects, addProject, updateProject, userRole } = useGlobal();
+  const { projects, addProject, updateProject, userRole, formatCurrency } = useGlobal();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   
@@ -106,7 +106,7 @@ export const Projects: React.FC = () => {
                 <div className="flex items-center gap-2 text-slate-600"><Clock className="w-4 h-4 text-slate-400" /><span>{project.dueDate}</span></div>
                 <div className="flex items-center gap-2 text-slate-600">
                    {canViewBudget ? (
-                      <><CheckCircle className="w-4 h-4 text-slate-400" /><span>${project.budget.toLocaleString()}</span></>
+                      <><CheckCircle className="w-4 h-4 text-slate-400" /><span>{formatCurrency(project.budget)}</span></>
                    ) : (
                       <><Lock className="w-4 h-4 text-slate-400" /><span>Hidden</span></>
                    )}
@@ -173,7 +173,7 @@ export const Projects: React.FC = () => {
                   
                   {canViewBudget && (
                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Budget</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Budget ({useGlobal().currency})</label>
                         <input className="w-full border p-2 rounded" type="number" value={editingProject.budget} onChange={e => setEditingProject({...editingProject, budget: parseFloat(e.target.value)})} />
                      </div>
                   )}
