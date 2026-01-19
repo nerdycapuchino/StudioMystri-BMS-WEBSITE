@@ -6,7 +6,7 @@ interface GlobalContextType {
   currency: 'INR' | 'USD';
   setCurrency: (c: 'INR' | 'USD') => void;
   formatCurrency: (amount: number) => string;
-  convertAmount: (amount: number) => number; // Helper to get raw converted number
+  convertAmount: (amount: number) => number;
   
   salesToday: number;
   addSale: (amount: number) => void;
@@ -19,7 +19,6 @@ interface GlobalContextType {
   setUserRole: (role: 'Super Admin' | 'Architect' | 'Sales' | null) => void;
   currentUser: string;
   
-  // POS Shift State
   isShiftOpen: boolean;
   openingBalance: string;
   cashCollected: number;
@@ -27,12 +26,10 @@ interface GlobalContextType {
   updateCashCollected: (amount: number) => void;
   closeShift: () => void;
 
-  // Products & Stock
   products: Product[];
   addProduct: (product: Product) => void;
   deductStock: (items: { id: string; quantity: number }[]) => void; 
 
-  // Persistent Module State
   leads: Lead[];
   addLead: (lead: Lead) => void;
   updateLeadStatus: (id: string, newStatus: Lead['status']) => void;
@@ -56,7 +53,7 @@ interface GlobalContextType {
   addPolicy: (policy: Policy) => void;
   
   inventory: InventoryItem[];
-  addInventoryItem: (item: InventoryItem) => void; // New
+  addInventoryItem: (item: InventoryItem) => void;
   updateInventoryStock: (id: string, qty: number) => void;
   
   shipments: Shipment[];
@@ -78,24 +75,24 @@ interface GlobalContextType {
   logAction: (action: string, details: string, module: string) => void;
   editLog: (id: string, newDetails: string) => void; 
 
-  // RBAC
   permissions: FieldPermission[];
   updatePermission: (role: string, field: string, access: AccessLevel) => void;
   checkAccess: (field: string) => AccessLevel;
 
-  // Team Hub State
   teamMessages: ChatMessage[];
   addTeamMessage: (msg: ChatMessage) => void;
   teamChannels: Channel[];
   addTeamChannel: (channel: Channel) => void;
   teamFiles: FileItem[];
   addTeamFile: (file: FileItem) => void;
+  
+  campaigns: any[];
+  toggleCampaignStatus: (id: string) => void;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Helpers
   const getStoredBool = (key: string, def: boolean) => {
     const stored = localStorage.getItem(key);
     return stored !== null ? stored === 'true' : def;
@@ -107,12 +104,12 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const getStoredStr = (key: string, def: string) => {
     return localStorage.getItem(key) || def;
   };
-  const getStoredJSON = <T,>(key: string, def: T): T => {
+  
+  function getStoredJSON<T>(key: string, def: T): T {
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : def;
-  };
+  }
 
-  // State
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [salesToday, setSalesToday] = useState(() => getStoredNum('salesToday', 12450));
   const [activities, setActivities] = useState<Activity[]>(() => getStoredJSON('activities', MOCK_ACTIVITIES));
@@ -123,13 +120,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   });
   const currentUser = userRole === 'Super Admin' ? 'Vikram Malhotra' : userRole === 'Architect' ? 'Ananya Singh' : 'Kabir Khan';
 
-  // POS
   const [isShiftOpen, setIsShiftOpen] = useState(() => getStoredBool('isShiftOpen', false));
   const [openingBalance, setOpeningBalance] = useState(() => getStoredStr('openingBalance', ''));
   const [cashCollected, setCashCollected] = useState(() => getStoredNum('cashCollected', 0));
   const [products, setProducts] = useState<Product[]>(() => getStoredJSON('products', MOCK_PRODUCTS));
 
-  // Modules
   const [leads, setLeads] = useState<Lead[]>(() => getStoredJSON('leads', MOCK_LEADS));
   const [integrations, setIntegrations] = useState<IntegrationStatus[]>(() => getStoredJSON('integrations', MOCK_INTEGRATIONS));
   const [notifications, setNotifications] = useState<Notification[]>(() => getStoredJSON('notifications', MOCK_NOTIFICATIONS));
@@ -146,36 +141,38 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [orders, setOrders] = useState<Order[]>(() => getStoredJSON('orders', MOCK_ORDERS));
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>(() => getStoredJSON('systemLogs', MOCK_LOGS));
 
-  // Initial Permissions
   const [permissions, setPermissions] = useState<FieldPermission[]>(() => getStoredJSON('permissions', [
     { role: 'Sales', field: 'salary', access: 'hidden' },
     { role: 'Sales', field: 'costPrice', access: 'hidden' },
     { role: 'Architect', field: 'salary', access: 'hidden' },
     { role: 'Architect', field: 'costPrice', access: 'read-only' },
     { role: 'Super Admin', field: 'salary', access: 'read-write' },
-    { role: 'Super Admin', field: 'costPrice', access: 'read-write' },
+    { role: 'Super Admin', field: 'costPrice', access: 'read-write' }
   ]));
 
-  // Team Hub State (Mock Initial Data)
   const [teamMessages, setTeamMessages] = useState<ChatMessage[]>(() => getStoredJSON('teamMessages', [
     { id: '1', channelId: 'general', sender: 'Ananya Singh', content: 'Has the updated floor plan for Oberoi been approved?', timestamp: '10:30 AM', avatar: 'A' },
     { id: '2', channelId: 'general', sender: 'Vikram Malhotra', content: 'Yes, just signed off. Proceed with procurement.', timestamp: '10:32 AM', avatar: 'V' },
-    { id: '3', channelId: 'general', sender: 'Kabir Khan', content: 'Great, I will update the client.', timestamp: '10:35 AM', avatar: 'K' },
+    { id: '3', channelId: 'general', sender: 'Kabir Khan', content: 'Great, I will update the client.', timestamp: '10:35 AM', avatar: 'K' }
   ]));
   const [teamChannels, setTeamChannels] = useState<Channel[]>(() => getStoredJSON('teamChannels', [
     { id: 'general', name: 'general', type: 'public' },
     { id: 'design-team', name: 'design-team', type: 'public' },
     { id: 'sales-leads', name: 'sales-leads', type: 'private' },
-    { id: 'procurement', name: 'procurement', type: 'public' },
+    { id: 'procurement', name: 'procurement', type: 'public' }
   ]));
   const [teamFiles, setTeamFiles] = useState<FileItem[]>(() => getStoredJSON('teamFiles', [
     { id: '1', name: 'Oberoi_Project_Specs.pdf', type: 'pdf', size: '2.4 MB', date: '2023-11-01', owner: 'Ananya' },
     { id: '2', name: 'Q3_Budget_Forecast.xlsx', type: 'sheet', size: '1.1 MB', date: '2023-10-28', owner: 'Vikram' },
     { id: '3', name: 'Site_Photos_Nov.jpg', type: 'image', size: '4.5 MB', date: '2023-11-05', owner: 'Kabir' },
-    { id: '4', name: 'Vendor_Contracts.docx', type: 'doc', size: '800 KB', date: '2023-11-02', owner: 'Admin' },
+    { id: '4', name: 'Vendor_Contracts.docx', type: 'doc', size: '800 KB', date: '2023-11-02', owner: 'Admin' }
   ]));
 
-  // Effects
+  const [campaigns, setCampaigns] = useState<any[]>(() => getStoredJSON('campaigns', [
+    { id: '1', name: 'Diwali Sale', status: 'Active', channel: 'Email', conversionRate: 12.5 },
+    { id: '2', name: 'New Collection Launch', status: 'Paused', channel: 'WhatsApp', conversionRate: 8.2 }
+  ]));
+
   useEffect(() => localStorage.setItem('salesToday', String(salesToday)), [salesToday]);
   useEffect(() => localStorage.setItem('activities', JSON.stringify(activities)), [activities]);
   useEffect(() => localStorage.setItem('projects', JSON.stringify(projects)), [projects]);
@@ -201,8 +198,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => localStorage.setItem('teamMessages', JSON.stringify(teamMessages)), [teamMessages]);
   useEffect(() => localStorage.setItem('teamChannels', JSON.stringify(teamChannels)), [teamChannels]);
   useEffect(() => localStorage.setItem('teamFiles', JSON.stringify(teamFiles)), [teamFiles]);
+  useEffect(() => localStorage.setItem('campaigns', JSON.stringify(campaigns)), [campaigns]);
 
-  // Actions
   const logAction = (action: string, details: string, module: string) => {
     const newLog: SystemLog = {
       id: Math.random().toString(36).substr(2, 9),
@@ -229,8 +226,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }));
   };
 
-  // Currency Logic
-  const exchangeRate = 84; // 1 USD = 84 INR
+  const exchangeRate = 84;
   const convertAmount = (amount: number) => {
     if (currency === 'USD') return amount / exchangeRate;
     return amount;
@@ -411,10 +407,9 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const checkAccess = (field: string): AccessLevel => {
     if (!userRole) return 'hidden';
     const perm = permissions.find(p => p.role === userRole && p.field === field);
-    return perm ? perm.access : 'read-write'; // Default to full access if not defined
+    return perm ? perm.access : 'read-write';
   };
 
-  // Team Hub Actions
   const addTeamMessage = (msg: ChatMessage) => {
     setTeamMessages(prev => [...prev, msg]);
   };
@@ -425,6 +420,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const addTeamFile = (file: FileItem) => {
     setTeamFiles(prev => [file, ...prev]);
     logAction('Upload File', `Uploaded file ${file.name}`, 'TEAM');
+  };
+
+  const toggleCampaignStatus = (id: string) => {
+    setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: c.status === 'Active' ? 'Paused' : 'Active' } : c));
+    logAction('Toggle Campaign', `Toggled campaign status for ID: ${id}`, 'MARKETING');
   };
 
   return (
@@ -446,7 +446,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       orders, addOrder,
       systemLogs, logAction, editLog,
       permissions, updatePermission, checkAccess,
-      teamMessages, addTeamMessage, teamChannels, addTeamChannel, teamFiles, addTeamFile
+      teamMessages, addTeamMessage, teamChannels, addTeamChannel, teamFiles, addTeamFile,
+      campaigns, toggleCampaignStatus
     }}>
       {children}
     </GlobalContext.Provider>
