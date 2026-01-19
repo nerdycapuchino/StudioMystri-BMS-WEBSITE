@@ -196,7 +196,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-          {/* Bottom Section: Project Health */}        <section className="rounded-[2rem] bg-surface-dark border border-white/5 overflow-hidden">
+          {/* Bottom Section: Project Health */}   
+          <section className="rounded-[2rem] bg-surface-dark border border-white/5 overflow-hidden">
           <div className="p-6 md:px-8 md:py-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary">construction</span>
