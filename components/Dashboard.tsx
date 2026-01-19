@@ -55,8 +55,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Scrollable Dashboard Content */}
       <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 md:space-y-8 scroll-smooth">
-        <!-- KPI Section -->
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {/* KPI Section */}        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <div className="relative overflow-hidden p-6 rounded-[2rem] bg-surface-dark border border-white/5 group hover:border-primary/20 transition-all">
             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-6xl text-primary">attach_money</span>
@@ -117,12 +116,10 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <!-- Middle Section: Chart & Alerts -->
         <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 p-6 md:p-8 rounded-[2rem] bg-surface-dark border border-white/5 flex flex-col h-[420px]">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div>
-                <h3 className="text-white text-lg font-bold">Revenue Trends</h3>
+          {/* Middle Section: Chart & Alerts */}                <h3 className="text-white text-lg font-bold">Revenue Trends</h3>
                 <p className="text-zinc-500 text-sm">POS vs Web Sales • Last 6 Months</p>
               </div>
               <div className="flex items-center gap-2 bg-background-dark/50 p-1 rounded-full border border-white/5">
@@ -199,8 +196,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        <!-- Bottom Section: Project Health -->
-        <section className="rounded-[2rem] bg-surface-dark border border-white/5 overflow-hidden">
+          {/* Bottom Section: Project Health */}        <section className="rounded-[2rem] bg-surface-dark border border-white/5 overflow-hidden">
           <div className="p-6 md:px-8 md:py-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary">construction</span>
