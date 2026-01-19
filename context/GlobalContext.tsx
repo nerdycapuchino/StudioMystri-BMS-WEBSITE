@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Project, Activity, Lead, IntegrationStatus, Notification, Invoice, Employee, InventoryItem, Shipment, User, Order, SystemLog, Product, Policy } from '../types';
-import { MOCK_PROJECTS, MOCK_ACTIVITIES, MOCK_LEADS, MOCK_INTEGRATIONS, MOCK_NOTIFICATIONS, MOCK_INVOICES, MOCK_EMPLOYEES, MOCK_INVENTORY, MOCK_SHIPMENTS, MOCK_USERS, MOCK_ORDERS, MOCK_LOGS, MOCK_PRODUCTS } from '../constants';
+import { Project, Activity, Lead, IntegrationStatus, Notification, Invoice, Employee, InventoryItem, Shipment, User, Order, SystemLog, Product, Policy, Customer, FieldPermission, AccessLevel, ChatMessage, Channel, FileItem } from '../types';
+import { MOCK_PROJECTS, MOCK_ACTIVITIES, MOCK_LEADS, MOCK_INTEGRATIONS, MOCK_NOTIFICATIONS, MOCK_INVOICES, MOCK_EMPLOYEES, MOCK_INVENTORY, MOCK_SHIPMENTS, MOCK_USERS, MOCK_ORDERS, MOCK_LOGS, MOCK_PRODUCTS, MOCK_CUSTOMERS } from '../constants';
 
 interface GlobalContextType {
   currency: 'INR' | 'USD';
@@ -68,12 +68,28 @@ interface GlobalContextType {
   updateUserStatus: (id: string, status: User['status']) => void;
   deleteUser: (id: string) => void;
 
+  customers: Customer[];
+  addCustomer: (customer: Customer) => void;
+
   orders: Order[];
   addOrder: (order: Order) => void;
 
   systemLogs: SystemLog[];
   logAction: (action: string, details: string, module: string) => void;
   editLog: (id: string, newDetails: string) => void; 
+
+  // RBAC
+  permissions: FieldPermission[];
+  updatePermission: (role: string, field: string, access: AccessLevel) => void;
+  checkAccess: (field: string) => AccessLevel;
+
+  // Team Hub State
+  teamMessages: ChatMessage[];
+  addTeamMessage: (msg: ChatMessage) => void;
+  teamChannels: Channel[];
+  addTeamChannel: (channel: Channel) => void;
+  teamFiles: FileItem[];
+  addTeamFile: (file: FileItem) => void;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -126,8 +142,38 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [inventory, setInventory] = useState<InventoryItem[]>(() => getStoredJSON('inventory', MOCK_INVENTORY));
   const [shipments, setShipments] = useState<Shipment[]>(() => getStoredJSON('shipments', MOCK_SHIPMENTS));
   const [users, setUsers] = useState<User[]>(() => getStoredJSON('users', MOCK_USERS));
+  const [customers, setCustomers] = useState<Customer[]>(() => getStoredJSON('customers', MOCK_CUSTOMERS));
   const [orders, setOrders] = useState<Order[]>(() => getStoredJSON('orders', MOCK_ORDERS));
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>(() => getStoredJSON('systemLogs', MOCK_LOGS));
+
+  // Initial Permissions
+  const [permissions, setPermissions] = useState<FieldPermission[]>(() => getStoredJSON('permissions', [
+    { role: 'Sales', field: 'salary', access: 'hidden' },
+    { role: 'Sales', field: 'costPrice', access: 'hidden' },
+    { role: 'Architect', field: 'salary', access: 'hidden' },
+    { role: 'Architect', field: 'costPrice', access: 'read-only' },
+    { role: 'Super Admin', field: 'salary', access: 'read-write' },
+    { role: 'Super Admin', field: 'costPrice', access: 'read-write' },
+  ]));
+
+  // Team Hub State (Mock Initial Data)
+  const [teamMessages, setTeamMessages] = useState<ChatMessage[]>(() => getStoredJSON('teamMessages', [
+    { id: '1', channelId: 'general', sender: 'Ananya Singh', content: 'Has the updated floor plan for Oberoi been approved?', timestamp: '10:30 AM', avatar: 'A' },
+    { id: '2', channelId: 'general', sender: 'Vikram Malhotra', content: 'Yes, just signed off. Proceed with procurement.', timestamp: '10:32 AM', avatar: 'V' },
+    { id: '3', channelId: 'general', sender: 'Kabir Khan', content: 'Great, I will update the client.', timestamp: '10:35 AM', avatar: 'K' },
+  ]));
+  const [teamChannels, setTeamChannels] = useState<Channel[]>(() => getStoredJSON('teamChannels', [
+    { id: 'general', name: 'general', type: 'public' },
+    { id: 'design-team', name: 'design-team', type: 'public' },
+    { id: 'sales-leads', name: 'sales-leads', type: 'private' },
+    { id: 'procurement', name: 'procurement', type: 'public' },
+  ]));
+  const [teamFiles, setTeamFiles] = useState<FileItem[]>(() => getStoredJSON('teamFiles', [
+    { id: '1', name: 'Oberoi_Project_Specs.pdf', type: 'pdf', size: '2.4 MB', date: '2023-11-01', owner: 'Ananya' },
+    { id: '2', name: 'Q3_Budget_Forecast.xlsx', type: 'sheet', size: '1.1 MB', date: '2023-10-28', owner: 'Vikram' },
+    { id: '3', name: 'Site_Photos_Nov.jpg', type: 'image', size: '4.5 MB', date: '2023-11-05', owner: 'Kabir' },
+    { id: '4', name: 'Vendor_Contracts.docx', type: 'doc', size: '800 KB', date: '2023-11-02', owner: 'Admin' },
+  ]));
 
   // Effects
   useEffect(() => localStorage.setItem('salesToday', String(salesToday)), [salesToday]);
@@ -146,9 +192,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => localStorage.setItem('inventory', JSON.stringify(inventory)), [inventory]);
   useEffect(() => localStorage.setItem('shipments', JSON.stringify(shipments)), [shipments]);
   useEffect(() => localStorage.setItem('users', JSON.stringify(users)), [users]);
+  useEffect(() => localStorage.setItem('customers', JSON.stringify(customers)), [customers]);
   useEffect(() => localStorage.setItem('orders', JSON.stringify(orders)), [orders]);
   useEffect(() => localStorage.setItem('systemLogs', JSON.stringify(systemLogs)), [systemLogs]);
   useEffect(() => localStorage.setItem('products', JSON.stringify(products)), [products]);
+  useEffect(() => localStorage.setItem('permissions', JSON.stringify(permissions)), [permissions]);
+  
+  useEffect(() => localStorage.setItem('teamMessages', JSON.stringify(teamMessages)), [teamMessages]);
+  useEffect(() => localStorage.setItem('teamChannels', JSON.stringify(teamChannels)), [teamChannels]);
+  useEffect(() => localStorage.setItem('teamFiles', JSON.stringify(teamFiles)), [teamFiles]);
 
   // Actions
   const logAction = (action: string, details: string, module: string) => {
@@ -338,9 +390,41 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     logAction('Delete User', `Deleted user ID ${id}`, 'ADMIN');
   };
 
+  const addCustomer = (customer: Customer) => {
+    setCustomers(prev => [...prev, customer]);
+    logAction('Add Customer', `Added customer ${customer.name}`, 'POS');
+  };
+
   const addOrder = (order: Order) => {
     setOrders(prev => [order, ...prev]);
     logAction('Create Order', `Order ${order.id} completed`, 'POS');
+  };
+
+  const updatePermission = (role: string, field: string, access: AccessLevel) => {
+    setPermissions(prev => {
+      const filtered = prev.filter(p => !(p.role === role && p.field === field));
+      return [...filtered, { role, field, access }];
+    });
+    logAction('Update Permission', `Changed ${field} access for ${role} to ${access}`, 'ADMIN');
+  };
+
+  const checkAccess = (field: string): AccessLevel => {
+    if (!userRole) return 'hidden';
+    const perm = permissions.find(p => p.role === userRole && p.field === field);
+    return perm ? perm.access : 'read-write'; // Default to full access if not defined
+  };
+
+  // Team Hub Actions
+  const addTeamMessage = (msg: ChatMessage) => {
+    setTeamMessages(prev => [...prev, msg]);
+  };
+  const addTeamChannel = (channel: Channel) => {
+    setTeamChannels(prev => [...prev, channel]);
+    logAction('Create Channel', `Created channel #${channel.name}`, 'TEAM');
+  };
+  const addTeamFile = (file: FileItem) => {
+    setTeamFiles(prev => [file, ...prev]);
+    logAction('Upload File', `Uploaded file ${file.name}`, 'TEAM');
   };
 
   return (
@@ -358,8 +442,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       inventory, addInventoryItem, updateInventoryStock,
       shipments, addShipment, updateShipment,
       users, addUser, updateUserStatus, deleteUser,
+      customers, addCustomer,
       orders, addOrder,
-      systemLogs, logAction, editLog
+      systemLogs, logAction, editLog,
+      permissions, updatePermission, checkAccess,
+      teamMessages, addTeamMessage, teamChannels, addTeamChannel, teamFiles, addTeamFile
     }}>
       {children}
     </GlobalContext.Provider>

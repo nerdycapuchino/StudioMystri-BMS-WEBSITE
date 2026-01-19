@@ -175,13 +175,14 @@ export enum AppModule {
   POS = 'POS',
   CRM = 'CRM',
   PROJECTS = 'PROJECTS',
-  WAREHOUSE = 'WAREHOUSE', // Dedicated Module
+  WAREHOUSE = 'WAREHOUSE',
   LOGISTICS = 'LOGISTICS',
   FINANCE = 'FINANCE',
   HR = 'HR',
   ADMIN = 'ADMIN',
   BRIDGE = 'BRIDGE',
-  ACTIVITY = 'ACTIVITY'
+  ACTIVITY = 'ACTIVITY',
+  TEAM = 'TEAM'
 }
 
 export interface Activity {
@@ -189,4 +190,41 @@ export interface Activity {
   message: string;
   timestamp: string;
   type: 'sale' | 'lead' | 'project' | 'alert';
+}
+
+export type AccessLevel = 'read-write' | 'read-only' | 'hidden';
+
+export interface FieldPermission {
+  role: string;
+  field: string; // e.g., 'salary', 'costPrice'
+  access: AccessLevel;
+}
+
+// Team Hub Types
+export interface ChatMessage {
+  id: string;
+  channelId: string; // Added for channel context
+  sender: string;
+  content: string;
+  timestamp: string;
+  avatar: string;
+  attachment?: { name: string; type: string };
+  isMeeting?: boolean;
+}
+
+export interface FileItem {
+  id: string;
+  name: string;
+  type: 'pdf' | 'doc' | 'image' | 'sheet';
+  size: string;
+  date: string;
+  owner: string;
+  sharedWith?: string[];
+}
+
+export interface Channel {
+  id: string;
+  name: string;
+  type: 'public' | 'private';
+  members?: string[];
 }

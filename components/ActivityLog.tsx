@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { Clock, ShieldAlert, Edit2, Check, X, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, ShieldAlert, Edit2, Check, X, History, ChevronDown, ChevronUp, Filter, Calendar } from 'lucide-react';
 
 export const ActivityLog: React.FC = () => {
   const { systemLogs, userRole, editLog } = useGlobal();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+
+  // Filters
+  const [filterUser, setFilterUser] = useState('');
+  const [filterModule, setFilterModule] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   const startEdit = (id: string, currentDetails: string) => {
     setEditingId(id);
@@ -18,14 +23,45 @@ export const ActivityLog: React.FC = () => {
     setEditingId(null);
   };
 
+  // Unique lists for dropdowns
+  const uniqueUsers = Array.from(new Set(systemLogs.map(l => l.user)));
+  const uniqueModules = Array.from(new Set(systemLogs.map(l => l.module)));
+
+  const filteredLogs = systemLogs.filter(log => {
+     const matchesUser = filterUser ? log.user === filterUser : true;
+     const matchesModule = filterModule ? log.module === filterModule : true;
+     const matchesDate = filterDate ? log.timestamp.includes(new Date(filterDate).toLocaleDateString()) : true; // Simple string match for demo
+     return matchesUser && matchesModule && matchesDate;
+  });
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
-         <h2 className="text-2xl font-bold text-slate-800">System Audit Logs</h2>
+         <h2 className="text-2xl font-bold text-slate-800">Unified Activity Feed</h2>
          <div className="flex items-center gap-2 text-xs text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
             <ShieldAlert className="w-3 h-3" />
             Immutable Record (Admin Override Active)
          </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex gap-4 items-center">
+         <div className="flex items-center gap-2 text-slate-500 font-medium">
+            <Filter className="w-4 h-4" /> Filters:
+         </div>
+         <select className="border rounded px-3 py-1.5 text-sm" value={filterUser} onChange={e => setFilterUser(e.target.value)}>
+            <option value="">All Users</option>
+            {uniqueUsers.map(u => <option key={u} value={u}>{u}</option>)}
+         </select>
+         <select className="border rounded px-3 py-1.5 text-sm" value={filterModule} onChange={e => setFilterModule(e.target.value)}>
+            <option value="">All Modules</option>
+            {uniqueModules.map(m => <option key={m} value={m}>{m}</option>)}
+         </select>
+         <div className="relative">
+            <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input type="date" className="border rounded pl-8 pr-3 py-1.5 text-sm" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+         </div>
+         <button onClick={() => { setFilterUser(''); setFilterModule(''); setFilterDate(''); }} className="text-sm text-indigo-600 hover:underline">Reset</button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1">
@@ -41,7 +77,7 @@ export const ActivityLog: React.FC = () => {
                </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-               {systemLogs.map(log => (
+               {filteredLogs.map(log => (
                   <React.Fragment key={log.id}>
                      <tr className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 text-slate-500 whitespace-nowrap flex items-center gap-2">

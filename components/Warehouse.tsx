@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { AlertTriangle, Package, DollarSign, Users, Filter, X, MapPin, Search, Plus } from 'lucide-react';
+import { AlertTriangle, Package, DollarSign, Users, Filter, X, MapPin, Search, Plus, EyeOff } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { InventoryItem } from '../types';
 
 export const Warehouse: React.FC = () => {
-  const { inventory, updateInventoryStock, addInventoryItem, addActivity, currency, formatCurrency } = useGlobal();
+  const { inventory, updateInventoryStock, addInventoryItem, addActivity, currency, formatCurrency, checkAccess } = useGlobal();
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newQty, setNewQty] = useState(0);
@@ -22,6 +22,8 @@ export const Warehouse: React.FC = () => {
     i.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     i.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const costAccess = checkAccess('costPrice');
 
   const handleEditClick = (item: InventoryItem) => {
     setEditingItem(item);
@@ -62,6 +64,12 @@ export const Warehouse: React.FC = () => {
      addActivity(`Purchase Order generated for ${item.name}`, 'alert');
   };
 
+  // Safe Calculation for Inventory Value if cost is hidden
+  const totalValue = inventory.reduce((sum, i) => {
+     if (costAccess === 'hidden') return 0;
+     return sum + (i.cost * i.quantity);
+  }, 0);
+
   return (
     <div className="h-full flex flex-col overflow-y-auto relative pb-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -97,7 +105,12 @@ export const Warehouse: React.FC = () => {
         </div>
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
            <div className="p-3 bg-green-50 text-green-600 rounded-lg"><DollarSign className="w-6 h-6"/></div>
-           <div><p className="text-sm text-slate-500">Inventory Value</p><h3 className="text-2xl font-bold">{formatCurrency(inventory.reduce((sum, i) => sum + (i.cost * i.quantity), 0))}</h3></div>
+           <div>
+              <p className="text-sm text-slate-500">Inventory Value</p>
+              <h3 className="text-2xl font-bold">
+                 {costAccess !== 'hidden' ? formatCurrency(totalValue) : <span className="flex items-center gap-2 text-slate-400 text-lg"><EyeOff className="w-5 h-5"/> Hidden</span>}
+              </h3>
+           </div>
         </div>
       </div>
 
@@ -153,7 +166,9 @@ export const Warehouse: React.FC = () => {
                        {item.location || 'Unassigned'}
                     </td>
                     <td className="px-4 py-3 text-slate-700">{item.quantity} {item.unit}</td>
-                    <td className="px-4 py-3 text-slate-700">{formatCurrency(item.cost * item.quantity)}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                       {costAccess !== 'hidden' ? formatCurrency(item.cost * item.quantity) : <EyeOff className="w-3 h-3 text-slate-300" />}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         item.quantity <= item.reorderLevel ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
@@ -240,7 +255,11 @@ export const Warehouse: React.FC = () => {
 
                   <div>
                      <label className="text-xs text-slate-500">Unit Cost (Base INR)</label>
-                     <input type="number" className="w-full border p-2 rounded" value={newItem.cost} onChange={e => setNewItem({...newItem, cost: parseFloat(e.target.value)})} />
+                     {costAccess === 'read-write' ? (
+                        <input type="number" className="w-full border p-2 rounded" value={newItem.cost} onChange={e => setNewItem({...newItem, cost: parseFloat(e.target.value)})} />
+                     ) : (
+                        <input disabled value="Hidden" className="w-full border p-2 rounded bg-slate-100 text-slate-400" />
+                     )}
                   </div>
 
                   <input className="w-full border p-2 rounded" placeholder="Location / Bin" value={newItem.location} onChange={e => setNewItem({...newItem, location: e.target.value})} />

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { Users, UserCheck, Clock, Plus, X, Phone, Mail, Calendar, DollarSign, FileText, Home, AlertCircle, Award, Edit, Shield, FilePlus, Download, Printer, Save } from 'lucide-react';
+import { Users, UserCheck, Clock, Plus, X, Phone, Mail, Calendar, DollarSign, FileText, Home, AlertCircle, Award, Edit, Shield, FilePlus, Download, Printer, Save, EyeOff } from 'lucide-react';
 import { Employee, Policy } from '../types';
 
 export const HR: React.FC = () => {
-  const { employees, addEmployee, updateEmployee, policies, addPolicy, formatCurrency, currency } = useGlobal();
+  const { employees, addEmployee, updateEmployee, policies, addPolicy, formatCurrency, currency, checkAccess } = useGlobal();
   const [showModal, setShowModal] = useState(false);
   const [showPayslipModal, setShowPayslipModal] = useState<Employee | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +22,8 @@ export const HR: React.FC = () => {
   const [createSystemUser, setCreateSystemUser] = useState(false);
   const [activeTab, setActiveTab] = useState<'Employees' | 'Policies'>('Employees');
   const [newPolicy, setNewPolicy] = useState<Partial<Policy>>({ title: '', category: 'Leave', content: '' });
+
+  const salaryAccess = checkAccess('salary');
 
   const handleSave = () => {
     if(!formData.name || !formData.role) return;
@@ -173,11 +175,15 @@ export const HR: React.FC = () => {
                             <p className="text-xs">{emp.email}</p>
                             <p className="text-xs text-slate-500">{emp.phone}</p>
                          </td>
-                         <td className="px-6 py-4 font-mono font-medium">{formatCurrency(emp.salary)}</td>
+                         <td className="px-6 py-4 font-mono font-medium">
+                            {salaryAccess !== 'hidden' ? formatCurrency(emp.salary) : <span className="flex items-center gap-1 text-slate-400"><EyeOff className="w-3 h-3"/> Hidden</span>}
+                         </td>
                          <td className="px-6 py-4 text-center font-bold text-slate-600">{emp.leavesRemaining} / {emp.leavePolicy}</td>
                          <td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs ${emp.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{emp.status}</span></td>
                          <td className="px-6 py-4 text-right flex justify-end gap-2">
-                            <button onClick={() => setShowPayslipModal(emp)} className="p-1.5 text-slate-500 hover:text-green-600 bg-slate-50 rounded" title="Generate Payslip"><DollarSign className="w-4 h-4"/></button>
+                            {salaryAccess !== 'hidden' && (
+                               <button onClick={() => setShowPayslipModal(emp)} className="p-1.5 text-slate-500 hover:text-green-600 bg-slate-50 rounded" title="Generate Payslip"><DollarSign className="w-4 h-4"/></button>
+                            )}
                             <button onClick={() => setViewProfile(emp)} className="p-1.5 text-slate-500 hover:text-indigo-600 bg-slate-50 rounded" title="View Profile"><FileText className="w-4 h-4"/></button>
                          </td>
                       </tr>
@@ -255,7 +261,11 @@ export const HR: React.FC = () => {
 
                  <div>
                     <label className="text-xs text-slate-500">Annual Salary (Base INR)</label>
-                    <input className="w-full border p-2 rounded" type="number" placeholder="0" value={formData.salary || ''} onChange={e => setFormData({...formData, salary: parseFloat(e.target.value)})} />
+                    {salaryAccess === 'read-write' ? (
+                       <input className="w-full border p-2 rounded" type="number" placeholder="0" value={formData.salary || ''} onChange={e => setFormData({...formData, salary: parseFloat(e.target.value)})} />
+                    ) : (
+                       <input className="w-full border p-2 rounded bg-slate-100 text-slate-400 cursor-not-allowed" disabled value="Hidden" />
+                    )}
                  </div>
                  <div>
                     <label className="text-xs text-slate-500">Leave Policy (Days/Year)</label>
@@ -372,7 +382,9 @@ export const HR: React.FC = () => {
                      <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><Award className="w-4 h-4"/> Professional Details</h4>
                      <div className="space-y-2 text-sm text-slate-600">
                         <p className="flex justify-between border-b pb-1"><span>Joined:</span> <span className="font-medium">{viewProfile.joinDate}</span></p>
-                        <p className="flex justify-between border-b pb-1"><span>Salary:</span> <span className="font-medium">{formatCurrency(viewProfile.salary)}</span></p>
+                        <p className="flex justify-between border-b pb-1"><span>Salary:</span> 
+                           {salaryAccess !== 'hidden' ? <span className="font-medium">{formatCurrency(viewProfile.salary)}</span> : <span className="text-slate-400 italic">Hidden</span>}
+                        </p>
                         <p className="flex justify-between border-b pb-1"><span>Leaves:</span> <span className="font-medium">{viewProfile.leavesRemaining} / {viewProfile.leavePolicy}</span></p>
                         <p className="flex justify-between border-b pb-1"><span>Qualifications:</span> <span className="font-medium">{viewProfile.qualifications || 'N/A'}</span></p>
                      </div>

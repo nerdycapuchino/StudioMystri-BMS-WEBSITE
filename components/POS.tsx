@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ShoppingCart, Plus, Minus, Trash2, CreditCard, X, Check, Smartphone, Mail, Wallet, LogOut, ScanBarcode, TicketPercent, Lock, Tag, Clock, Package, FileText, Info, Camera, RefreshCcw } from 'lucide-react';
-import { MOCK_PRODUCTS, MOCK_CUSTOMERS } from '../constants';
+import { Search, ShoppingCart, Plus, Minus, Trash2, CreditCard, X, Check, Smartphone, Mail, Wallet, LogOut, ScanBarcode, TicketPercent, Lock, Tag, Clock, Package, FileText, Info, Camera, RefreshCcw, UserPlus } from 'lucide-react';
 import { Product, CartItem, Customer } from '../types';
 import { useGlobal } from '../context/GlobalContext';
 
 export const POS: React.FC = () => {
   const { 
     addSale, addActivity, isShiftOpen, openingBalance, cashCollected, startShift, updateCashCollected, closeShift, userRole,
-    products, addProduct, orders, addOrder, deductStock, addInvoice, currency, formatCurrency
+    products, addProduct, orders, addOrder, deductStock, addInvoice, currency, formatCurrency, customers, addCustomer
   } = useGlobal();
 
   // Shift Logic
@@ -28,6 +27,7 @@ export const POS: React.FC = () => {
   const [showOrdersModal, setShowOrdersModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
 
   // Add Product Form
   const [newProd, setNewProd] = useState<Partial<Product>>({ name: '', price: 0, category: 'Furniture', stock: 10, sku: '', description: '', materials: '', dimensions: '' });
@@ -47,6 +47,8 @@ export const POS: React.FC = () => {
   // Customer
   const [customerPhone, setCustomerPhone] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({ name: '', phone: '', email: '' });
+  const [customerNotFound, setCustomerNotFound] = useState(false);
 
   // Derived Values
   const categories = ['All', 'Furniture', 'Lighting', 'Textiles', 'Decor'];
@@ -98,14 +100,15 @@ export const POS: React.FC = () => {
     setCart(prev => prev.map(item => {
       if (item.id === id) {
         const newQty = item.quantity + delta;
+        if (newQty <= 0) return { ...item, quantity: 0 }; // Will be filtered later or just show 0
         if (newQty > product.stock) {
           alert(`Only ${product.stock} available!`);
           return item;
         }
-        return { ...item, quantity: Math.max(1, newQty) };
+        return { ...item, quantity: newQty };
       }
       return item;
-    }));
+    }).filter(item => item.quantity > 0));
   };
 
   const applyCoupon = () => {
@@ -121,6 +124,35 @@ export const POS: React.FC = () => {
     }
     setDiscount(tempDiscount);
     setShowDiscountModal(false);
+  };
+
+  const handleCustomerSearch = () => {
+    const found = customers.find(c => c.phone === customerPhone);
+    if(found) {
+      setSelectedCustomer(found);
+      setCustomerNotFound(false);
+    } else {
+      setSelectedCustomer(null);
+      setCustomerNotFound(true);
+    }
+  };
+
+  const handleAddCustomer = () => {
+    if (newCustomer.name && newCustomer.phone) {
+      const cust: Customer = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newCustomer.name!,
+        phone: newCustomer.phone!,
+        email: newCustomer.email || '',
+        totalSpend: 0,
+        address: ''
+      };
+      addCustomer(cust);
+      setSelectedCustomer(cust);
+      setShowAddCustomerModal(false);
+      setNewCustomer({ name: '', phone: '', email: '' });
+      setCustomerNotFound(false);
+    }
   };
 
   const startPayment = (method: string) => {
@@ -177,6 +209,8 @@ export const POS: React.FC = () => {
     setShowReceiptModal(true);
     setDiscount({type: 'percent', value: 0});
     setSelectedCustomer(null);
+    setCustomerPhone('');
+    setCustomerNotFound(false);
   };
 
   const handleAddNewProduct = () => {
@@ -254,7 +288,7 @@ export const POS: React.FC = () => {
                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                  <input 
                    type="text" 
-                   placeholder="Search products..." 
+                   placeholder="Search by name or SKU..." 
                    className="w-full pl-9 pr-4 py-2 bg-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" 
                    value={searchQuery}
                    onChange={e => setSearchQuery(e.target.value)}
@@ -326,29 +360,41 @@ export const POS: React.FC = () => {
             <button onClick={() => setCart([])} className="text-slate-400 hover:text-red-500"><Trash2 className="w-4 h-4"/></button>
          </div>
          
-         {/* Customer Search */}
-         <div className="p-3 border-b border-slate-100">
+         {/* Customer Search with Enhanced Logic */}
+         <div className="p-3 border-b border-slate-100 bg-white">
             {selectedCustomer ? (
-               <div className="flex justify-between items-center bg-indigo-50 p-2 rounded-lg">
+               <div className="flex justify-between items-center bg-indigo-50 p-3 rounded-lg border border-indigo-100">
                   <div className="text-xs">
-                     <p className="font-bold text-indigo-900">{selectedCustomer.name}</p>
-                     <p className="text-indigo-600">{selectedCustomer.phone}</p>
+                     <p className="font-bold text-indigo-900 text-sm">{selectedCustomer.name}</p>
+                     <p className="text-indigo-600 mb-1">{selectedCustomer.phone}</p>
+                     {selectedCustomer.lastPurchase && (
+                        <p className="text-slate-500 flex items-center gap-1">
+                           <Clock className="w-3 h-3" /> Last: {selectedCustomer.lastPurchase}
+                        </p>
+                     )}
                   </div>
-                  <button onClick={() => setSelectedCustomer(null)}><X className="w-4 h-4 text-indigo-400"/></button>
+                  <button onClick={() => { setSelectedCustomer(null); setCustomerPhone(''); }}><X className="w-4 h-4 text-indigo-400 hover:text-indigo-600"/></button>
                </div>
             ) : (
-               <div className="flex gap-2">
-                  <input 
-                    placeholder="Customer Phone" 
-                    value={customerPhone} 
-                    onChange={e => setCustomerPhone(e.target.value)}
-                    className="flex-1 text-sm border rounded px-2 py-1"
-                  />
-                  <button onClick={() => {
-                     const found = MOCK_CUSTOMERS.find(c => c.phone === customerPhone);
-                     if(found) setSelectedCustomer(found);
-                     else alert('Customer not found');
-                  }} className="bg-slate-800 text-white rounded px-3 py-1 text-xs">Find</button>
+               <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                     <input 
+                       placeholder="Phone Number" 
+                       value={customerPhone} 
+                       onChange={e => { setCustomerPhone(e.target.value); setCustomerNotFound(false); }}
+                       className="flex-1 text-sm border rounded px-3 py-2 outline-none focus:border-indigo-500"
+                       onKeyDown={(e) => e.key === 'Enter' && handleCustomerSearch()}
+                     />
+                     <button onClick={handleCustomerSearch} className="bg-slate-800 text-white rounded px-3 py-2 text-sm font-medium hover:bg-slate-700">Find</button>
+                  </div>
+                  {customerNotFound && (
+                     <div className="flex items-center justify-between bg-red-50 p-2 rounded text-xs text-red-600">
+                        <span>Not found</span>
+                        <button onClick={() => { setNewCustomer({...newCustomer, phone: customerPhone}); setShowAddCustomerModal(true); }} className="font-bold underline hover:text-red-800 flex items-center gap-1">
+                           <UserPlus className="w-3 h-3" /> Add New
+                        </button>
+                     </div>
+                  )}
                </div>
             )}
          </div>
@@ -356,16 +402,16 @@ export const POS: React.FC = () => {
          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {cart.length === 0 && <div className="text-center text-slate-400 text-sm mt-10">Cart is empty</div>}
             {cart.map(item => (
-               <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-slate-50 rounded-lg">
+               <div key={item.id} className="flex justify-between items-center text-sm p-2 bg-slate-50 rounded-lg border border-slate-100">
                   <div className="flex-1 truncate pr-2">
                      <p className="font-medium text-slate-800 truncate">{item.name}</p>
                      <p className="text-xs text-slate-500 flex items-center gap-1">{item.sku}</p>
                   </div>
                   <div className="flex items-center gap-1 text-right">
-                     <p className="text-xs text-slate-600 font-medium mr-2">{formatCurrency(item.price)}</p>
-                     <button onClick={() => updateQuantity(item.id, -1)} className="p-1 bg-white border rounded hover:bg-slate-100"><Minus className="w-3 h-3"/></button>
-                     <span className="w-4 text-center font-bold">{item.quantity}</span>
-                     <button onClick={() => updateQuantity(item.id, 1)} className="p-1 bg-white border rounded hover:bg-slate-100"><Plus className="w-3 h-3"/></button>
+                     <p className="text-xs text-slate-600 font-medium mr-2">{formatCurrency(item.price * item.quantity)}</p>
+                     <button onClick={() => updateQuantity(item.id, -1)} className="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-slate-100 text-slate-600"><Minus className="w-3 h-3"/></button>
+                     <span className="w-6 text-center font-bold">{item.quantity}</span>
+                     <button onClick={() => updateQuantity(item.id, 1)} className="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-slate-100 text-slate-600"><Plus className="w-3 h-3"/></button>
                   </div>
                </div>
             ))}
@@ -386,7 +432,7 @@ export const POS: React.FC = () => {
                   {currency === 'INR' ? 'GST' : 'Tax'}
                   <input 
                      type="number" 
-                     className="w-10 bg-white border rounded px-1 text-xs ml-1" 
+                     className="w-10 bg-white border rounded px-1 text-xs ml-1 outline-none" 
                      value={taxRate} 
                      onChange={(e) => setTaxRate(parseFloat(e.target.value))} 
                   />%
@@ -394,10 +440,28 @@ export const POS: React.FC = () => {
                <span>{formatCurrency(tax)}</span>
             </div>
             
-            <div className="flex justify-between text-lg font-bold mb-4 pt-2 border-t"><span>Total</span><span>{formatCurrency(total)}</span></div>
-            <button onClick={() => setShowPaymentModal(true)} disabled={cart.length === 0} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50">Pay Now</button>
+            <div className="flex justify-between text-lg font-bold mb-4 pt-2 border-t text-slate-800"><span>Total</span><span>{formatCurrency(total)}</span></div>
+            <button onClick={() => setShowPaymentModal(true)} disabled={cart.length === 0} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50 shadow-lg">Pay Now</button>
          </div>
       </div>
+
+      {/* Add Customer Modal */}
+      {showAddCustomerModal && (
+         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+               <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-lg">Add New Customer</h3>
+                  <button onClick={() => setShowAddCustomerModal(false)}><X className="w-5 h-5 text-slate-400"/></button>
+               </div>
+               <div className="space-y-3">
+                  <input className="w-full border p-2 rounded" placeholder="Full Name" value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} autoFocus />
+                  <input className="w-full border p-2 rounded" placeholder="Phone Number" value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} />
+                  <input className="w-full border p-2 rounded" placeholder="Email (Optional)" value={newCustomer.email} onChange={e => setNewCustomer({...newCustomer, email: e.target.value})} />
+                  <button onClick={handleAddCustomer} className="w-full bg-indigo-600 text-white py-2 rounded font-bold hover:bg-indigo-700 mt-2">Save Customer</button>
+               </div>
+            </div>
+         </div>
+      )}
 
       {/* Add Product Modal */}
       {showAddProductModal && (

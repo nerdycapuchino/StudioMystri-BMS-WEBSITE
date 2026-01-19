@@ -12,8 +12,9 @@ import { Finance } from './components/Finance';
 import { HR } from './components/HR';
 import { Integrations } from './components/Integrations';
 import { ActivityLog } from './components/ActivityLog';
+import { TeamHub } from './components/TeamHub';
 import { AppModule, Notification } from './types';
-import { LayoutDashboard, ShoppingCart, Users, HardHat, Truck, Settings, Share2, LogOut, Bell, DollarSign, UserCheck, X, FileText, Menu, ChevronLeft, ChevronRight, Package, Box } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, HardHat, Truck, Settings, Share2, LogOut, Bell, DollarSign, UserCheck, X, FileText, Menu, ChevronLeft, ChevronRight, Package, Box, MessageSquare } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const { userRole, setUserRole, notifications, markNotificationRead, currency, setCurrency } = useGlobal();
@@ -31,6 +32,7 @@ const MainLayout: React.FC = () => {
     { id: AppModule.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard, roles: ['Super Admin', 'Architect', 'Sales'] },
     { id: AppModule.POS, label: 'Point of Sale', icon: ShoppingCart, roles: ['Super Admin', 'Sales'] },
     { id: AppModule.CRM, label: 'CRM & Sales', icon: Users, roles: ['Super Admin', 'Sales'] },
+    { id: AppModule.TEAM, label: 'Team Hub', icon: MessageSquare, roles: ['Super Admin', 'Architect', 'Sales', 'Logistics', 'HR', 'Finance'] },
     { id: AppModule.FINANCE, label: 'Finance', icon: DollarSign, roles: ['Super Admin'] },
     { id: AppModule.HR, label: 'HR & Team', icon: UserCheck, roles: ['Super Admin'] },
     { id: AppModule.WAREHOUSE, label: 'Warehouse', icon: Box, roles: ['Super Admin', 'Logistics', 'Architect'] },
@@ -64,6 +66,7 @@ const MainLayout: React.FC = () => {
       case AppModule.WAREHOUSE: return <Warehouse />;
       case AppModule.PROJECTS: return <Projects />;
       case AppModule.LOGISTICS: return <Logistics />;
+      case AppModule.TEAM: return <TeamHub />;
       case AppModule.ACTIVITY: return <ActivityLog />;
       case AppModule.ADMIN: return <Admin />;
       case AppModule.BRIDGE: return <Integrations />;
