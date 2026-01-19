@@ -94,20 +94,46 @@ const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const getStoredBool = (key: string, def: boolean) => {
-    const stored = localStorage.getItem(key);
-    return stored !== null ? stored === 'true' : def;
+    try {
+      const stored = localStorage.getItem(key);
+      return stored !== null ? stored === 'true' : def;
+    } catch (e) {
+      console.error(`Error reading ${key} from localStorage`, e);
+      return def;
+    }
   };
+  
   const getStoredNum = (key: string, def: number) => {
-    const stored = localStorage.getItem(key);
-    return stored !== null ? parseFloat(stored) : def;
+    try {
+      const stored = localStorage.getItem(key);
+      return stored !== null && !isNaN(parseFloat(stored)) ? parseFloat(stored) : def;
+    } catch (e) {
+      console.error(`Error reading ${key} from localStorage`, e);
+      return def;
+    }
   };
+  
   const getStoredStr = (key: string, def: string) => {
-    return localStorage.getItem(key) || def;
+    try {
+      return localStorage.getItem(key) || def;
+    } catch (e) {
+      console.error(`Error reading ${key} from localStorage`, e);
+      return def;
+    }
   };
   
   function getStoredJSON<T>(key: string, def: T): T {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : def;
+    try {
+      const stored = localStorage.getItem(key);
+      // Check for undefined string or null
+      if (!stored || stored === 'undefined' || stored === 'null') return def;
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error(`Error parsing ${key} from localStorage`, e);
+      // If error, clear the corrupted key so it doesn't crash next time
+      localStorage.removeItem(key);
+      return def;
+    }
   }
 
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
@@ -115,9 +141,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [activities, setActivities] = useState<Activity[]>(() => getStoredJSON('activities', MOCK_ACTIVITIES));
   const [projects, setProjects] = useState<Project[]>(() => getStoredJSON('projects', MOCK_PROJECTS));
   const [userRole, setUserRole] = useState<'Super Admin' | 'Architect' | 'Sales' | null>(() => {
-    const role = localStorage.getItem('userRole');
-    return (role as any) || null;
+    try {
+      const role = localStorage.getItem('userRole');
+      if (role === 'null' || role === 'undefined') return null;
+      return (role as any) || null;
+    } catch (e) {
+      return null;
+    }
   });
+  
   const currentUser = userRole === 'Super Admin' ? 'Vikram Malhotra' : userRole === 'Architect' ? 'Ananya Singh' : 'Kabir Khan';
 
   const [isShiftOpen, setIsShiftOpen] = useState(() => getStoredBool('isShiftOpen', false));

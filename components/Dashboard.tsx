@@ -29,7 +29,7 @@ export const Dashboard: React.FC = () => {
           {/* Search */}
           <div className="flex items-center bg-surface-dark border border-white/5 rounded-full px-4 h-11 w-full max-w-md focus-within:ring-1 focus-within:ring-primary/50 transition-all shadow-inner">
             <span className="material-symbols-outlined text-zinc-500">search</span>
-            <input class="bg-transparent border-none text-white placeholder-zinc-500 focus:ring-0 w-full ml-2 text-sm font-medium focus:outline-none" placeholder="Search orders, clients, stock..." type="text"/>
+            <input className="bg-transparent border-none text-white placeholder-zinc-500 focus:ring-0 w-full ml-2 text-sm font-medium focus:outline-none" placeholder="Search orders, clients, stock..." type="text"/>
             <div className="flex gap-1 text-[10px] text-zinc-600 font-mono border border-white/5 px-1.5 py-0.5 rounded bg-white/5">
               <span>⌘</span><span>K</span>
             </div>
@@ -55,7 +55,8 @@ export const Dashboard: React.FC = () => {
 
       {/* Scrollable Dashboard Content */}
       <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 md:space-y-8 scroll-smooth">
-          {/* KPI Section */}        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* KPI Section */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <div className="relative overflow-hidden p-6 rounded-[2rem] bg-surface-dark border border-white/5 group hover:border-primary/20 transition-all">
             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-6xl text-primary">attach_money</span>
@@ -92,7 +93,7 @@ export const Dashboard: React.FC = () => {
             <p className="text-zinc-400 text-sm font-medium mb-1">Pending Shipments</p>
             <div className="flex items-baseline gap-2 mb-2">
               <h3 className="text-3xl font-bold text-white tracking-tight">{pendingShipments}</h3>
-              <span class="text-sm font-medium text-zinc-500">units</span>
+              <span className="text-sm font-medium text-zinc-500">units</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-zinc-500">Next dispatch: <span className="text-white">Today, 4PM</span></span>
@@ -116,10 +117,12 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
+        {/* Middle Section: Chart & Alerts */}
         <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 p-6 md:p-8 rounded-[2rem] bg-surface-dark border border-white/5 flex flex-col h-[420px]">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          {/* Middle Section: Chart & Alerts */}                <h3 className="text-white text-lg font-bold">Revenue Trends</h3>
+              <div>
+                <h3 className="text-white text-lg font-bold">Revenue Trends</h3>
                 <p className="text-zinc-500 text-sm">POS vs Web Sales • Last 6 Months</p>
               </div>
               <div className="flex items-center gap-2 bg-background-dark/50 p-1 rounded-full border border-white/5">
@@ -196,8 +199,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-          {/* Bottom Section: Project Health */}   
-          <section className="rounded-[2rem] bg-surface-dark border border-white/5 overflow-hidden">
+        {/* Bottom Section: Project Health */}
+        <section className="rounded-[2rem] bg-surface-dark border border-white/5 overflow-hidden">
           <div className="p-6 md:px-8 md:py-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary">construction</span>
