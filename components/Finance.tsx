@@ -1,115 +1,264 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Invoice } from '../types';
+import { Plus, ArrowUpRight, ArrowDownLeft, Wallet, Calendar, Edit2, Trash2, CheckCircle, AlertCircle, X, Search } from 'lucide-react';
 
 export const Finance: React.FC = () => {
-  const { invoices, formatCurrency } = useGlobal();
+  const { invoices, formatCurrency, addInvoice, updateInvoicePayment, deleteInvoice, updateInvoice } = useGlobal();
+  const [showModal, setShowModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [payId, setPayId] = useState<string | null>(null);
+  const [payAmt, setPayAmt] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   
-  const income = invoices.filter(i => i.type === 'Income').reduce((acc, curr) => acc + curr.paidAmount, 0);
-  const expenses = invoices.filter(i => i.type === 'Expense').reduce((acc, curr) => acc + curr.paidAmount, 0);
-  const netProfit = income - expenses;
+  // Form State
+  const [form, setForm] = useState<Partial<Invoice>>({ client: '', amount: 0, type: 'Income', status: 'Pending' });
+
+  // Calculated Stats
+  const totalIncome = invoices.filter(i => i.type === 'Income').reduce((a,b) => a + b.amount, 0);
+  const totalExpense = invoices.filter(i => i.type === 'Expense').reduce((a,b) => a + b.amount, 0);
+  const netBalance = totalIncome - totalExpense;
+  const pendingReceivables = invoices.filter(i => i.type === 'Income' && i.status !== 'Paid').reduce((a,b) => a + (b.amount - b.paidAmount), 0);
+
+  const filteredInvoices = invoices.filter(inv => 
+    inv.client.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    inv.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSave = () => {
+    if (editMode && form.id) {
+       updateInvoice(form.id, form);
+    } else {
+       addInvoice({ 
+         ...form, 
+         id: `INV-${Math.floor(Math.random()*9000)+1000}`, 
+         date: new Date().toLocaleDateString(), 
+         paidAmount: 0, 
+         history: [] 
+       } as Invoice);
+    }
+    setShowModal(false); 
+    setForm({ client: '', amount: 0, type: 'Income', status: 'Pending' });
+    setEditMode(false);
+  };
+
+  const openEdit = (invoice: Invoice) => {
+     setForm(invoice);
+     setEditMode(true);
+     setShowModal(true);
+  };
+
+  const handlePayment = () => { 
+    if(payId) { 
+       updateInvoicePayment(payId, payAmt); 
+       setPayId(null); 
+       setPayAmt(0); 
+    } 
+  };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark text-white">
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="max-w-7xl mx-auto p-4 md:p-8 flex flex-col gap-8">
-          
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="h-full flex flex-col bg-background-dark text-white font-display overflow-hidden">
+      {/* Header Area */}
+      <div className="p-8 pb-0 shrink-0">
+         <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-3xl md:text-4xl font-light text-white tracking-tight">Finance Snapshot</h2>
-              <p className="text-text-muted mt-1">Profit & Loss Ledger</p>
+               <h2 className="text-4xl font-black tracking-tighter text-white">Financial Hub</h2>
+               <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Cashflow & Ledger Management</p>
             </div>
-            <div className="flex items-center gap-3">
-               <button className="hidden sm:flex items-center gap-2 px-4 py-2 bg-surface-dark rounded-full border border-border-dark text-text-muted hover:text-white transition-colors text-sm">
-                  <span className="material-symbols-outlined" style={{fontSize: '18px'}}>calendar_today</span>
-                  <span>This Quarter</span>
-               </button>
-            </div>
-          </div>
+            <button 
+               onClick={() => { setEditMode(false); setForm({ client: '', amount: 0, type: 'Income', status: 'Pending' }); setShowModal(true); }} 
+               className="px-8 py-3 bg-primary text-black font-black text-xs uppercase tracking-widest rounded-full shadow-glow active:scale-95 transition-transform flex items-center gap-2"
+            >
+               <Plus className="w-4 h-4" /> New Entry
+            </button>
+         </div>
 
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="group relative overflow-hidden rounded-xl p-6 bg-surface-dark border border-border-dark hover:border-primary/30 transition-all">
-              <div className="absolute top-0 right-0 p-4 opacity-50">
-                <span className="material-symbols-outlined text-primary/20 group-hover:text-primary/40 transition-colors" style={{fontSize: '48px'}}>trending_up</span>
-              </div>
-              <p className="text-text-muted text-sm font-medium uppercase tracking-wider">Total Revenue</p>
-              <div className="mt-2 flex items-baseline gap-3">
-                <h3 className="text-3xl font-bold text-white tabular-nums tracking-tight">{formatCurrency(income)}</h3>
-              </div>
+         {/* Stats Cards */}
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-surface-dark p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+               <div className="absolute top-0 right-0 p-4 opacity-50 group-hover:scale-110 transition-transform"><Wallet className="w-8 h-8 text-zinc-600" /></div>
+               <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Net Liquid Balance</p>
+               <h3 className="text-2xl font-black text-white">{formatCurrency(netBalance)}</h3>
             </div>
-
-            <div className="group relative overflow-hidden rounded-xl p-6 bg-surface-dark border border-border-dark hover:border-white/20 transition-all">
-              <div className="absolute top-0 right-0 p-4 opacity-50">
-                <span className="material-symbols-outlined text-white/10 group-hover:text-white/20 transition-colors" style={{fontSize: '48px'}}>trending_down</span>
-              </div>
-              <p className="text-text-muted text-sm font-medium uppercase tracking-wider">Total Expenses</p>
-              <div className="mt-2 flex items-baseline gap-3">
-                <h3 className="text-3xl font-bold text-white tabular-nums tracking-tight">{formatCurrency(expenses)}</h3>
-              </div>
+            <div className="bg-surface-dark p-6 rounded-[2rem] border border-white/5 group">
+               <div className="flex items-center gap-2 mb-1">
+                  <div className="bg-primary/20 p-1 rounded-full"><ArrowUpRight className="w-3 h-3 text-primary" /></div>
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Total Income</p>
+               </div>
+               <h3 className="text-2xl font-black text-primary">{formatCurrency(totalIncome)}</h3>
             </div>
-
-            <div className="group relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-[#2a1c12] to-background-dark border border-bronze/20 hover:border-bronze/50 transition-all">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-bronze/10 rounded-full blur-2xl group-hover:bg-bronze/20 transition-all"></div>
-              <div className="absolute top-0 right-0 p-4 opacity-80">
-                <span className="material-symbols-outlined text-bronze/30 group-hover:text-bronze/50 transition-colors" style={{fontSize: '48px'}}>diamond</span>
-              </div>
-              <p className="text-bronze text-sm font-medium uppercase tracking-wider">Net Profit</p>
-              <div className="mt-2 flex items-baseline gap-3">
-                <h3 className="text-3xl font-bold text-bronze-light tabular-nums tracking-tight">{formatCurrency(netProfit)}</h3>
-              </div>
+            <div className="bg-surface-dark p-6 rounded-[2rem] border border-white/5 group">
+               <div className="flex items-center gap-2 mb-1">
+                  <div className="bg-red-500/20 p-1 rounded-full"><ArrowDownLeft className="w-3 h-3 text-red-500" /></div>
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Total Expenses</p>
+               </div>
+               <h3 className="text-2xl font-black text-red-400">{formatCurrency(totalExpense)}</h3>
             </div>
-          </div>
+             <div className="bg-surface-dark p-6 rounded-[2rem] border border-white/5 group">
+               <div className="flex items-center gap-2 mb-1">
+                  <div className="bg-amber-500/20 p-1 rounded-full"><AlertCircle className="w-3 h-3 text-amber-500" /></div>
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Pending Receivables</p>
+               </div>
+               <h3 className="text-2xl font-black text-amber-500">{formatCurrency(pendingReceivables)}</h3>
+            </div>
+         </div>
 
-          {/* Ledger Table */}
-          <div className="flex flex-col gap-4">
-             <div className="flex items-center justify-between p-1">
-                <h3 className="text-lg font-bold text-white">Transaction Ledger</h3>
-                <div className="flex gap-2">
-                   <button className="p-2 rounded-full text-text-muted hover:text-white hover:bg-white/10" title="Export"><span className="material-symbols-outlined">download</span></button>
-                </div>
-             </div>
-             
-             <div className="w-full overflow-hidden rounded-xl border border-border-dark bg-surface-dark/30 backdrop-blur-sm">
-                <div className="overflow-x-auto">
-                   <table className="w-full text-left border-collapse">
-                      <thead>
-                         <tr className="border-b border-border-dark bg-surface-dark">
-                            <th className="py-4 px-6 text-xs font-medium uppercase tracking-wider text-text-muted w-32">Date</th>
-                            <th className="py-4 px-6 text-xs font-medium uppercase tracking-wider text-text-muted w-32">ID</th>
-                            <th className="py-4 px-6 text-xs font-medium uppercase tracking-wider text-text-muted w-40">Category</th>
-                            <th className="py-4 px-6 text-xs font-medium uppercase tracking-wider text-text-muted">Entity / Client</th>
-                            <th className="py-4 px-6 text-xs font-medium uppercase tracking-wider text-right text-text-muted w-32">Amount</th>
-                            <th className="py-4 px-6 text-xs font-medium uppercase tracking-wider text-right text-text-muted w-32">Status</th>
-                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border-dark/50 text-sm">
-                         {invoices.map(inv => (
-                            <tr key={inv.id} className="group hover:bg-surface-dark transition-colors">
-                               <td className="py-4 px-6 text-white whitespace-nowrap tabular-nums">{inv.date}</td>
-                               <td className="py-4 px-6 text-text-muted font-mono text-xs">{inv.id}</td>
-                               <td className="py-4 px-6">
-                                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${inv.type === 'Income' ? 'bg-primary/10 text-primary ring-primary/20' : 'bg-white/5 text-text-muted ring-white/10'}`}>
-                                     {inv.type}
-                                  </span>
-                               </td>
-                               <td className="py-4 px-6 text-white font-medium">{inv.client}</td>
-                               <td className={`py-4 px-6 text-right font-medium tabular-nums ${inv.type === 'Income' ? 'text-primary' : 'text-white'}`}>
-                                  {inv.type === 'Income' ? '+' : '-'}{formatCurrency(inv.amount)}
-                               </td>
-                               <td className="py-4 px-6 text-right">
-                                  <span className={`text-xs ${inv.status === 'Paid' ? 'text-text-muted' : 'text-bronze font-bold'}`}>{inv.status}</span>
-                               </td>
-                            </tr>
-                         ))}
-                      </tbody>
-                   </table>
-                </div>
-             </div>
-          </div>
-        </div>
+         {/* Filter Bar */}
+         <div className="flex items-center gap-4 mb-4">
+            <div className="relative flex-1 max-w-sm">
+               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+               <input 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search transactions..." 
+                  className="w-full bg-surface-dark border border-white/5 rounded-full pl-10 pr-4 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
+               />
+            </div>
+         </div>
       </div>
+
+      {/* Transactions Table */}
+      <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
+         <div className="bg-surface-dark border border-white/5 rounded-[2.5rem] overflow-hidden">
+            <table className="w-full text-left">
+               <thead className="bg-surface-highlight border-b border-white/5">
+                  <tr>
+                     <th className="p-6 text-[10px] text-zinc-500 font-black uppercase tracking-widest">Date / ID</th>
+                     <th className="p-6 text-[10px] text-zinc-500 font-black uppercase tracking-widest">Entity / Client</th>
+                     <th className="p-6 text-[10px] text-zinc-500 font-black uppercase tracking-widest text-right">Amount</th>
+                     <th className="p-6 text-[10px] text-zinc-500 font-black uppercase tracking-widest text-right">Paid</th>
+                     <th className="p-6 text-[10px] text-zinc-500 font-black uppercase tracking-widest text-center">Status</th>
+                     <th className="p-6 text-[10px] text-zinc-500 font-black uppercase tracking-widest text-right">Actions</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y divide-white/5">
+                  {filteredInvoices.map(inv => (
+                     <tr key={inv.id} className="hover:bg-white/5 transition-colors group">
+                        <td className="p-6">
+                           <div className="flex items-center gap-3">
+                              <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-500">
+                                 <Calendar className="w-5 h-5" />
+                              </div>
+                              <div>
+                                 <p className="font-bold text-white text-sm">{inv.date}</p>
+                                 <p className="text-[10px] text-zinc-500 font-mono tracking-wider">{inv.id}</p>
+                              </div>
+                           </div>
+                        </td>
+                        <td className="p-6">
+                           <p className="font-bold text-white">{inv.client}</p>
+                           <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${inv.type === 'Income' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                              {inv.type}
+                           </span>
+                        </td>
+                        <td className="p-6 text-right">
+                           <p className="font-mono font-bold text-white text-lg">{formatCurrency(inv.amount)}</p>
+                        </td>
+                        <td className="p-6 text-right">
+                           <p className="font-mono font-bold text-zinc-400">{formatCurrency(inv.paidAmount)}</p>
+                        </td>
+                        <td className="p-6 text-center">
+                           <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wide border ${
+                              inv.status === 'Paid' ? 'bg-primary/10 text-primary border-primary/20' : 
+                              inv.status === 'Overdue' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                              'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                           }`}>
+                              {inv.status}
+                           </span>
+                        </td>
+                        <td className="p-6 text-right">
+                           <div className="flex justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                              {inv.status !== 'Paid' && (
+                                 <button onClick={() => setPayId(inv.id)} className="p-2 bg-primary/10 hover:bg-primary text-primary hover:text-black rounded-lg transition-colors" title="Record Payment">
+                                    <CheckCircle className="w-4 h-4" />
+                                 </button>
+                              )}
+                              <button onClick={() => openEdit(inv)} className="p-2 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-lg transition-colors" title="Edit">
+                                 <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => deleteInvoice(inv.id)} className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-colors" title="Delete">
+                                 <Trash2 className="w-4 h-4" />
+                              </button>
+                           </div>
+                        </td>
+                     </tr>
+                  ))}
+               </tbody>
+            </table>
+         </div>
+      </div>
+
+      {/* Add/Edit Modal */}
+      {showModal && (
+         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-surface-dark border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl space-y-8">
+               <div className="flex justify-between items-center">
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight">{editMode ? 'Edit Transaction' : 'New Transaction'}</h3>
+                  <button onClick={() => setShowModal(false)} className="text-zinc-500 hover:text-white"><X className="w-6 h-6"/></button>
+               </div>
+               
+               <div className="bg-background-dark p-1 rounded-2xl border border-white/5 flex gap-1">
+                  <button onClick={() => setForm({...form, type: 'Income'})} className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${form.type === 'Income' ? 'bg-primary text-black' : 'text-zinc-500'}`}>Income</button>
+                  <button onClick={() => setForm({...form, type: 'Expense'})} className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${form.type === 'Expense' ? 'bg-red-500 text-white' : 'text-zinc-500'}`}>Expense</button>
+               </div>
+
+               <div className="space-y-4">
+                  <div className="space-y-1">
+                     <label className="text-[10px] text-zinc-500 font-black uppercase ml-4">Entity / Client Name</label>
+                     <input value={form.client} onChange={e => setForm({...form, client: e.target.value})} className="w-full bg-background-dark border border-white/10 rounded-full px-6 py-4 text-white focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Enter name" />
+                  </div>
+                  <div className="space-y-1">
+                     <label className="text-[10px] text-zinc-500 font-black uppercase ml-4">Total Amount</label>
+                     <input type="number" value={form.amount || ''} onChange={e => setForm({...form, amount: Number(e.target.value)})} className="w-full bg-background-dark border border-white/10 rounded-full px-6 py-4 text-white focus:outline-none focus:ring-1 focus:ring-primary" placeholder="0.00" />
+                  </div>
+                   <div className="space-y-1">
+                     <label className="text-[10px] text-zinc-500 font-black uppercase ml-4">Status</label>
+                     <div className="relative">
+                        <select className="w-full bg-background-dark border border-white/10 rounded-full px-6 py-4 text-white focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer" value={form.status} onChange={e => setForm({...form, status: e.target.value as any})}>
+                           <option value="Pending">Pending</option>
+                           <option value="Partial">Partial</option>
+                           <option value="Paid">Paid</option>
+                           <option value="Overdue">Overdue</option>
+                        </select>
+                        <span className="material-symbols-outlined absolute right-6 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">expand_more</span>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="flex gap-4">
+                  <button onClick={() => setShowModal(false)} className="flex-1 py-4 bg-white/5 rounded-full font-bold text-white border border-white/5 hover:bg-white/10">Cancel</button>
+                  <button onClick={handleSave} className="flex-1 py-4 bg-primary text-black rounded-full font-black uppercase text-xs tracking-widest shadow-glow">{editMode ? 'Update Entry' : 'Create Entry'}</button>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* Payment Modal */}
+      {payId && (
+         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-surface-dark border border-white/10 rounded-[2.5rem] p-10 w-full max-w-md shadow-2xl space-y-6 text-center">
+               <div className="size-16 rounded-full bg-primary/20 flex items-center justify-center text-primary mx-auto border border-primary/20 shadow-glow mb-4">
+                  <Wallet className="w-8 h-8" />
+               </div>
+               <h3 className="text-2xl font-black text-white">Record Payment</h3>
+               <p className="text-zinc-400 text-sm">Enter the amount received/paid against <span className="text-white font-mono">{payId}</span></p>
+               
+               <input 
+                  type="number" 
+                  autoFocus
+                  onChange={e => setPayAmt(Number(e.target.value))} 
+                  placeholder="0.00" 
+                  className="w-full bg-background-dark border border-white/10 rounded-2xl p-6 text-3xl font-black text-primary text-center focus:outline-none focus:border-primary" 
+               />
+               
+               <div className="flex gap-4 pt-4">
+                  <button onClick={() => setPayId(null)} className="flex-1 py-4 bg-white/5 rounded-full font-bold text-white border border-white/5 hover:bg-white/10">Cancel</button>
+                  <button onClick={handlePayment} className="flex-1 py-4 bg-primary text-black rounded-full font-black uppercase text-xs tracking-widest shadow-glow">Confirm</button>
+               </div>
+            </div>
+         </div>
+      )}
     </div>
   );
 };

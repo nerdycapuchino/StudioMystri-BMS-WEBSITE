@@ -1,3 +1,4 @@
+
 import { Product, Lead, InventoryItem, Project, Customer, Shipment, User, IntegrationStatus, Activity, Invoice, Employee, Notification, Order, SystemLog } from './types';
 
 export const MOCK_PRODUCTS: Product[] = [
@@ -25,8 +26,41 @@ export const MOCK_INVENTORY: InventoryItem[] = [
 ];
 
 export const MOCK_PROJECTS: Project[] = [
-  { id: '1', name: 'Oberoi Sky City Apt', client: 'Mr. & Mrs. Oberoi', stages: ['Design', 'Execution'], currentStage: 'Execution', progress: 75, dueDate: '2023-12-20', budget: 55000, files: ['floor_plan_v2.pdf', 'kitchen_render.jpg'] },
-  { id: '2', name: 'FinTech HQ Reception', client: 'Razorpay', stages: ['Concept', 'Design'], currentStage: 'Design', progress: 40, dueDate: '2024-02-15', budget: 150000, files: ['concept_moodboard.png'] },
+  { 
+    id: '1', 
+    name: 'Oberoi Sky City Apt', 
+    client: 'Mr. & Mrs. Oberoi', 
+    stages: ['Concept', 'Design', 'Material Procurement', 'Civil Work', 'Execution', 'Handover'], 
+    currentStage: 'Execution', 
+    progress: 75, 
+    dueDate: '2024-12-20', 
+    budget: 5500000, 
+    files: ['floor_plan_v2.pdf', 'kitchen_render.jpg', 'electrical_layout.dwg'],
+    dimensions: '4BHK - 2400 sqft',
+    description: 'Modern minimalist renovation focusing on natural wood and marble finishes.',
+    siteAddress: 'Borivali East, Mumbai',
+    referenceImages: [
+      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800',
+      'https://images.unsplash.com/photo-1616486341353-c5833211e993?auto=format&fit=crop&w=800'
+    ]
+  },
+  { 
+    id: '2', 
+    name: 'FinTech HQ Reception', 
+    client: 'Razorpay', 
+    stages: ['Concept', 'Design', 'Client Approval', 'Construction', 'Finishing'], 
+    currentStage: 'Design', 
+    progress: 40, 
+    dueDate: '2025-02-15', 
+    budget: 1500000, 
+    files: ['concept_moodboard.png', 'lighting_plan.pdf'],
+    dimensions: 'Reception Area - 800 sqft',
+    description: 'Tech-forward lobby design with custom parametric wooden ceiling.',
+    siteAddress: 'Koramangala, Bangalore',
+    referenceImages: [
+      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800'
+    ]
+  },
 ];
 
 export const MOCK_SHIPMENTS: Shipment[] = [
@@ -34,13 +68,14 @@ export const MOCK_SHIPMENTS: Shipment[] = [
 ];
 
 export const MOCK_USERS: User[] = [
-  { id: '1', name: 'Vikram Malhotra', role: 'Super Admin', email: 'admin@studiomystri.com', status: 'Active', linkedEmployeeId: '1' },
-  { id: '2', name: 'Ananya Singh', role: 'Architect', email: 'ananya@studiomystri.com', status: 'Active', linkedEmployeeId: '2' },
-  { id: '3', name: 'Kabir Khan', role: 'Sales', email: 'kabir@studiomystri.com', status: 'Active', linkedEmployeeId: '3' },
+  { id: '1', name: 'Vikram Malhotra', role: 'Super Admin', roleId: 'admin', email: 'admin@studiomystri.com', status: 'Active', linkedEmployeeId: '1' },
+  { id: '2', name: 'Ananya Singh', role: 'Architect', roleId: 'admin', email: 'ananya@studiomystri.com', status: 'Active', linkedEmployeeId: '2' },
+  { id: '3', name: 'Kabir Khan', role: 'Sales', roleId: 'sales', email: 'kabir@studiomystri.com', status: 'Active', linkedEmployeeId: '3' },
 ];
 
 export const MOCK_INTEGRATIONS: IntegrationStatus[] = [
-  { name: 'Shopify', status: 'Connected', lastSync: '10 mins ago', icon: 'Wordpress' },
+  { name: 'Shopify', status: 'Connected', lastSync: '10 mins ago', icon: 'ShoppingBag' },
+  { name: 'WordPress', status: 'Connected', lastSync: '1 hour ago', icon: 'Wordpress' },
   { name: 'QuickBooks', status: 'Connected', lastSync: '1 hour ago', icon: 'Terminal' },
   { name: 'Shiprocket', status: 'Connected', lastSync: 'Real-time', icon: 'Truck' },
 ];
@@ -56,9 +91,9 @@ export const MOCK_INVOICES: Invoice[] = [
 ];
 
 export const MOCK_EMPLOYEES: Employee[] = [
-  { id: '1', name: 'Vikram Malhotra', role: 'Principal Architect', email: 'vikram@studio.com', phone: '9998887776', salary: 150000, joinDate: '2020-01-15', status: 'Active', attendance: 'Present', leavePolicy: 30, leavesRemaining: 15, dob: '1985-05-15', address: 'Mumbai', emergencyContact: 'Wife: 9999999999', qualifications: 'M.Arch', documents: [] },
-  { id: '2', name: 'Ananya Singh', role: 'Senior Designer', email: 'ananya@studio.com', phone: '8887776665', salary: 95000, joinDate: '2021-03-10', status: 'Active', attendance: 'Present', leavePolicy: 24, leavesRemaining: 20, dob: '1992-08-20', address: 'Delhi', emergencyContact: 'Father: 8888888888', qualifications: 'B.Des', documents: [] },
-  { id: '3', name: 'Kabir Khan', role: 'Sales Manager', email: 'kabir@studiomystri.com', phone: '7776665554', salary: 85000, joinDate: '2022-06-01', status: 'Active', attendance: 'Present', leavePolicy: 20, leavesRemaining: 18, dob: '1995-02-10', address: 'Bangalore', emergencyContact: 'Mother: 7777777777', qualifications: 'MBA Sales', documents: [] },
+  { id: '1', name: 'Vikram Malhotra', role: 'Principal Architect', roleId: 'admin', email: 'vikram@studio.com', phone: '9998887776', salary: 150000, joinDate: '2020-01-15', status: 'Active', attendance: 'Present', leavePolicy: 30, leavesRemaining: 15, dob: '1985-05-15', address: 'Mumbai', emergencyContact: 'Wife: 9999999999', qualifications: 'M.Arch', documents: [] },
+  { id: '2', name: 'Ananya Singh', role: 'Senior Designer', roleId: 'admin', email: 'ananya@studio.com', phone: '8887776665', salary: 95000, joinDate: '2021-03-10', status: 'Active', attendance: 'Present', leavePolicy: 24, leavesRemaining: 20, dob: '1992-08-20', address: 'Delhi', emergencyContact: 'Father: 8888888888', qualifications: 'B.Des', documents: [] },
+  { id: '3', name: 'Kabir Khan', role: 'Sales Manager', roleId: 'sales', email: 'kabir@studiomystri.com', phone: '7776665554', salary: 85000, joinDate: '2022-06-01', status: 'Active', attendance: 'Present', leavePolicy: 20, leavesRemaining: 18, dob: '1995-02-10', address: 'Bangalore', emergencyContact: 'Mother: 7777777777', qualifications: 'MBA Sales', documents: [] },
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [

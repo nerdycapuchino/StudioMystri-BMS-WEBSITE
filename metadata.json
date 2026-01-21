@@ -1,5 +1,8 @@
 {
   "name": "Studio Mystri BMS",
   "description": "A comprehensive Business Management System including POS, CRM, ERP, and Project Management modules.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
 }

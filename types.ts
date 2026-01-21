@@ -1,10 +1,11 @@
+
 // Domain Models
 
 export interface Product {
   id: string;
   name: string;
   sku: string;
-  price: number; // Stored in Base Currency (INR)
+  price: number; 
   category: string;
   image: string;
   stock: number;
@@ -26,6 +27,8 @@ export interface Customer {
   lastPurchase?: string;
   totalSpend: number;
   address?: string;
+  notes?: string;
+  status?: 'Active' | 'Inactive';
 }
 
 export interface Lead {
@@ -39,10 +42,9 @@ export interface Lead {
   type: 'Inbound' | 'Outbound' | 'Referral';
   source: string;
   lastContact: string;
-  value: number; // Base Currency (INR)
+  value: number; 
   requirements?: string;
   notes?: string;
-  files?: { name: string; url: string }[]; // New: Files/References
 }
 
 export interface InventoryItem {
@@ -53,7 +55,7 @@ export interface InventoryItem {
   unit: string;
   reorderLevel: number;
   cost: number;
-  location?: string; 
+  location?: string;
   supplier?: string;
 }
 
@@ -67,6 +69,10 @@ export interface Project {
   dueDate: string;
   budget: number;
   files: string[];
+  dimensions?: string;
+  description?: string;
+  referenceImages?: string[];
+  siteAddress?: string;
 }
 
 export interface Shipment {
@@ -78,96 +84,6 @@ export interface Shipment {
   trackingNumber: string;
   trackingUrl?: string;
   eta: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  role: 'Super Admin' | 'Architect' | 'Sales' | 'Logistics' | 'HR' | 'Finance';
-  email: string;
-  status: 'Active' | 'Inactive';
-  linkedEmployeeId?: string; 
-}
-
-export interface IntegrationStatus {
-  name: string;
-  status: 'Connected' | 'Disconnected' | 'Error';
-  lastSync: string;
-  icon: string;
-}
-
-export interface Invoice {
-  id: string;
-  client: string;
-  amount: number; 
-  baseAmount: number; 
-  taxAmount: number; 
-  taxRate: number; 
-  gstNumber?: string; 
-  paidAmount: number;
-  type: 'Income' | 'Expense';
-  date: string;
-  status: 'Paid' | 'Partial' | 'Pending' | 'Overdue';
-  currency: 'INR' | 'USD';
-  history: { date: string; amount: number; note: string }[];
-}
-
-export interface Employee {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  salary: number; // Base INR
-  joinDate: string;
-  status: 'Active' | 'Leave' | 'Terminated';
-  attendance: 'Present' | 'Absent' | 'Half-Day';
-  leavePolicy: number; 
-  leavesRemaining: number;
-  dob: string;
-  address: string;
-  emergencyContact: string;
-  qualifications: string;
-  documents: { name: string; url: string; date: string }[]; 
-}
-
-export interface Policy {
-  id: string;
-  title: string;
-  category: 'Leave' | 'Conduct' | 'Safety' | 'IT';
-  content: string;
-  lastUpdated: string;
-}
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: 'order' | 'lead' | 'alert'; // For linking
-  targetId?: string;
-}
-
-export interface Order {
-  id: string;
-  customerName: string;
-  date: string;
-  total: number;
-  items: number;
-  status: 'Completed' | 'Refunded';
-  paymentMethod: string;
-  currency: 'INR' | 'USD'; 
-}
-
-export interface SystemLog {
-  id: string;
-  user: string;
-  action: string;
-  details: string;
-  timestamp: string;
-  module: string;
-  editHistory?: { editedBy: string; timestamp: string; oldDetails: string }[];
 }
 
 export enum AppModule {
@@ -182,7 +98,106 @@ export enum AppModule {
   ADMIN = 'ADMIN',
   BRIDGE = 'BRIDGE',
   ACTIVITY = 'ACTIVITY',
-  TEAM = 'TEAM'
+  TEAM = 'TEAM',
+  CUSTOMERS = 'CUSTOMERS'
+}
+
+export interface UserRole {
+  id: string;
+  name: string;
+  description: string;
+  allowedModules: AppModule[];
+}
+
+export interface User {
+  id: string;
+  name: string;
+  roleId: string; 
+  email: string;
+  status: 'Active' | 'Inactive';
+  role?: string;
+  linkedEmployeeId?: string;
+}
+
+export interface IntegrationStatus {
+  name: string;
+  status: 'Connected' | 'Disconnected' | 'Error';
+  lastSync: string;
+  icon: string;
+}
+
+export interface Invoice {
+  id: string;
+  client: string;
+  amount: number; 
+  paidAmount: number;
+  type: 'Income' | 'Expense';
+  date: string;
+  status: 'Paid' | 'Partial' | 'Pending' | 'Overdue';
+  currency: 'INR' | 'USD';
+  history: { date: string; amount: number; note: string }[];
+  baseAmount?: number;
+  taxAmount?: number;
+  taxRate?: number;
+  gstNumber?: string;
+}
+
+export interface Employee {
+  id: string;
+  name: string;
+  roleId: string; 
+  email: string;
+  phone: string;
+  salary: number;
+  joinDate: string;
+  status: 'Active' | 'Leave' | 'Terminated';
+  attendance: 'Present' | 'Absent' | 'Half-Day';
+  role?: string;
+  leavePolicy?: number;
+  leavesRemaining?: number;
+  dob?: string;
+  address?: string;
+  emergencyContact?: string;
+  qualifications?: string;
+  documents?: string[];
+}
+
+export interface CompanyPolicy {
+  id: string;
+  title: string;
+  category: 'General' | 'Conduct' | 'Benefits' | 'Safety';
+  lastUpdated: string;
+  size: string;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  type?: string;
+}
+
+export interface Order {
+  id: string;
+  customerName: string;
+  date: string;
+  total: number;
+  items: number;
+  status: 'Completed' | 'Refunded';
+  paymentMethod?: string;
+  currency?: string;
+}
+
+export interface SystemLog {
+  id: string;
+  user: string;
+  action: string;
+  details: string;
+  timestamp: string;
+  module: string;
+  editHistory?: { editedBy: string; timestamp: string; oldDetails: string }[];
 }
 
 export interface Activity {
@@ -195,36 +210,23 @@ export interface Activity {
 export type AccessLevel = 'read-write' | 'read-only' | 'hidden';
 
 export interface FieldPermission {
-  role: string;
-  field: string; // e.g., 'salary', 'costPrice'
+  roleId: string;
+  field: string;
   access: AccessLevel;
 }
 
-// Team Hub Types
 export interface ChatMessage {
   id: string;
-  channelId: string; // Added for channel context
+  channelId: string;
   sender: string;
   content: string;
   timestamp: string;
   avatar: string;
-  attachment?: { name: string; type: string };
-  isMeeting?: boolean;
-}
-
-export interface FileItem {
-  id: string;
-  name: string;
-  type: 'pdf' | 'doc' | 'image' | 'sheet';
-  size: string;
-  date: string;
-  owner: string;
-  sharedWith?: string[];
 }
 
 export interface Channel {
   id: string;
   name: string;
-  type: 'public' | 'private';
-  members?: string[];
+  type: 'public' | 'private' | 'dm';
+  participantIds?: string[]; // Used primarily for DM and private
 }
