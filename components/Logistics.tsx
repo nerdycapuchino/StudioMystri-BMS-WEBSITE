@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Truck, MapPin, Package, Calendar, X, Plus, ExternalLink, Mail, Edit2 } from 'lucide-react';
@@ -9,6 +10,8 @@ export const Logistics: React.FC = () => {
   const [editingShipment, setEditingShipment] = useState<Shipment | null>(null);
   const [newShipment, setNewShipment] = useState<Partial<Shipment>>({ customer: '', orderId: '', courier: 'BlueDart', eta: '', trackingUrl: '' });
   const [customCourier, setCustomCourier] = useState(false);
+
+  const safeShipments = shipments || []; // Prevent crash if undefined
 
   const handleCreate = () => {
     if(newShipment.customer && newShipment.orderId) {
@@ -64,7 +67,7 @@ export const Logistics: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {shipments.map(shipment => (
+              {safeShipments.map(shipment => (
                 <tr key={shipment.id} className="hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4 font-mono font-bold text-primary">{shipment.trackingNumber}</td>
                   <td className="px-6 py-4">

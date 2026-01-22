@@ -3,6 +3,7 @@
   "description": "A comprehensive Business Management System including POS, CRM, ERP, and Project Management modules.",
   "requestFramePermissions": [
     "camera",
-    "microphone"
+    "microphone",
+    "geolocation"
   ]
 }

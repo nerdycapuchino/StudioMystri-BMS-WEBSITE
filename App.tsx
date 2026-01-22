@@ -15,8 +15,10 @@ import { Customers } from './components/Customers';
 import { Integrations } from './components/Integrations';
 import { ActivityLog } from './components/ActivityLog';
 import { TeamHub } from './components/TeamHub';
+import { InvoiceGenerator } from './components/InvoiceGenerator';
+import { Scanner } from './components/Scanner';
 import { AppModule } from './types';
-import { Menu, MenuSquare, LogOut, ChevronRight, LayoutDashboard, Store, Users, Briefcase, Box, Wallet, BadgeCheck, MessageSquare, Truck, ClipboardList, Settings, UserCircle, Contact } from 'lucide-react';
+import { Menu, MenuSquare, LogOut, ChevronRight, LayoutDashboard, Store, Users, Briefcase, Box, Wallet, BadgeCheck, MessageSquare, Truck, ClipboardList, Settings, UserCircle, Contact, Receipt, ScanLine } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const { currentUser, setCurrentUser, currency, setCurrency, userRoles } = useGlobal();
@@ -38,6 +40,8 @@ const MainLayout: React.FC = () => {
   const allNavItems = [
     { id: AppModule.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
     { id: AppModule.POS, label: 'Store POS', icon: Store },
+    { id: AppModule.SCANNER, label: 'Scanner', icon: ScanLine },
+    { id: AppModule.INVOICE_GEN, label: 'Invoice Gen', icon: Receipt },
     { id: AppModule.CRM, label: 'CRM Leads', icon: Users },
     { id: AppModule.CUSTOMERS, label: 'Customers', icon: Contact },
     { id: AppModule.PROJECTS, label: 'Projects', icon: Briefcase },
@@ -66,6 +70,8 @@ const MainLayout: React.FC = () => {
       case AppModule.TEAM: return <TeamHub />;
       case AppModule.ACTIVITY: return <ActivityLog />;
       case AppModule.ADMIN: return <Admin />;
+      case AppModule.INVOICE_GEN: return <InvoiceGenerator />;
+      case AppModule.SCANNER: return <Scanner />;
       default: return <Dashboard changeModule={setActiveModule} />;
     }
   };
@@ -78,20 +84,22 @@ const MainLayout: React.FC = () => {
           flex flex-col h-full bg-surface-darker border-r border-white/5 transition-all duration-300 ease-in-out z-[100]
           ${isMobile 
             ? (sidebarExpanded ? 'w-72 fixed inset-y-0 left-0 translate-x-0' : 'w-0 fixed inset-y-0 left-0 -translate-x-full') 
-            : (sidebarExpanded ? 'w-72' : 'w-20')}
+            : (sidebarExpanded ? 'w-64' : 'w-20')}
         `}
       >
         {/* Sidebar Header */}
         <div className="p-4 flex items-center h-20 border-b border-white/5 justify-between md:justify-center overflow-hidden shrink-0">
-           <div className={`flex items-center gap-3 transition-all duration-300 ${sidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 md:hidden'}`}>
-             <div className="bg-primary size-10 rounded-full flex items-center justify-center text-black font-black shadow-glow">M</div>
-             <span className="font-black text-xl tracking-tighter">MYSTRI</span>
+           <div className={`flex items-center gap-3 transition-all duration-300 ${sidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 hidden'}`}>
+             <div className="size-8 rounded-lg overflow-hidden border border-white/10 shrink-0">
+                <img src="https://via.placeholder.com/100/38e07b/000000?text=L" alt="Logo" className="w-full h-full object-cover" />
+             </div>
+             <span className="font-black text-lg tracking-tighter whitespace-nowrap">MYSTRI</span>
            </div>
            <button 
              onClick={() => setSidebarExpanded(!sidebarExpanded)} 
              className={`p-2.5 hover:bg-white/5 rounded-full text-primary transition-transform active:scale-90 ${!sidebarExpanded && !isMobile ? 'translate-x-0' : ''}`}
            >
-             {sidebarExpanded ? <MenuSquare className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+             {sidebarExpanded ? <MenuSquare className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
            </button>
         </div>
         
@@ -105,12 +113,12 @@ const MainLayout: React.FC = () => {
                   if (isMobile) setSidebarExpanded(false); 
                 }}
                 className={`
-                  w-full flex items-center gap-4 px-6 py-4 transition-all hover:bg-white/5 group relative
+                  w-full flex items-center gap-4 px-6 py-3.5 transition-all hover:bg-white/5 group relative
                   ${activeModule === item.id ? 'text-primary' : 'text-zinc-500 hover:text-white'}
                 `}
                 title={!sidebarExpanded ? item.label : ''}
              >
-                <item.icon className={`w-6 h-6 transition-transform group-active:scale-90 ${activeModule === item.id ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                <item.icon className={`w-5 h-5 transition-transform group-active:scale-90 ${activeModule === item.id ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                 <span className={`
                   text-sm font-bold whitespace-nowrap transition-all duration-300
                   ${sidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none absolute'}
@@ -118,7 +126,7 @@ const MainLayout: React.FC = () => {
                   {item.label}
                 </span>
                 {activeModule === item.id && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-glow" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full shadow-glow" />
                 )}
              </button>
            ))}
@@ -127,48 +135,35 @@ const MainLayout: React.FC = () => {
         {/* Global Controls & User Profile */}
         <div className="p-4 border-t border-white/5 space-y-4 shrink-0 bg-[#090e0b]">
            {/* Currency Toggles */}
-           <div className={`bg-black/40 p-1 rounded-xl flex gap-1 ${!sidebarExpanded ? 'flex-col' : 'flex-row'}`}>
-             <button onClick={() => setCurrency('INR')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'INR' ? 'bg-primary text-black' : 'text-zinc-600 hover:text-zinc-400'}`}>₹</button>
-             <button onClick={() => setCurrency('USD')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'USD' ? 'bg-primary text-black' : 'text-zinc-600 hover:text-zinc-400'}`}>$</button>
-           </div>
+           {sidebarExpanded && (
+             <div className="bg-black/40 p-1 rounded-xl flex gap-1 animate-fade-in">
+               <button onClick={() => setCurrency('INR')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'INR' ? 'bg-primary text-black' : 'text-zinc-600 hover:text-zinc-400'}`}>₹</button>
+               <button onClick={() => setCurrency('USD')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'USD' ? 'bg-primary text-black' : 'text-zinc-600 hover:text-zinc-400'}`}>$</button>
+             </div>
+           )}
            
-           {/* User Profile with Hover Details */}
-           <div className="relative group">
-              <div className={`flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors ${!sidebarExpanded ? 'justify-center' : ''}`}>
-                 <div className="size-10 rounded-full bg-surface-highlight border border-white/10 flex items-center justify-center text-primary font-bold shadow-inner">
-                    {currentUser.name.substring(0,2).toUpperCase()}
-                 </div>
-                 {sidebarExpanded && (
-                    <div className="overflow-hidden">
-                       <p className="text-sm font-bold text-white truncate">{currentUser.name}</p>
-                       <p className="text-[10px] text-zinc-500 truncate">{currentUser.role || 'Staff'}</p>
-                    </div>
-                 )}
-              </div>
-              
-              {/* Profile Hover Tooltip */}
-              <div className={`
-                 absolute left-full bottom-0 ml-3 w-64 bg-surface-dark border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-[200]
-                 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 translate-x-2 group-hover:translate-x-0
-              `}>
-                 <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/5">
-                    <div className="size-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-lg border border-primary/20">
-                       {currentUser.name.substring(0,2).toUpperCase()}
-                    </div>
-                    <div>
-                       <p className="font-bold text-white">{currentUser.name}</p>
-                       <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{currentUser.role}</p>
-                    </div>
-                 </div>
-                 <p className="text-xs text-zinc-400 font-mono mb-4 break-all">{currentUser.email}</p>
-                 <button 
-                   onClick={() => setCurrentUser(null)} 
-                   className="w-full py-2 bg-red-500/10 text-red-500 rounded-lg text-xs font-bold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
-                 >
-                    <LogOut className="w-3.5 h-3.5" /> Sign Out
-                 </button>
-              </div>
-           </div>
+           {/* User Profile - Hidden when collapsed as requested */}
+           {sidebarExpanded && (
+             <div className="flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5 overflow-hidden animate-fade-in">
+                <div className="size-8 rounded-full bg-surface-highlight border border-white/10 flex items-center justify-center text-primary font-bold shadow-inner text-xs shrink-0">
+                   {currentUser.name.substring(0,2).toUpperCase()}
+                </div>
+                <div className="overflow-hidden">
+                   <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
+                   <p className="text-[10px] text-zinc-500 truncate">{currentUser.role || 'Staff'}</p>
+                </div>
+             </div>
+           )}
+
+           {/* Log Out Button */}
+           <button 
+             onClick={() => setCurrentUser(null)} 
+             className={`w-full flex items-center gap-4 p-2 text-red-400 hover:bg-red-400/10 rounded-xl transition-colors group ${!sidebarExpanded ? 'justify-center' : ''}`}
+             title="Sign Out"
+           >
+              <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              {sidebarExpanded && <span className="text-xs font-bold">Sign Out</span>}
+           </button>
         </div>
       </aside>
 
@@ -176,11 +171,16 @@ const MainLayout: React.FC = () => {
       <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#0b100d]">
          {/* Mobile Header Bar */}
          {isMobile && (
-            <header className="h-16 flex items-center px-4 border-b border-white/5 bg-surface-dark shrink-0 z-50">
-               <button onClick={() => setSidebarExpanded(true)} className="p-2 text-primary">
-                  <Menu className="w-6 h-6" />
-               </button>
-               <span className="ml-4 font-black tracking-tighter text-lg uppercase">{activeModule}</span>
+            <header className="h-16 flex items-center px-4 border-b border-white/5 bg-surface-dark shrink-0 z-50 justify-between">
+               <div className="flex items-center gap-3">
+                 <button onClick={() => setSidebarExpanded(true)} className="p-2 text-primary">
+                    <Menu className="w-6 h-6" />
+                 </button>
+                 <span className="font-black tracking-tighter text-lg uppercase">{activeModule}</span>
+               </div>
+               <div className="size-8 bg-surface-highlight rounded-full flex items-center justify-center text-xs font-bold text-primary border border-white/10">
+                  {currentUser.name.substring(0,2).toUpperCase()}
+               </div>
             </header>
          )}
 

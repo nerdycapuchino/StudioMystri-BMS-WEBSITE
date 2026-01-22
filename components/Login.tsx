@@ -1,10 +1,13 @@
+
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 
 export const Login: React.FC = () => {
-  const { setCurrentUser, userRoles } = useGlobal();
+  const { setCurrentUser } = useGlobal();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +30,7 @@ export const Login: React.FC = () => {
         status: 'Active'
       });
       setLoading(false);
-    }, 600);
+    }, 800);
   };
 
   return (
@@ -35,51 +38,62 @@ export const Login: React.FC = () => {
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-background-dark via-surface-dark to-black opacity-90"></div>
-        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop" className="w-full h-full object-cover opacity-20" />
+        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop" className="w-full h-full object-cover opacity-20" alt="Background" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md bg-surface-dark/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-10 shadow-2xl">
-         <div className="text-center mb-10">
-            <div className="size-20 bg-primary/20 rounded-full mx-auto mb-6 flex items-center justify-center text-primary border border-primary/10 shadow-glow">
-               <span className="material-symbols-outlined text-4xl">chair</span>
+      <div className="relative z-10 w-full max-w-[400px] bg-surface-dark/95 backdrop-blur-xl border border-white/10 rounded-[2rem] p-10 shadow-2xl">
+         <div className="text-center mb-8">
+            {/* Logo Placeholder - 1:1 Ratio, approx 100x100px */}
+            <div className="mx-auto mb-6 w-[100px] h-[100px] bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
+               {/* Replace src with actual logo URL */}
+               <img src="https://via.placeholder.com/100/38e07b/000000?text=LOGO" alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tighter">STUDIO MYSTRI</h1>
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mt-2">Business Management System</p>
+            <h1 className="text-2xl font-black text-white tracking-tighter">STUDIO MYSTRI</h1>
          </div>
 
-         <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-zinc-500 uppercase ml-4">Corporate Identity</label>
+         <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1.5">
+               <label className="text-[11px] font-bold text-zinc-400 uppercase ml-3">Email ID</label>
                <input 
                   type="email" 
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
-                  placeholder="name@studiomystri.com"
-                  className="w-full bg-black/40 border border-white/10 rounded-full px-6 py-4 text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none"
+                  placeholder="Enter your email"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3.5 text-white text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none"
                   required
                />
             </div>
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-zinc-500 uppercase ml-4">Security Credentials</label>
+            <div className="space-y-1.5">
+               <label className="text-[11px] font-bold text-zinc-400 uppercase ml-3">Password</label>
                <input 
                   type="password" 
-                  placeholder="••••••••"
-                  className="w-full bg-black/40 border border-white/10 rounded-full px-6 py-4 text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3.5 text-white text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none"
                   required
                />
             </div>
+
+            <div className="flex items-center gap-2 ml-1">
+               <input 
+                  type="checkbox" 
+                  id="remember" 
+                  checked={rememberMe} 
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className="rounded bg-black/40 border-white/10 text-primary focus:ring-0 cursor-pointer" 
+               />
+               <label htmlFor="remember" className="text-xs text-zinc-400 font-medium cursor-pointer select-none">Remember Me</label>
+            </div>
+
             <button 
                type="submit" 
                disabled={loading}
-               className="w-full bg-primary text-black font-black text-sm uppercase tracking-widest py-5 rounded-full shadow-glow hover:scale-[1.02] active:scale-95 transition-all mt-4"
+               className="w-full bg-primary text-black font-black text-sm uppercase tracking-widest py-4 rounded-xl shadow-glow hover:scale-[1.02] active:scale-95 transition-all mt-2"
             >
-               {loading ? 'Authorizing...' : 'Establish Connection'}
+               {loading ? 'Logging in...' : 'Login'}
             </button>
          </form>
-
-         <div className="mt-10 text-center opacity-30">
-            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Secured by Studio Mystri IT</p>
-         </div>
       </div>
     </div>
   );

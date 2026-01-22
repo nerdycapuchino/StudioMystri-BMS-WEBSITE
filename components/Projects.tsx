@@ -1,39 +1,30 @@
 
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { Project } from '../types';
+import { Project, ProjectPayment } from '../types';
 import { 
-  Plus, 
-  Search, 
-  MapPin, 
-  Calendar, 
-  Trash2, 
-  Maximize2, 
-  FileText, 
-  Image as ImageIcon, 
-  Ruler, 
-  Clock, 
-  CheckCircle2, 
-  ChevronRight, 
-  X,
-  Eye,
-  DollarSign
+  Plus, Search, MapPin, Calendar, Trash2, Maximize2, FileText, Image as ImageIcon, Ruler, Clock, CheckCircle2, ChevronRight, X, Eye, DollarSign, Upload, Save, Edit2, Wallet
 } from 'lucide-react';
 
 export const Projects: React.FC = () => {
-  const { projects, addProject, deleteProject, currentUser, formatCurrency } = useGlobal();
+  const { projects, addProject, updateProject, deleteProject, currentUser, formatCurrency } = useGlobal();
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Edit State for Selected Project
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Project | null>(null);
+  const [activeTab, setActiveTab] = useState<'details' | 'financials'>('details');
+
   const [newProject, setNewProject] = useState<Partial<Project>>({ 
-    name: '', 
-    client: '', 
-    budget: 0, 
-    dimensions: '', 
-    description: '',
-    siteAddress: '' 
+    name: '', client: '', budget: 0, dimensions: '', description: '', siteAddress: '' 
   });
+
+  // Payment Form & State
+  const [payAmount, setPayAmount] = useState<string>('');
+  const [payNote, setPayNote] = useState('');
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
 
   // Role Security Check
   const canSeeBudget = currentUser?.roleId === 'admin' || currentUser?.roleId === 'finance';
@@ -53,11 +44,91 @@ export const Projects: React.FC = () => {
            description: newProject.description,
            siteAddress: newProject.siteAddress,
            files: [],
-           referenceImages: []
+           referenceImages: [],
+           payments: []
         } as Project);
         setShowAddModal(false);
         setNewProject({ name: '', client: '', budget: 0, dimensions: '', description: '', siteAddress: '' });
      }
+  };
+
+  const handleUpdate = () => {
+      if (editForm && selectedProject) {
+          updateProject(selectedProject.id, editForm);
+          setSelectedProject(editForm);
+          setIsEditing(false);
+      }
+  };
+
+  const handlePaymentSubmit = () => {
+      if (!payAmount || !selectedProject) return;
+
+      const amountVal = Number(payAmount);
+      let updatedPayments = [...(selectedProject.payments || [])];
+
+      if (editingPaymentId) {
+          // Update existing
+          updatedPayments = updatedPayments.map(p => p.id === editingPaymentId ? { ...p, amount: amountVal, note: payNote || p.note } : p);
+      } else {
+          // Create new
+          const payment: ProjectPayment = {
+              id: Math.random().toString(36).substr(2, 9),
+              amount: amountVal,
+              date: new Date().toLocaleDateString(),
+              note: payNote || 'Partial Entry',
+              method: 'Bank Transfer'
+          };
+          updatedPayments.push(payment);
+      }
+
+      const updatedProject = { ...selectedProject, payments: updatedPayments };
+      updateProject(selectedProject.id, updatedProject);
+      setSelectedProject(updatedProject);
+      
+      // Reset
+      setPayAmount('');
+      setPayNote('');
+      setEditingPaymentId(null);
+  };
+
+  const editPayment = (p: ProjectPayment) => {
+      setEditingPaymentId(p.id);
+      setPayAmount(p.amount.toString());
+      setPayNote(p.note);
+  };
+
+  const deletePayment = (pid: string) => {
+      if (!selectedProject) return;
+      const updatedPayments = selectedProject.payments?.filter(p => p.id !== pid) || [];
+      const updatedProject = { ...selectedProject, payments: updatedPayments };
+      updateProject(selectedProject.id, updatedProject);
+      setSelectedProject(updatedProject);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'doc' | 'img') => {
+      if (e.target.files && editForm) {
+          const files: File[] = Array.from(e.target.files);
+          const urls = files.map(f => URL.createObjectURL(f));
+          
+          if (type === 'img') {
+              setEditForm({ ...editForm, referenceImages: [...(editForm.referenceImages || []), ...urls] });
+          } else {
+              const names = files.map(f => f.name);
+              setEditForm({ ...editForm, files: [...(editForm.files || []), ...names] });
+          }
+      }
+  };
+  
+  const toggleStage = (stage: string) => {
+      if (!editForm) return;
+      const stageIdx = editForm.stages.indexOf(stage);
+      const newProgress = Math.round(((stageIdx) / (editForm.stages.length - 1)) * 100);
+      setEditForm({ ...editForm, currentStage: stage, progress: newProgress });
+  };
+
+  const startEdit = () => {
+      setEditForm(selectedProject);
+      setIsEditing(true);
   };
 
   const filteredProjects = projects.filter(p => 
@@ -168,127 +239,265 @@ export const Projects: React.FC = () => {
                     <Maximize2 className="w-10 h-10" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black text-white tracking-tighter uppercase">{selectedProject.name}</h3>
+                    {isEditing ? (
+                        <input 
+                            value={editForm?.name} 
+                            onChange={e => setEditForm(prev => prev ? {...prev, name: e.target.value} : null)}
+                            className="text-3xl font-black text-white tracking-tighter uppercase bg-transparent border-b border-white/20 focus:border-primary outline-none w-full mb-2"
+                        />
+                    ) : (
+                        <h3 className="text-3xl font-black text-white tracking-tighter uppercase">{selectedProject.name}</h3>
+                    )}
+                    
                     <div className="flex gap-4 mt-2">
-                      <span className="flex items-center gap-1.5 text-xs text-zinc-500 font-bold"><MapPin className="w-3.5 h-3.5" /> {selectedProject.siteAddress}</span>
-                      <span className="flex items-center gap-1.5 text-xs text-zinc-500 font-bold"><Clock className="w-3.5 h-3.5" /> Est. Handover: {selectedProject.dueDate}</span>
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-bold">
+                          <MapPin className="w-3.5 h-3.5" /> 
+                          {isEditing ? <input value={editForm?.siteAddress} onChange={e => setEditForm(prev => prev ? {...prev, siteAddress: e.target.value} : null)} className="bg-transparent border-b border-white/20 text-white w-40" /> : selectedProject.siteAddress}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-bold">
+                          <Clock className="w-3.5 h-3.5" /> Est. Handover: 
+                          {isEditing ? <input type="date" value={editForm?.dueDate} onChange={e => setEditForm(prev => prev ? {...prev, dueDate: e.target.value} : null)} className="bg-transparent border-b border-white/20 text-white ml-2" /> : selectedProject.dueDate}
+                      </div>
                     </div>
                   </div>
                </div>
-               <button onClick={() => setSelectedProject(null)} className="size-12 bg-white/5 hover:bg-red-500/20 rounded-full flex items-center justify-center text-zinc-500 hover:text-red-500 transition-all">
-                 <X className="w-6 h-6" />
-               </button>
+               <div className="flex gap-4">
+                 <div className="flex bg-white/5 rounded-full p-1 border border-white/5">
+                     <button onClick={() => setActiveTab('details')} className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'details' ? 'bg-primary text-black shadow-glow' : 'text-zinc-500'}`}>Overview</button>
+                     <button onClick={() => setActiveTab('financials')} className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'financials' ? 'bg-primary text-black shadow-glow' : 'text-zinc-500'}`}>Financials</button>
+                 </div>
+                 {!isEditing ? (
+                     <button onClick={startEdit} className="px-6 py-3 bg-white/5 text-white font-bold rounded-full hover:bg-white/10 flex items-center gap-2">
+                         <Edit2 className="w-4 h-4" /> Edit Project
+                     </button>
+                 ) : (
+                     <button onClick={handleUpdate} className="px-6 py-3 bg-primary text-black font-bold rounded-full shadow-glow flex items-center gap-2">
+                         <Save className="w-4 h-4" /> Save Changes
+                     </button>
+                 )}
+                 <button onClick={() => { setSelectedProject(null); setIsEditing(false); }} className="size-12 bg-white/5 hover:bg-red-500/20 rounded-full flex items-center justify-center text-zinc-500 hover:text-red-500 transition-all">
+                   <X className="w-6 h-6" />
+                 </button>
+               </div>
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 grid grid-cols-1 xl:grid-cols-3 gap-10">
-               
-               {/* Left Column: Details & Finances */}
-               <div className="space-y-8">
-                  <div className="bg-surface-darker p-8 rounded-[2rem] border border-white/5">
-                     <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-6">Site Specifications</h4>
-                     <div className="space-y-6">
-                        <div className="flex items-center gap-4">
-                           <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400"><Ruler className="w-5 h-5" /></div>
-                           <div><p className="text-[10px] font-black text-zinc-500 uppercase">Dimensions</p><p className="text-white font-bold">{selectedProject.dimensions || 'No dimensions recorded'}</p></div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                           <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400"><FileText className="w-5 h-5" /></div>
-                           <div><p className="text-[10px] font-black text-zinc-500 uppercase">Client</p><p className="text-white font-bold">{selectedProject.client}</p></div>
-                        </div>
-                        {canSeeBudget && (
-                          <div className="flex items-center gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
-                             <div className="size-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><DollarSign className="w-5 h-5" /></div>
-                             <div><p className="text-[10px] font-black text-primary/60 uppercase">Project Worth</p><p className="text-white text-xl font-mono font-bold">{formatCurrency(selectedProject.budget)}</p></div>
-                          </div>
-                        )}
-                     </div>
-                  </div>
-
-                  <div className="bg-surface-darker p-8 rounded-[2rem] border border-white/5">
-                     <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-6">Execution Roadmap</h4>
-                     <div className="space-y-8 relative before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
-                        {selectedProject.stages.map((stage, idx) => {
-                           const isDone = selectedProject.stages.indexOf(selectedProject.currentStage) >= idx;
-                           const isCurrent = selectedProject.currentStage === stage;
-                           return (
-                             <div key={stage} className="flex gap-6 items-start relative">
-                                <div className={`size-10 rounded-full flex items-center justify-center z-10 border-2 transition-all ${isDone ? 'bg-primary border-primary text-black' : 'bg-background-dark border-white/10 text-zinc-700'}`}>
-                                   {isDone ? <CheckCircle2 className="w-5 h-5" /> : <span className="font-bold text-sm">{idx+1}</span>}
-                                </div>
-                                <div className="flex-1">
-                                   <p className={`font-black text-sm uppercase tracking-widest ${isDone ? 'text-white' : 'text-zinc-600'}`}>{stage}</p>
-                                   {isCurrent && <p className="text-[10px] text-primary font-bold">Currently Active</p>}
-                                </div>
-                             </div>
-                           );
-                        })}
-                     </div>
-                  </div>
-               </div>
-
-               {/* Center Column: Gallery & References */}
-               <div className="xl:col-span-2 space-y-8">
-                  <div className="bg-surface-darker p-8 rounded-[3rem] border border-white/5 h-fit">
-                     <div className="flex justify-between items-center mb-6">
-                        <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Visual References & Site Photos</h4>
-                        <button className="text-primary text-xs font-bold flex items-center gap-1 hover:underline"><Plus className="w-3 h-3"/> Add Media</button>
-                     </div>
-                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {(selectedProject.referenceImages || []).length > 0 ? (
-                          selectedProject.referenceImages?.map((img, i) => (
-                            <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-white/10 group relative">
-                               <img src={img} className="w-full h-full object-cover" alt="Site reference" />
-                               <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Eye className="w-6 h-6 text-white" />
+            {activeTab === 'details' ? (
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 grid grid-cols-1 xl:grid-cols-3 gap-10">
+                   {/* Left Column: Details & Finances */}
+                   <div className="space-y-8">
+                      <div className="bg-surface-darker p-8 rounded-[2rem] border border-white/5">
+                         <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-6">Site Specifications</h4>
+                         <div className="space-y-6">
+                            <div className="flex items-center gap-4">
+                               <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400"><Ruler className="w-5 h-5" /></div>
+                               <div className="flex-1">
+                                   <p className="text-[10px] font-black text-zinc-500 uppercase">Dimensions</p>
+                                   {isEditing ? <input value={editForm?.dimensions} onChange={e => setEditForm(prev => prev ? {...prev, dimensions: e.target.value} : null)} className="bg-transparent border-b border-white/20 text-white w-full font-bold" /> : <p className="text-white font-bold">{selectedProject.dimensions || 'No dimensions recorded'}</p>}
                                </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="col-span-full py-20 bg-white/5 rounded-[2rem] border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-600">
-                             <ImageIcon className="w-12 h-12 mb-4 opacity-20" />
-                             <p className="text-sm font-bold">No references uploaded yet</p>
-                          </div>
-                        )}
-                     </div>
-                  </div>
-
-                  <div className="bg-surface-darker p-8 rounded-[3rem] border border-white/5 h-fit">
-                     <div className="flex justify-between items-center mb-6">
-                        <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Project Documentation</h4>
-                        <button className="text-primary text-xs font-bold flex items-center gap-1 hover:underline"><Plus className="w-3 h-3"/> Upload Doc</button>
-                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {(selectedProject.files || []).length > 0 ? (
-                           selectedProject.files.map(file => (
-                              <div key={file} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/20 transition-all cursor-pointer group">
-                                 <div className="size-12 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-primary"><FileText className="w-6 h-6" /></div>
-                                 <div className="flex-1 overflow-hidden">
-                                    <p className="text-white text-sm font-bold truncate">{file}</p>
-                                    <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Document • PDF</p>
+                            <div className="flex items-center gap-4">
+                               <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400"><FileText className="w-5 h-5" /></div>
+                               <div className="flex-1">
+                                   <p className="text-[10px] font-black text-zinc-500 uppercase">Client</p>
+                                   {isEditing ? <input value={editForm?.client} onChange={e => setEditForm(prev => prev ? {...prev, client: e.target.value} : null)} className="bg-transparent border-b border-white/20 text-white w-full font-bold" /> : <p className="text-white font-bold">{selectedProject.client}</p>}
+                               </div>
+                            </div>
+                            {canSeeBudget && (
+                              <div className="flex items-center gap-4 bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                                 <div className="size-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary"><DollarSign className="w-5 h-5" /></div>
+                                 <div className="flex-1">
+                                     <p className="text-[10px] font-black text-primary/60 uppercase">Project Worth</p>
+                                     {isEditing ? <input type="number" value={editForm?.budget} onChange={e => setEditForm(prev => prev ? {...prev, budget: Number(e.target.value)} : null)} className="bg-transparent border-b border-primary/30 text-white w-full text-xl font-mono font-bold" /> : <p className="text-white text-xl font-mono font-bold">{formatCurrency(selectedProject.budget)}</p>}
                                  </div>
-                                 <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-primary" />
                               </div>
-                           ))
-                        ) : (
-                           <p className="col-span-full text-center text-zinc-700 py-6 italic text-sm">Clear</p>
-                        )}
-                     </div>
-                  </div>
+                            )}
+                         </div>
+                      </div>
 
-                  <div className="bg-primary/10 p-8 rounded-[3rem] border border-primary/10">
-                     <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Designer's Notes</h4>
-                     <p className="text-zinc-300 leading-relaxed italic">
-                        {selectedProject.description || 'No site descriptions or designer notes have been added to this project yet.'}
-                     </p>
-                  </div>
-               </div>
-            </div>
+                      <div className="bg-surface-darker p-8 rounded-[2rem] border border-white/5">
+                         <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-6">Execution Roadmap</h4>
+                         <div className="space-y-8 relative before:absolute before:left-5 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
+                            {(isEditing ? editForm?.stages : selectedProject.stages)?.map((stage, idx) => {
+                               const currentS = isEditing ? editForm?.currentStage : selectedProject.currentStage;
+                               const stagesList = isEditing ? editForm?.stages! : selectedProject.stages;
+                               const isDone = stagesList.indexOf(currentS!) >= idx;
+                               const isCurrent = currentS === stage;
+                               return (
+                                 <div 
+                                    key={stage} 
+                                    className={`flex gap-6 items-start relative ${isEditing ? 'cursor-pointer hover:opacity-80' : ''}`}
+                                    onClick={() => isEditing && toggleStage(stage)}
+                                 >
+                                    <div className={`size-10 rounded-full flex items-center justify-center z-10 border-2 transition-all ${isDone ? 'bg-primary border-primary text-black' : 'bg-background-dark border-white/10 text-zinc-700'}`}>
+                                       {isDone ? <CheckCircle2 className="w-5 h-5" /> : <span className="font-bold text-sm">{idx+1}</span>}
+                                    </div>
+                                    <div className="flex-1">
+                                       <p className={`font-black text-sm uppercase tracking-widest ${isDone ? 'text-white' : 'text-zinc-600'}`}>{stage}</p>
+                                       {isCurrent && <p className="text-[10px] text-primary font-bold">Currently Active</p>}
+                                    </div>
+                                 </div>
+                               );
+                            })}
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Center Column: Gallery & References */}
+                   <div className="xl:col-span-2 space-y-8">
+                      <div className="bg-surface-darker p-8 rounded-[3rem] border border-white/5 h-fit">
+                         <div className="flex justify-between items-center mb-6">
+                            <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Visual References & Site Photos</h4>
+                            {isEditing && (
+                                <div className="relative overflow-hidden">
+                                    <button className="text-primary text-xs font-bold flex items-center gap-1 hover:underline pointer-events-none"><Plus className="w-3 h-3"/> Add Media</button>
+                                    <input type="file" multiple accept="image/*" onChange={(e) => handleFileUpload(e, 'img')} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                </div>
+                            )}
+                         </div>
+                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {((isEditing ? editForm?.referenceImages : selectedProject.referenceImages) || []).length > 0 ? (
+                              (isEditing ? editForm?.referenceImages : selectedProject.referenceImages)?.map((img, i) => (
+                                <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-white/10 group relative">
+                                   <img src={img} className="w-full h-full object-cover" alt="Site reference" />
+                                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Eye className="w-6 h-6 text-white" />
+                                   </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="col-span-full py-20 bg-white/5 rounded-[2rem] border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-600">
+                                 <ImageIcon className="w-12 h-12 mb-4 opacity-20" />
+                                 <p className="text-sm font-bold">No references uploaded yet</p>
+                              </div>
+                            )}
+                         </div>
+                      </div>
+
+                      <div className="bg-surface-darker p-8 rounded-[3rem] border border-white/5 h-fit">
+                         <div className="flex justify-between items-center mb-6">
+                            <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">Project Documentation</h4>
+                            {isEditing && (
+                                <div className="relative overflow-hidden">
+                                    <button className="text-primary text-xs font-bold flex items-center gap-1 hover:underline pointer-events-none"><Upload className="w-3 h-3"/> Upload Doc</button>
+                                    <input type="file" multiple accept=".pdf,.doc,.docx" onChange={(e) => handleFileUpload(e, 'doc')} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                </div>
+                            )}
+                         </div>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {((isEditing ? editForm?.files : selectedProject.files) || []).length > 0 ? (
+                               (isEditing ? editForm?.files : selectedProject.files)?.map(file => (
+                                  <div key={file} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/20 transition-all cursor-pointer group">
+                                     <div className="size-12 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-primary"><FileText className="w-6 h-6" /></div>
+                                     <div className="flex-1 overflow-hidden">
+                                        <p className="text-white text-sm font-bold truncate">{file}</p>
+                                        <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Document</p>
+                                     </div>
+                                     <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-primary" />
+                                  </div>
+                               ))
+                            ) : (
+                               <p className="col-span-full text-center text-zinc-700 py-6 italic text-sm">Clear</p>
+                            )}
+                         </div>
+                      </div>
+
+                      <div className="bg-primary/10 p-8 rounded-[3rem] border border-primary/10">
+                         <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Designer's Notes</h4>
+                         {isEditing ? (
+                             <textarea 
+                                 value={editForm?.description} 
+                                 onChange={e => setEditForm(prev => prev ? {...prev, description: e.target.value} : null)}
+                                 className="w-full bg-transparent text-zinc-300 leading-relaxed italic border border-white/10 rounded-xl p-4 h-32 outline-none focus:border-primary"
+                             />
+                         ) : (
+                             <p className="text-zinc-300 leading-relaxed italic">
+                                {selectedProject.description || 'No site descriptions or designer notes have been added to this project yet.'}
+                             </p>
+                         )}
+                      </div>
+                   </div>
+                </div>
+            ) : (
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+                    <div className="bg-surface-darker p-8 rounded-[2rem] border border-white/5 max-w-4xl mx-auto">
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-2xl font-black text-white">Project Financials</h3>
+                            <div className="text-right">
+                                <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Total Contract Value</p>
+                                <p className="text-2xl font-black text-white font-mono">{formatCurrency(selectedProject.budget)}</p>
+                            </div>
+                        </div>
+
+                        {/* Add Payment Form */}
+                        <div className="bg-black/20 p-6 rounded-2xl border border-white/5 mb-8">
+                            <h4 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">{editingPaymentId ? 'Edit Entry' : 'Record New Partial Payment'}</h4>
+                            <div className="flex gap-4 items-end">
+                                <div className="flex-1">
+                                    <label className="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Amount Received</label>
+                                    <input 
+                                        type="number" 
+                                        value={payAmount} 
+                                        onChange={e => setPayAmount(e.target.value)} 
+                                        className="w-full bg-surface-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" 
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-[10px] font-bold text-zinc-500 uppercase ml-2 mb-1 block">Note / Reference</label>
+                                    <input 
+                                        value={payNote} 
+                                        onChange={e => setPayNote(e.target.value)} 
+                                        className="w-full bg-surface-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" 
+                                        placeholder="Advance / 1st Installment"
+                                    />
+                                </div>
+                                <button onClick={handlePaymentSubmit} className="px-6 py-3 bg-primary text-black font-bold rounded-xl shadow-glow">
+                                    {editingPaymentId ? 'Update' : 'Add Entry'}
+                                </button>
+                                {editingPaymentId && (
+                                    <button onClick={() => { setEditingPaymentId(null); setPayAmount(''); setPayNote(''); }} className="px-4 py-3 bg-white/5 text-white font-bold rounded-xl">Cancel</button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Payment History */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
+                                <h4 className="text-sm font-bold text-white uppercase tracking-widest">Payment Ledger</h4>
+                                <p className="text-xs font-bold text-zinc-500">
+                                    Received: <span className="text-primary">{formatCurrency((selectedProject.payments || []).reduce((sum, p) => sum + p.amount, 0))}</span>
+                                    <span className="mx-2">•</span>
+                                    Pending: <span className="text-red-400">{formatCurrency(selectedProject.budget - (selectedProject.payments || []).reduce((sum, p) => sum + p.amount, 0))}</span>
+                                </p>
+                            </div>
+                            {(selectedProject.payments || []).length > 0 ? (
+                                selectedProject.payments?.map(p => (
+                                    <div key={p.id} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 group">
+                                        <div>
+                                            <p className="font-bold text-white">{p.note}</p>
+                                            <p className="text-xs text-zinc-500">{p.date} • {p.method}</p>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <p className="font-mono font-bold text-primary text-lg">{formatCurrency(p.amount)}</p>
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => editPayment(p)} className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-zinc-300 hover:text-white"><Edit2 className="w-4 h-4"/></button>
+                                                <button onClick={() => deletePayment(p.id)} className="p-2 bg-white/10 hover:bg-red-500/20 rounded-lg text-zinc-300 hover:text-red-500"><Trash2 className="w-4 h-4"/></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-10 text-zinc-600 italic">No payments recorded yet.</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
             
             {/* Modal Actions */}
             <div className="p-8 border-t border-white/5 bg-surface-dark/50 flex justify-end gap-4 shrink-0">
-               <button className="px-8 py-3 bg-white/5 text-white font-bold rounded-full border border-white/10 hover:bg-white/10 transition-all">Download All Site Data</button>
-               <button onClick={() => setSelectedProject(null)} className="px-10 py-3 bg-primary text-black font-black text-xs uppercase tracking-widest rounded-full shadow-glow active:scale-95 transition-all">Return to Dashboard</button>
+               <button onClick={() => { setSelectedProject(null); setIsEditing(false); }} className="px-10 py-3 bg-primary text-black font-black text-xs uppercase tracking-widest rounded-full shadow-glow active:scale-95 transition-all">Return to Dashboard</button>
             </div>
           </div>
         </div>

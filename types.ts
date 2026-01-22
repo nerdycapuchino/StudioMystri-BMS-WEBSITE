@@ -1,6 +1,14 @@
 
 // Domain Models
 
+export interface ProductVariant {
+  id: string;
+  name: string; // e.g., "Red", "Large"
+  price: number;
+  stock: number;
+  sku: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -13,10 +21,21 @@ export interface Product {
   materials?: string;
   dimensions?: string;
   manualUrl?: string; 
+  barcode?: string;
+  variants?: ProductVariant[];
 }
 
 export interface CartItem extends Product {
   quantity: number;
+  selectedVariant?: ProductVariant;
+}
+
+export interface PurchaseHistoryItem {
+  id: string;
+  date: string;
+  total: number;
+  items: string[];
+  source: 'POS' | 'Website';
 }
 
 export interface Customer {
@@ -24,45 +43,75 @@ export interface Customer {
   name: string;
   phone: string;
   email: string;
+  gstNumber?: string;
   lastPurchase?: string;
   totalSpend: number;
   address?: string;
+  shippingAddress?: string;
   notes?: string;
   status?: 'Active' | 'Inactive';
+  history: PurchaseHistoryItem[];
 }
 
 export interface Lead {
   id: string;
   companyName: string;
-  pocName: string;
+  pocName: string; 
   website?: string;
   phone: string;
   email: string;
+  gstNumber?: string;
   status: 'New' | 'Negotiation' | 'Won' | 'Lost';
   type: 'Inbound' | 'Outbound' | 'Referral';
-  source: string;
+  source: string; 
   lastContact: string;
   value: number; 
   requirements?: string;
   notes?: string;
+  files?: string[];
+  brief?: string;
+  dateReceived?: string;
 }
 
 export interface InventoryItem {
   id: string;
   name: string;
-  type: 'Raw Material' | 'Finished Good';
+  type: 'Raw Material' | 'Finished Good' | 'Consumable';
   quantity: number;
   unit: string;
   reorderLevel: number;
   cost: number;
   location?: string;
   supplier?: string;
+  batchNumber?: string;
+  expiryDate?: string;
+  barcode?: string;
+  bom?: { itemName: string; qty: number }[];
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  assigneeId: string;
+  dueDate: string;
+  status: 'To Do' | 'In Progress' | 'Done';
+  priority: 'Low' | 'Medium' | 'High';
+  description?: string;
+}
+
+export interface ProjectPayment {
+  id: string;
+  amount: number;
+  date: string;
+  note: string;
+  method: string;
 }
 
 export interface Project {
   id: string;
   name: string;
   client: string;
+  gstNumber?: string;
   stages: string[];
   currentStage: string;
   progress: number;
@@ -73,6 +122,7 @@ export interface Project {
   description?: string;
   referenceImages?: string[];
   siteAddress?: string;
+  payments?: ProjectPayment[];
 }
 
 export interface Shipment {
@@ -99,7 +149,10 @@ export enum AppModule {
   BRIDGE = 'BRIDGE',
   ACTIVITY = 'ACTIVITY',
   TEAM = 'TEAM',
-  CUSTOMERS = 'CUSTOMERS'
+  CUSTOMERS = 'CUSTOMERS',
+  TASKS = 'TASKS',
+  INVOICE_GEN = 'INVOICE_GEN',
+  SCANNER = 'SCANNER'
 }
 
 export interface UserRole {
@@ -140,6 +193,27 @@ export interface Invoice {
   taxAmount?: number;
   taxRate?: number;
   gstNumber?: string;
+  items?: { desc: string; qty: number; rate: number; total: number; variant?: string; hsn?: string; gstRate?: number }[];
+  
+  // Detailed Fields for Tax Invoice
+  deliveryType?: 'Standard' | 'Express' | 'Pickup'; 
+  deliveryCost?: number; 
+  sellerName?: string;
+  sellerAddress?: string;
+  sellerGst?: string;
+  buyerAddress?: string;
+  shippingAddress?: string;
+  paymentMode?: string;
+  referenceNo?: string;
+  referenceDate?: string;
+  buyerOrderNo?: string;
+  dispatchDocNo?: string;
+  dispatchThrough?: string;
+  destination?: string;
+  termsOfDelivery?: string;
+  pan?: string;
+  declaration?: string;
+  jurisdiction?: string;
 }
 
 export interface Employee {
@@ -156,15 +230,21 @@ export interface Employee {
   leavePolicy?: number;
   leavesRemaining?: number;
   dob?: string;
-  address?: string;
+  currentAddress?: string; // New
+  permanentAddress?: string; // New
+  bloodGroup?: string;
   emergencyContact?: string;
+  idProof?: string; // New
+  notes?: string; // New
   qualifications?: string;
   documents?: string[];
+  credentials?: { username: string; initialPass: string };
 }
 
 export interface CompanyPolicy {
   id: string;
   title: string;
+  content?: string;
   category: 'General' | 'Conduct' | 'Benefits' | 'Safety';
   lastUpdated: string;
   size: string;
@@ -228,5 +308,5 @@ export interface Channel {
   id: string;
   name: string;
   type: 'public' | 'private' | 'dm';
-  participantIds?: string[]; // Used primarily for DM and private
+  participantIds?: string[]; 
 }
