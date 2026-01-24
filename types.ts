@@ -170,6 +170,7 @@ export interface User {
   status: 'Active' | 'Inactive';
   role?: string;
   linkedEmployeeId?: string;
+  password?: string;
 }
 
 export interface IntegrationStatus {

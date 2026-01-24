@@ -3,32 +3,26 @@ import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 
 export const Login: React.FC = () => {
-  const { setCurrentUser } = useGlobal();
+  const { setCurrentUser, users } = useGlobal();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     setTimeout(() => {
-      // Demo logic: If email has 'admin', they are Super Admin, otherwise they are Sales
-      const isAdmin = email.toLowerCase().includes('admin');
-      const isWorker = email.toLowerCase().includes('worker');
-      
-      let roleId = 'sales';
-      if (isAdmin) roleId = 'admin';
-      else if (isWorker) roleId = 'worker';
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-      setCurrentUser({
-        id: Math.random().toString(36).substr(2, 9),
-        name: email.split('@')[0].toUpperCase(),
-        email: email,
-        roleId: roleId,
-        status: 'Active'
-      });
+      if (user && user.password === password) {
+         setCurrentUser(user);
+      } else {
+         setError('Invalid email or password. Try admin@studiomystri.com / admin123');
+      }
       setLoading(false);
     }, 800);
   };
@@ -50,6 +44,12 @@ export const Login: React.FC = () => {
             </div>
             <h1 className="text-2xl font-black text-white tracking-tighter">STUDIO MYSTRI</h1>
          </div>
+
+         {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold text-center">
+               {error}
+            </div>
+         )}
 
          <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1.5">

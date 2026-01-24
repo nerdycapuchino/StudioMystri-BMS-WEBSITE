@@ -81,9 +81,9 @@ export const MOCK_SHIPMENTS: Shipment[] = [
 ];
 
 export const MOCK_USERS: User[] = [
-  { id: '1', name: 'Vikram Malhotra', role: 'Super Admin', roleId: 'admin', email: 'admin@studiomystri.com', status: 'Active', linkedEmployeeId: '1' },
-  { id: '2', name: 'Ananya Singh', role: 'Architect', roleId: 'admin', email: 'ananya@studiomystri.com', status: 'Active', linkedEmployeeId: '2' },
-  { id: '3', name: 'Kabir Khan', role: 'Sales', roleId: 'sales', email: 'kabir@studiomystri.com', status: 'Active', linkedEmployeeId: '3' },
+  { id: '1', name: 'Vikram Malhotra', role: 'Super Admin', roleId: 'admin', email: 'admin@studiomystri.com', status: 'Active', linkedEmployeeId: '1', password: 'admin123' },
+  { id: '2', name: 'Ananya Singh', role: 'Architect', roleId: 'admin', email: 'ananya@studiomystri.com', status: 'Active', linkedEmployeeId: '2', password: 'user123' },
+  { id: '3', name: 'Kabir Khan', role: 'Sales', roleId: 'sales', email: 'kabir@studiomystri.com', status: 'Active', linkedEmployeeId: '3', password: 'user123' },
 ];
 
 export const MOCK_INTEGRATIONS: IntegrationStatus[] = [
