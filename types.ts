@@ -153,6 +153,7 @@ export enum AppModule {
   TASKS = 'TASKS',
   INVOICE_GEN = 'INVOICE_GEN',
   SCANNER = 'SCANNER'
+    SETTINGS = 'SETTINGS',
 }
 
 export interface UserRole {
