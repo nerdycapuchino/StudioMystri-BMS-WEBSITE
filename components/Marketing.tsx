@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Send, Sparkles, MessageSquare, Mail, Loader2, X, Pause, Play, Edit } from 'lucide-react';
@@ -8,16 +9,22 @@ export const Marketing: React.FC = () => {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [topic, setTopic] = useState('');
   const [audience, setAudience] = useState('');
-  const [channel, setChannel] = useState<'Email' | 'WhatsApp'>('Email');
   const [generatedContent, setGeneratedContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async () => {
     if (!topic || !audience) return;
     setIsLoading(true);
-    // Mock content generation - Replace with your own AI service or external API if needed
-    const content = `[${channel}] Marketing Campaign: ${topic}\n\nTargeted to: ${audience}\n\nThis is a mock generated content. Integrate your preferred AI service (OpenAI, Anthropic, etc.) to generate real marketing copy.`;    setGeneratedContent(content);
-    setIsLoading(false);
+    
+    // Simulate generation delay
+    setTimeout(() => {
+        const templates = [
+            `Subject: Discover ${topic} - Just for You!\n\nHi there,\n\nWe know ${audience} appreciate quality. That's why we're bringing you the best in ${topic}. Visit our showroom today!`,
+            `Hey ${audience}!\n\nCheck out our new ${topic} collection. It's exactly what you've been looking for. Limited stock available!`
+        ];
+        setGeneratedContent(templates[Math.floor(Math.random() * templates.length)]);
+        setIsLoading(false);
+    }, 1000);
   };
 
   const chartData = [
@@ -38,7 +45,7 @@ export const Marketing: React.FC = () => {
           onClick={() => setIsAiModalOpen(true)}
           className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200"
         >
-          <Sparkles className="w-4 h-4" /> AI Content Generator
+          <Sparkles className="w-4 h-4" /> Content Generator
         </button>
       </div>
 
@@ -95,20 +102,19 @@ export const Marketing: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Modal kept as is but hidden for brevity in this response unless requested */}
       {isAiModalOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm rounded-xl">
            <div className="bg-white w-[500px] rounded-xl shadow-2xl p-6">
               <div className="flex justify-between mb-4">
-                 <h3 className="font-bold flex gap-2 items-center"><Sparkles className="w-4 h-4 text-purple-600"/> Generate Content</h3>
+                 <h3 className="font-bold flex gap-2 items-center"><Sparkles className="w-4 h-4 text-purple-600"/> Quick Template Gen</h3>
                  <button onClick={() => setIsAiModalOpen(false)}><X className="w-4 h-4"/></button>
               </div>
-              <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Topic" className="w-full border p-2 rounded mb-2" />
-              <input value={audience} onChange={e => setAudience(e.target.value)} placeholder="Audience" className="w-full border p-2 rounded mb-4" />
+              <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Product / Topic" className="w-full border p-2 rounded mb-2" />
+              <input value={audience} onChange={e => setAudience(e.target.value)} placeholder="Target Audience" className="w-full border p-2 rounded mb-4" />
               <button onClick={handleGenerate} className="w-full bg-indigo-600 text-white py-2 rounded">
-                 {isLoading ? 'Generating...' : 'Generate'}
+                 {isLoading ? 'Generating...' : 'Generate Template'}
               </button>
-              {generatedContent && <div className="mt-4 p-2 bg-slate-50 text-sm border rounded">{generatedContent}</div>}
+              {generatedContent && <div className="mt-4 p-2 bg-slate-50 text-sm border rounded whitespace-pre-wrap">{generatedContent}</div>}
            </div>
         </div>
       )}

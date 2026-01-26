@@ -1,15 +1,16 @@
 
+
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { Shield, UserPlus, Edit, Trash2, X, Check, Link, Lock, Eye, EyeOff, Key } from 'lucide-react';
+import { Shield, UserPlus, Edit, Trash2, X, Check, Link, Lock, Eye, EyeOff, Key, Building2, Landmark, Image } from 'lucide-react';
 import { User, AccessLevel } from '../types';
 
 export const Admin: React.FC = () => {
-  const { users, addUser, updateUserStatus, deleteUser, employees, permissions, updatePermission, currentUser } = useGlobal();
+  const { users, addUser, updateUserStatus, deleteUser, employees, permissions, updatePermission, currentUser, companySettings, updateCompanySettings } = useGlobal();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showCreds, setShowCreds] = useState<string | null>(null); // Employee ID to show creds for
+  const [showCreds, setShowCreds] = useState<string | null>(null);
   const [newUser, setNewUser] = useState<Partial<User>>({ name: '', email: '', role: 'Sales', status: 'Active' });
-  const [activeTab, setActiveTab] = useState<'users' | 'security' | 'credentials'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'security' | 'credentials' | 'settings'>('users');
 
   const safeUsers = users || [];
   const safePermissions = permissions || [];
@@ -20,12 +21,20 @@ export const Admin: React.FC = () => {
         id: Math.random().toString(36).substr(2, 9),
         name: newUser.name,
         email: newUser.email,
-        role: newUser.role as any,
+        roleId: newUser.role ? newUser.role.toLowerCase() : 'sales',
+        role: newUser.role,
         status: newUser.status as any
-      });
+      } as User);
       setShowAddModal(false);
       setNewUser({ name: '', email: '', role: 'Sales', status: 'Active' });
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'loginBackgroundUrl') => {
+      if (e.target.files && e.target.files[0]) {
+          const url = URL.createObjectURL(e.target.files[0]);
+          updateCompanySettings({ [field]: url });
+      }
   };
 
   const roles = ['Super Admin', 'Architect', 'Sales', 'Logistics', 'HR', 'Finance'];
@@ -46,11 +55,14 @@ export const Admin: React.FC = () => {
            <h2 className="text-3xl font-bold text-white tracking-tight">Admin & Security</h2>
            <p className="text-zinc-400 text-sm mt-1">Manage users, roles, and data access.</p>
         </div>
-        <div className="flex bg-surface-dark p-1 rounded-xl border border-white/5">
-           <button onClick={() => setActiveTab('users')} className={`px-6 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'users' ? 'bg-primary text-background-dark shadow-glow' : 'text-zinc-400 hover:text-white'}`}>Users</button>
-           <button onClick={() => setActiveTab('security')} className={`px-6 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'security' ? 'bg-primary text-background-dark shadow-glow' : 'text-zinc-400 hover:text-white'}`}>Field Security</button>
+        <div className="flex bg-surface-dark p-1 rounded-xl border border-white/5 overflow-x-auto">
+           <button onClick={() => setActiveTab('users')} className={`px-6 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === 'users' ? 'bg-primary text-background-dark shadow-glow' : 'text-zinc-400 hover:text-white'}`}>Users</button>
+           <button onClick={() => setActiveTab('security')} className={`px-6 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === 'security' ? 'bg-primary text-background-dark shadow-glow' : 'text-zinc-400 hover:text-white'}`}>Field Security</button>
            {currentUser?.roleId === 'admin' && (
-               <button onClick={() => setActiveTab('credentials')} className={`px-6 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'credentials' ? 'bg-primary text-background-dark shadow-glow' : 'text-zinc-400 hover:text-white'}`}>Credentials</button>
+               <>
+                   <button onClick={() => setActiveTab('credentials')} className={`px-6 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === 'credentials' ? 'bg-primary text-background-dark shadow-glow' : 'text-zinc-400 hover:text-white'}`}>Credentials</button>
+                   <button onClick={() => setActiveTab('settings')} className={`px-6 py-2 text-sm font-bold rounded-lg transition-all whitespace-nowrap ${activeTab === 'settings' ? 'bg-primary text-background-dark shadow-glow' : 'text-zinc-400 hover:text-white'}`}>Company Settings</button>
+               </>
            )}
         </div>
       </div>
@@ -120,6 +132,7 @@ export const Admin: React.FC = () => {
         </>
       )}
 
+      {/* Security Tab Omitted for Brevity - Keeping Existing logic */}
       {activeTab === 'security' && (
         <div className="bg-surface-dark p-8 rounded-2xl shadow-xl border border-white/5 overflow-y-auto">
            <h3 className="font-bold text-xl text-white mb-2 flex items-center gap-2"><Lock className="w-5 h-5 text-primary" /> Field-Level Security Matrix</h3>
@@ -172,6 +185,7 @@ export const Admin: React.FC = () => {
         </div>
       )}
 
+      {/* Credentials Tab Omitted for Brevity - Keeping Existing logic */}
       {activeTab === 'credentials' && (
           <div className="bg-surface-dark p-8 rounded-2xl shadow-xl border border-white/5 overflow-y-auto">
               <h3 className="font-bold text-xl text-white mb-6 flex items-center gap-2"><Key className="w-5 h-5 text-primary"/> Employee Login Credentials</h3>
@@ -206,6 +220,98 @@ export const Admin: React.FC = () => {
                           )}
                       </div>
                   ))}
+              </div>
+          </div>
+      )}
+
+      {activeTab === 'settings' && (
+          <div className="bg-surface-dark p-8 rounded-2xl shadow-xl border border-white/5 overflow-y-auto">
+              <h3 className="font-bold text-xl text-white mb-6 flex items-center gap-2"><Building2 className="w-5 h-5 text-primary"/> Company Profile & Invoice Settings</h3>
+              <div className="max-w-3xl space-y-8">
+                  {/* Branding Images */}
+                  <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-6">
+                      <h4 className="text-sm font-bold text-zinc-300 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2"><Image className="w-4 h-4"/> Branding Assets</h4>
+                      <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Logo (Nav & Invoices)</label>
+                              <div className="flex items-center gap-4">
+                                  <div className="size-16 bg-white rounded-lg p-2 shrink-0 border border-white/10 flex items-center justify-center">
+                                      {companySettings.logoUrl ? <img src={companySettings.logoUrl} className="max-w-full max-h-full object-contain" /> : <span className="text-black text-xs">No Logo</span>}
+                                  </div>
+                                  <label className="cursor-pointer px-4 py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors">
+                                      Upload Logo
+                                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'logoUrl')} />
+                                  </label>
+                              </div>
+                          </div>
+                          <div className="space-y-2">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Login Screen Background</label>
+                              <div className="flex items-center gap-4">
+                                  <div className="h-16 w-24 bg-black rounded-lg shrink-0 border border-white/10 overflow-hidden">
+                                      {companySettings.loginBackgroundUrl ? <img src={companySettings.loginBackgroundUrl} className="w-full h-full object-cover" /> : <span className="text-zinc-600 text-[10px] flex items-center justify-center h-full">Default</span>}
+                                  </div>
+                                  <label className="cursor-pointer px-4 py-2 bg-white/5 text-white rounded-lg text-xs font-bold hover:bg-white/10 transition-colors">
+                                      Upload BG
+                                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'loginBackgroundUrl')} />
+                                  </label>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* General Info */}
+                  <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-6">
+                      <h4 className="text-sm font-bold text-zinc-300 uppercase tracking-widest border-b border-white/5 pb-2">Organization Details</h4>
+                      <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Company Name</label>
+                              <input value={companySettings.name} onChange={e => updateCompanySettings({ name: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" />
+                          </div>
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">GSTIN / Tax ID</label>
+                              <input value={companySettings.gstNumber} onChange={e => updateCompanySettings({ gstNumber: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" />
+                          </div>
+                      </div>
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-zinc-500 uppercase">Registered Address</label>
+                          <textarea value={companySettings.address} onChange={e => updateCompanySettings({ address: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm h-24" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Contact Email</label>
+                              <input value={companySettings.email} onChange={e => updateCompanySettings({ email: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" />
+                          </div>
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Contact Phone</label>
+                              <input value={companySettings.phone} onChange={e => updateCompanySettings({ phone: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" />
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Bank Details */}
+                  <div className="bg-white/5 p-6 rounded-2xl border border-white/5 space-y-6">
+                      <h4 className="text-sm font-bold text-zinc-300 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2"><Landmark className="w-4 h-4"/> Banking Information</h4>
+                      <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Bank Name</label>
+                              <input value={companySettings.bankName || ''} onChange={e => updateCompanySettings({ bankName: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" placeholder="e.g., HDFC Bank" />
+                          </div>
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Account Number</label>
+                              <input value={companySettings.accountNo || ''} onChange={e => updateCompanySettings({ accountNo: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" placeholder="XXXX XXXX XXXX" />
+                          </div>
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">IFSC Code</label>
+                              <input value={companySettings.ifsc || ''} onChange={e => updateCompanySettings({ ifsc: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" placeholder="HDFC0001234" />
+                          </div>
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-zinc-500 uppercase">Branch Name</label>
+                              <input value={companySettings.branch || ''} onChange={e => updateCompanySettings({ branch: e.target.value })} className="w-full bg-surface-highlight border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary text-sm" placeholder="e.g., Navrangpura" />
+                          </div>
+                      </div>
+                  </div>
+
+                  <button className="px-8 py-3 bg-primary text-black font-bold rounded-xl shadow-glow text-sm">Save All Settings</button>
               </div>
           </div>
       )}

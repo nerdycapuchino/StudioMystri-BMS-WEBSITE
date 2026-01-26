@@ -1,24 +1,15 @@
-import React, { useState } from 'react';
+
+import React, { useMemo } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { AlertTriangle, Package, DollarSign, Users, Filter, X, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { InventoryItem } from '../types';
 
-const data = [
-  { name: 'Jan', revenue: 4000, expenses: 2400 },
-  { name: 'Feb', revenue: 3000, expenses: 1398 },
-  { name: 'Mar', revenue: 2000, expenses: 9800 },
-  { name: 'Apr', revenue: 2780, expenses: 3908 },
-  { name: 'May', revenue: 1890, expenses: 4800 },
-  { name: 'Jun', revenue: 2390, expenses: 3800 },
-  { name: 'Jul', revenue: 3490, expenses: 4300 },
-];
-
 export const ERP: React.FC = () => {
-  const { inventory, updateInventoryStock, addActivity } = useGlobal();
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [newQty, setNewQty] = useState(0);
-  const [newLocation, setNewLocation] = useState('');
+  const { inventory, updateInventoryStock, addActivity, invoices, salesToday, formatCurrency, employees } = useGlobal();
+  const [editingItem, setEditingItem] = React.useState<InventoryItem | null>(null);
+  const [newQty, setNewQty] = React.useState(0);
+  const [newLocation, setNewLocation] = React.useState('');
 
   const handleEditClick = (item: InventoryItem) => {
     setEditingItem(item);
@@ -29,15 +20,8 @@ export const ERP: React.FC = () => {
   const handleSave = () => {
     if (editingItem) {
       updateInventoryStock(editingItem.id, newQty);
-      // In a real app we'd have a specific updateInventoryDetails method, 
-      // but for now we simulate the location update or reuse the stock one.
-      // Assuming GlobalContext updateInventoryStock handles this or we mock it:
-      // Note: GlobalContext only has updateInventoryStock. 
-      // To satisfy user request for managing warehouse parts, we'll assume updateInventoryStock *could* handle more,
-      // or we just acknowledge the UI capability for now.
-      
       if (newQty > editingItem.quantity) {
-         addActivity(`Restocked ${editingItem.name}: +${newQty - editingItem.quantity} ${editingItem.unit} to ${newLocation}`, 'alert');
+         addActivity(`Restocked ${editingItem.name}: +${newQty - editingItem.quantity} ${editingItem.unit}`, 'alert');
       }
       setEditingItem(null);
     }
@@ -48,6 +32,32 @@ export const ERP: React.FC = () => {
      addActivity(`Purchase Order generated for ${item.name}`, 'alert');
   };
 
+  // Real Data Processing for Charts
+  const chartData = useMemo(() => {
+    const monthlyData: { [key: string]: { name: string; revenue: number; expenses: number } } = {};
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Initialize current year months
+    months.forEach(m => monthlyData[m] = { name: m, revenue: 0, expenses: 0 });
+
+    invoices.forEach(inv => {
+        // Parse date (Assuming format 'YYYY-MM-DD' or 'DD/MM/YYYY')
+        const d = new Date(inv.date); 
+        // Fallback for demo dates if invalid
+        const monthName = isNaN(d.getTime()) ? 'Nov' : months[d.getMonth()];
+        
+        if (monthlyData[monthName]) {
+            if (inv.type === 'Income') monthlyData[monthName].revenue += inv.amount;
+            else if (inv.type === 'Expense') monthlyData[monthName].expenses += inv.amount;
+        }
+    });
+
+    return Object.values(monthlyData);
+  }, [invoices]);
+
+  const totalRevenue = invoices.filter(i => i.type === 'Income').reduce((sum, i) => sum + i.amount, 0);
+  const activeOrders = invoices.filter(i => i.status === 'Pending' || i.status === 'Partial').length;
+
   return (
     <div className="h-full flex flex-col overflow-y-auto pr-2 relative">
       <h2 className="text-2xl font-bold text-slate-800 mb-6">Business Overview</h2>
@@ -55,10 +65,10 @@ export const ERP: React.FC = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         {[
-          { title: 'Total Revenue', value: '$124,500', trend: '+12%', icon: DollarSign, color: 'indigo' },
+          { title: 'Total Revenue', value: formatCurrency(totalRevenue), trend: '+12%', icon: DollarSign, color: 'indigo' },
           { title: 'Low Stock Items', value: inventory.filter(i => i.quantity <= i.reorderLevel).length, trend: 'Action Req', icon: AlertTriangle, color: 'orange' },
-          { title: 'Active Orders', value: '28', trend: '+5%', icon: Package, color: 'blue' },
-          { title: 'Staff Present', value: '14/16', trend: '92%', icon: Users, color: 'green' },
+          { title: 'Active Orders', value: activeOrders, trend: '+5%', icon: Package, color: 'blue' },
+          { title: 'Staff Present', value: `${employees.filter(e=>e.attendance==='Present').length}/${employees.length}`, trend: '92%', icon: Users, color: 'green' },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
             <div className="flex justify-between items-start mb-2">
@@ -81,13 +91,12 @@ export const ERP: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-semibold text-slate-800">Financial Performance</h3>
              <select className="text-sm border-none bg-slate-50 rounded px-2 py-1 text-slate-600 focus:ring-0 cursor-pointer">
-               <option>Last 6 Months</option>
                <option>This Year</option>
              </select>
           </div>
           <div className="h-64 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
@@ -95,8 +104,8 @@ export const ERP: React.FC = () => {
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0' }}
                   cursor={{fill: '#f1f5f9'}}
                 />
-                <Bar dataKey="revenue" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={32} />
-                <Bar dataKey="expenses" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={32} />
+                <Bar dataKey="revenue" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={32} name="Income" />
+                <Bar dataKey="expenses" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={32} name="Expenses" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -108,7 +117,7 @@ export const ERP: React.FC = () => {
              <AlertTriangle className="w-4 h-4 text-orange-500" />
              Stock Alerts
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-64 overflow-y-auto custom-scrollbar pr-2">
              {inventory.filter(i => i.quantity <= i.reorderLevel).map(item => (
                <div key={item.id} className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-orange-600 shadow-sm font-bold text-xs shrink-0">
@@ -159,7 +168,7 @@ export const ERP: React.FC = () => {
                      {item.location || 'Unassigned'}
                   </td>
                   <td className="px-4 py-3 text-slate-700">{item.quantity} {item.unit}</td>
-                  <td className="px-4 py-3 text-slate-700">${item.cost}</td>
+                  <td className="px-4 py-3 text-slate-700">{formatCurrency(item.cost)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       item.quantity <= item.reorderLevel ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'

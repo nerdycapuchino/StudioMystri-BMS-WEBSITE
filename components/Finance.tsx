@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Invoice } from '../types';
@@ -36,12 +37,14 @@ export const Finance: React.FC = () => {
     inv.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Metrics
+  // Metrics Logic Fixed: Only count 'Income' invoices for Receivables
+  // Pending Receivables = Sum(Total Amount - Paid Amount) for Income Invoices
+  const incomeTotal = invoices.filter(i => i.type === 'Income').reduce((acc, i) => acc + i.amount, 0);
   const incomePaid = invoices.filter(i => i.type === 'Income').reduce((acc, i) => acc + i.paidAmount, 0);
+  const pendingReceivables = incomeTotal - incomePaid;
+
   const expensePaid = invoices.filter(i => i.type === 'Expense').reduce((acc, i) => acc + i.paidAmount, 0);
   const profit = incomePaid - expensePaid;
-
-  const pendingReceivables = invoices.filter(i => i.type === 'Income').reduce((acc, i) => acc + (i.amount - i.paidAmount), 0);
 
   const addItemToGen = () => {
       if(newItem.desc && newItem.rate > 0) {
@@ -62,6 +65,7 @@ export const Finance: React.FC = () => {
       const total = subtotal + tax;
       
       addInvoice({
+          ...invGen,
           id: `MAN-${Math.floor(Math.random()*10000)}`,
           client: invGen.clientName,
           amount: total,
@@ -76,8 +80,7 @@ export const Finance: React.FC = () => {
           history: [],
           items: invGen.items.map(i => ({ desc: i.desc, qty: i.qty, rate: i.rate, total: i.qty * i.rate })),
           gstNumber: invGen.clientGst,
-          buyerAddress: invGen.clientAddress,
-          ...invGen
+          buyerAddress: invGen.clientAddress
       } as Invoice);
       
       setShowInvoiceGenerator(false);
@@ -111,7 +114,7 @@ export const Finance: React.FC = () => {
          </div>
          <div className="bg-surface-dark p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
             <TrendingUp className="absolute top-4 right-4 w-8 h-8 text-green-500/50" />
-            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Total Income</p>
+            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Total Income (Paid)</p>
             <h3 className="text-2xl font-black text-green-400">{formatCurrency(incomePaid)}</h3>
          </div>
          <div className="bg-surface-dark p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
@@ -121,7 +124,7 @@ export const Finance: React.FC = () => {
          </div>
          <div className="bg-surface-dark p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
             <AlertCircle className="absolute top-4 right-4 w-8 h-8 text-amber-500/50" />
-            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Receivables</p>
+            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Pending Receivables</p>
             <h3 className="text-2xl font-black text-amber-400">{formatCurrency(pendingReceivables)}</h3>
          </div>
       </div>

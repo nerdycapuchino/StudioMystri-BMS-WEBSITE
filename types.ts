@@ -1,6 +1,20 @@
 
 // Domain Models
 
+export interface CompanySettings {
+  name: string;
+  address: string;
+  gstNumber: string;
+  logoUrl: string;
+  loginBackgroundUrl?: string; // New field for login screen background
+  email: string;
+  phone: string;
+  bankName?: string;
+  accountNo?: string;
+  ifsc?: string;
+  branch?: string;
+}
+
 export interface ProductVariant {
   id: string;
   name: string; // e.g., "Red", "Large"
@@ -9,13 +23,21 @@ export interface ProductVariant {
   sku: string;
 }
 
+export interface ProductMedia {
+  type: 'image' | 'video';
+  url: string;
+  file?: File;
+}
+
 export interface Product {
   id: string;
   name: string;
   sku: string;
   price: number; 
   category: string;
-  image: string;
+  image: string; // Keep for backward compatibility/thumbnail
+  media?: ProductMedia[]; // New field for multiple uploads
+  documents?: { name: string; url: string }[]; // New field for manuals
   stock: number;
   description?: string;
   materials?: string;
@@ -153,7 +175,6 @@ export enum AppModule {
   TASKS = 'TASKS',
   INVOICE_GEN = 'INVOICE_GEN',
   SCANNER = 'SCANNER'
-    SETTINGS = 'SETTINGS',
 }
 
 export interface UserRole {
@@ -197,7 +218,7 @@ export interface Invoice {
   items?: { desc: string; qty: number; rate: number; total: number; variant?: string; hsn?: string; gstRate?: number }[];
   
   // Detailed Fields for Tax Invoice
-  deliveryType?: 'Standard' | 'Express' | 'Pickup'; 
+  deliveryType?: 'Standard' | 'Express' | 'Pickup' | 'Free'; 
   deliveryCost?: number; 
   sellerName?: string;
   sellerAddress?: string;
@@ -215,6 +236,12 @@ export interface Invoice {
   pan?: string;
   declaration?: string;
   jurisdiction?: string;
+  
+  // Bank Details Snapshot (to persist even if settings change later)
+  bankName?: string;
+  accountNo?: string;
+  ifsc?: string;
+  branch?: string;
 }
 
 export interface Employee {
@@ -231,12 +258,12 @@ export interface Employee {
   leavePolicy?: number;
   leavesRemaining?: number;
   dob?: string;
-  currentAddress?: string; // New
-  permanentAddress?: string; // New
+  currentAddress?: string;
+  permanentAddress?: string;
   bloodGroup?: string;
   emergencyContact?: string;
-  idProof?: string; // New
-  notes?: string; // New
+  idProof?: string;
+  notes?: string;
   qualifications?: string;
   documents?: string[];
   credentials?: { username: string; initialPass: string };
@@ -310,4 +337,12 @@ export interface Channel {
   name: string;
   type: 'public' | 'private' | 'dm';
   participantIds?: string[]; 
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  channel: 'Email' | 'WhatsApp';
+  status: 'Active' | 'Paused';
+  conversionRate: number;
 }

@@ -1,6 +1,6 @@
 
 
-import { Product, Lead, InventoryItem, Project, Customer, Shipment, User, IntegrationStatus, Activity, Invoice, Employee, Notification, Order, SystemLog } from './types';
+import { Product, Lead, InventoryItem, Project, Customer, Shipment, User, IntegrationStatus, Activity, Invoice, Employee, Notification, Order, SystemLog, Campaign } from './types';
 
 export const MOCK_PRODUCTS: Product[] = [
   { 
@@ -121,4 +121,9 @@ export const MOCK_ORDERS: Order[] = [
 export const MOCK_LOGS: SystemLog[] = [
   { id: '1', user: 'Vikram Malhotra', action: 'Login', details: 'Successful login from IP 192.168.1.1', timestamp: '2023-11-08 09:00 AM', module: 'Auth' },
   { id: '2', user: 'Kabir Khan', action: 'Create Lead', details: 'Added lead "TechPark Solutions"', timestamp: '2023-11-08 10:30 AM', module: 'CRM' },
+];
+
+export const MOCK_CAMPAIGNS: Campaign[] = [
+  { id: '1', name: 'Diwali Sale', channel: 'WhatsApp', status: 'Active', conversionRate: 12 },
+  { id: '2', name: 'New Arrivals', channel: 'Email', status: 'Paused', conversionRate: 8 },
 ];

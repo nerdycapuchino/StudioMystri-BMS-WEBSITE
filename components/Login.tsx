@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 
 export const Login: React.FC = () => {
-  const { setCurrentUser } = useGlobal();
+  const { setCurrentUser, companySettings } = useGlobal();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,20 +35,28 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-6 bg-background-dark relative overflow-hidden">
-      {/* Background Ambience */}
+      {/* Dynamic Background Ambience */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-background-dark via-surface-dark to-black opacity-90"></div>
-        <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop" className="w-full h-full object-cover opacity-20" alt="Background" />
+        <img 
+            src={companySettings.loginBackgroundUrl || "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop"} 
+            className="w-full h-full object-cover opacity-30" 
+            alt="Background" 
+        />
       </div>
 
       <div className="relative z-10 w-full max-w-[400px] bg-surface-dark/95 backdrop-blur-xl border border-white/10 rounded-[2rem] p-10 shadow-2xl">
          <div className="text-center mb-8">
-            {/* Logo Placeholder - 1:1 Ratio, approx 100x100px */}
-            <div className="mx-auto mb-6 w-[100px] h-[100px] bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden">
-               {/* Replace src with actual logo URL */}
-               <img src="https://via.placeholder.com/100/38e07b/000000?text=LOGO" alt="Logo" className="w-full h-full object-cover" />
+            {/* Dynamic Logo Placeholder */}
+            <div className="mx-auto mb-6 w-[100px] h-[100px] bg-white rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden p-2">
+               {companySettings.logoUrl ? (
+                   <img src={companySettings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+               ) : (
+                   <div className="font-black text-4xl text-black">M</div>
+               )}
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tighter">STUDIO MYSTRI</h1>
+            <h1 className="text-2xl font-black text-white tracking-tighter uppercase">{companySettings.name}</h1>
+            <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Enterprise Login</p>
          </div>
 
          <form onSubmit={handleLogin} className="space-y-5">

@@ -1,15 +1,23 @@
 
+
 import React, { useState, useRef } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { InventoryItem } from '../types';
-import { Plus, X, Search, Edit2, Trash2, Barcode, Scan, Camera, Package, MapPin, Truck, Layers, Printer } from 'lucide-react';
+import { Plus, X, Search, Edit2, Trash2, Barcode, Scan, Camera, Package, MapPin, Truck, Layers, Printer, Hammer, ArrowRight } from 'lucide-react';
 
 export const Warehouse: React.FC = () => {
-  const { inventory, formatCurrency, addInventoryItem, updateInventoryItem, deleteInventoryItem } = useGlobal();
+  const { inventory, formatCurrency, addInventoryItem, updateInventoryItem, deleteInventoryItem, manufactureProduct } = useGlobal();
+  const [activeTab, setActiveTab] = useState<'inventory' | 'production'>('inventory');
   const [showAdd, setShowAdd] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [editItem, setEditItem] = useState<InventoryItem | null>(null);
+  const [printLabelItem, setPrintLabelItem] = useState<InventoryItem | null>(null);
   
+  // Production State
+  const [prodItem, setProdItem] = useState<string>('');
+  const [prodQty, setProdQty] = useState<number>(1);
+  const [prodResult, setProdResult] = useState<{success: boolean, message: string} | null>(null);
+
   // Enhanced Form State
   const [form, setForm] = useState<Partial<InventoryItem>>({ 
       name: '', quantity: 0, cost: 0, unit: 'pcs', type: 'Raw Material', 
@@ -55,6 +63,17 @@ export const Warehouse: React.FC = () => {
       }
   };
 
+  const executeProduction = () => {
+      if (!prodItem || prodQty <= 0) return;
+      const result = manufactureProduct(prodItem, prodQty);
+      setProdResult(result);
+      if (result.success) {
+          setProdQty(1);
+          setTimeout(() => setProdResult(null), 3000);
+      }
+  };
+
+  // Mock scanner for warehouse view (use actual scanner component for real scan)
   const startScanner = async () => {
       setShowScanner(true);
       try {
@@ -79,7 +98,6 @@ export const Warehouse: React.FC = () => {
   };
 
   const simulateScan = () => {
-      // In a real app, this would be triggered by a barcode detection library
       if (inventory.length > 0) {
           const randomItem = inventory[Math.floor(Math.random() * inventory.length)];
           alert(`Scanned: ${randomItem.name} (${randomItem.quantity} in stock)`);
@@ -89,6 +107,9 @@ export const Warehouse: React.FC = () => {
       }
   };
 
+  // Filter finished goods for production
+  const finishedGoods = inventory.filter(i => i.type === 'Finished Good' && i.bom && i.bom.length > 0);
+
   return (
     <div className="h-full flex flex-col p-6 md:p-8 bg-background-dark overflow-hidden relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -96,6 +117,12 @@ export const Warehouse: React.FC = () => {
             <h2 className="text-3xl font-bold text-white tracking-tight">Warehouse Master</h2>
             <p className="text-zinc-400 text-sm mt-1">Manage Stock, BOM, and Logistics</p>
         </div>
+        
+        <div className="flex bg-white/5 rounded-full p-1 border border-white/5">
+            <button onClick={() => setActiveTab('inventory')} className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'inventory' ? 'bg-primary text-black' : 'text-zinc-500'}`}>Inventory</button>
+            <button onClick={() => setActiveTab('production')} className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'production' ? 'bg-primary text-black' : 'text-zinc-500'}`}>Production</button>
+        </div>
+
         <div className="flex gap-3">
             <button onClick={startScanner} className="px-5 py-2.5 bg-white/5 border border-white/10 text-white rounded-full text-sm font-bold hover:bg-white/10 flex items-center gap-2 transition-all">
                 <Scan className="w-4 h-4 text-primary" /> Scan Item
@@ -106,6 +133,7 @@ export const Warehouse: React.FC = () => {
         </div>
       </div>
 
+      {activeTab === 'inventory' ? (
       <div className="flex-1 overflow-y-auto bg-surface-dark border border-white/5 rounded-2xl custom-scrollbar">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface-highlight text-zinc-500 uppercase text-xs font-bold tracking-widest sticky top-0 z-10">
@@ -142,6 +170,7 @@ export const Warehouse: React.FC = () => {
                 <td className="p-6 text-right font-mono text-zinc-300">{formatCurrency(item.cost)}</td>
                 <td className="p-6 text-right">
                   <div className="flex justify-end gap-2">
+                    <button onClick={() => setPrintLabelItem(item)} className="p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors" title="Print Label"><Printer className="w-4 h-4"/></button>
                     <button onClick={() => openEdit(item)} className="p-2 text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors"><Edit2 className="w-4 h-4"/></button>
                     <button onClick={() => deleteInventoryItem(item.id)} className="p-2 text-zinc-400 hover:text-red-500 bg-white/5 hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4"/></button>
                   </div>
@@ -151,6 +180,79 @@ export const Warehouse: React.FC = () => {
           </tbody>
         </table>
       </div>
+      ) : (
+          <div className="flex-1 bg-surface-dark border border-white/5 rounded-2xl p-8 overflow-y-auto custom-scrollbar">
+              <div className="max-w-4xl mx-auto">
+                  <div className="bg-black/20 p-8 rounded-[2rem] border border-white/5 mb-8">
+                      <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2"><Hammer className="w-5 h-5 text-primary"/> Run Production Cycle</h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                          <div>
+                              <label className="text-xs font-bold text-zinc-500 uppercase block mb-2">Select Item to Build</label>
+                              <div className="relative">
+                                  <select 
+                                    className="w-full bg-surface-highlight border border-white/10 rounded-xl p-4 text-white appearance-none focus:outline-none focus:border-primary"
+                                    value={prodItem}
+                                    onChange={e => { setProdItem(e.target.value); setProdResult(null); }}
+                                  >
+                                      <option value="" disabled>Choose Finished Good...</option>
+                                      {finishedGoods.map(g => <option key={g.id} value={g.id}>{g.name} (In Stock: {g.quantity})</option>)}
+                                  </select>
+                                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">expand_more</span>
+                              </div>
+                          </div>
+                          <div>
+                              <label className="text-xs font-bold text-zinc-500 uppercase block mb-2">Quantity to Produce</label>
+                              <input 
+                                type="number" 
+                                className="w-full bg-surface-highlight border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-primary" 
+                                value={prodQty}
+                                onChange={e => { setProdResult(null); setProdQty(Number(e.target.value)); }}
+                                min="1"
+                              />
+                          </div>
+                      </div>
+
+                      {prodItem && (
+                          <div className="bg-white/5 rounded-xl p-4 mb-6">
+                              <h4 className="text-xs font-bold text-zinc-400 uppercase mb-3 flex items-center gap-2"><Layers className="w-4 h-4"/> Required Materials</h4>
+                              <div className="space-y-2">
+                                  {inventory.find(i => i.id === prodItem)?.bom?.map((b, idx) => {
+                                      const rawMat = inventory.find(r => r.name === b.itemName);
+                                      const totalReq = b.qty * prodQty;
+                                      const hasStock = (rawMat?.quantity || 0) >= totalReq;
+                                      return (
+                                          <div key={idx} className="flex justify-between items-center text-sm p-2 bg-black/20 rounded-lg">
+                                              <span className="text-zinc-300">{b.itemName}</span>
+                                              <div className="flex items-center gap-4">
+                                                  <span className="text-zinc-500 text-xs">Requires: <span className="text-white font-bold">{totalReq}</span></span>
+                                                  <span className={`text-xs font-bold px-2 py-0.5 rounded ${hasStock ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                                                      Stock: {rawMat?.quantity || 0}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          </div>
+                      )}
+
+                      <button 
+                        onClick={executeProduction}
+                        className="w-full py-4 bg-primary text-black font-black uppercase text-sm tracking-widest rounded-xl shadow-glow hover:scale-[1.01] active:scale-95 transition-all"
+                      >
+                          Confirm & Build
+                      </button>
+
+                      {prodResult && (
+                          <div className={`mt-4 p-4 rounded-xl text-center font-bold text-sm ${prodResult.success ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                              {prodResult.message}
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
 
       {/* Add/Edit Modal */}
       {(showAdd) && (
@@ -257,6 +359,24 @@ export const Warehouse: React.FC = () => {
                       <button onClick={stopScanner} className="px-6 py-3 bg-red-600 text-white font-bold rounded-full text-xs uppercase tracking-widest">Close</button>
                   </div>
                   <div className="absolute top-4 left-0 right-0 text-center text-white font-bold text-sm bg-black/50 py-2">Align Barcode in Frame</div>
+              </div>
+          </div>
+      )}
+
+      {/* Label Printing Modal */}
+      {printLabelItem && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 p-4">
+              <div className="bg-white p-8 rounded-xl text-black text-center w-[300px]">
+                  <h3 className="font-bold mb-4">Print Label</h3>
+                  <div className="border-2 border-black p-4 inline-block mb-4">
+                      <p className="font-black text-lg">{printLabelItem.name}</p>
+                      <p className="font-mono text-sm">{printLabelItem.barcode || 'NO-BARCODE'}</p>
+                      <p className="text-xs font-bold mt-2">{formatCurrency(printLabelItem.cost)}</p>
+                  </div>
+                  <div className="flex gap-2">
+                      <button onClick={() => window.print()} className="flex-1 py-2 bg-black text-white font-bold rounded-lg flex items-center justify-center gap-2"><Printer className="w-4 h-4"/> Print</button>
+                      <button onClick={() => setPrintLabelItem(null)} className="flex-1 py-2 bg-gray-200 text-black font-bold rounded-lg">Close</button>
+                  </div>
               </div>
           </div>
       )}

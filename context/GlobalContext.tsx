@@ -1,13 +1,17 @@
 
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Project, Activity, Lead, IntegrationStatus, Notification, Invoice, Employee, InventoryItem, Shipment, User, Order, SystemLog, Product, Customer, ChatMessage, Channel, AppModule, UserRole, CompanyPolicy, Task } from '../types';
-import { MOCK_PROJECTS, MOCK_ACTIVITIES, MOCK_LEADS, MOCK_INTEGRATIONS, MOCK_NOTIFICATIONS, MOCK_INVOICES, MOCK_EMPLOYEES, MOCK_INVENTORY, MOCK_SHIPMENTS, MOCK_USERS, MOCK_ORDERS, MOCK_LOGS, MOCK_PRODUCTS, MOCK_CUSTOMERS } from '../constants';
+import { Project, Activity, Lead, IntegrationStatus, Notification, Invoice, Employee, InventoryItem, Shipment, User, Order, SystemLog, Product, Customer, ChatMessage, Channel, AppModule, UserRole, CompanyPolicy, Task, CompanySettings, Campaign } from '../types';
+import { MOCK_PROJECTS, MOCK_ACTIVITIES, MOCK_LEADS, MOCK_INTEGRATIONS, MOCK_NOTIFICATIONS, MOCK_INVOICES, MOCK_EMPLOYEES, MOCK_INVENTORY, MOCK_SHIPMENTS, MOCK_USERS, MOCK_ORDERS, MOCK_LOGS, MOCK_PRODUCTS, MOCK_CUSTOMERS, MOCK_CAMPAIGNS } from '../constants';
 
 interface GlobalContextType {
   currency: 'INR' | 'USD';
   setCurrency: (c: 'INR' | 'USD') => void;
   formatCurrency: (amount: number) => string;
   
+  companySettings: CompanySettings;
+  updateCompanySettings: (settings: Partial<CompanySettings>) => void;
+
   salesToday: number;
   addSale: (amount: number, customerId?: string, items?: any[]) => void;
   activities: Activity[];
@@ -50,7 +54,7 @@ interface GlobalContextType {
   
   employees: Employee[];
   addEmployee: (employee: Employee) => void; 
-  updateEmployee: (id: string, data: Partial<Employee>) => void; // Added
+  updateEmployee: (id: string, data: Partial<Employee>) => void;
   policies: CompanyPolicy[];
   updatePolicy: (id: string, data: Partial<CompanyPolicy>) => void;
   
@@ -59,6 +63,7 @@ interface GlobalContextType {
   updateInventoryStock: (id: string, qty: number) => void;
   deleteInventoryItem: (id: string) => void;
   updateInventoryItem: (id: string, data: Partial<InventoryItem>) => void;
+  manufactureProduct: (itemId: string, qty: number) => { success: boolean; message: string };
   
   systemLogs: SystemLog[];
   logAction: (action: string, details: string, module: string) => void;
@@ -89,6 +94,13 @@ interface GlobalContextType {
 
   permissions: any[];
   updatePermission: (role: string, field: string, access: any) => void;
+
+  campaigns: Campaign[];
+  toggleCampaignStatus: (id: string) => void;
+
+  integrations: IntegrationStatus[];
+  toggleIntegration: (name: string) => void;
+  syncIntegrations: () => Promise<void>;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -102,6 +114,17 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   const [currency, setCurrency] = useState<'INR' | 'USD'>(() => (localStorage.getItem('currency') as any) || 'INR');
+  
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => getStoredJSON('companySettings', {
+      name: 'Studio Mystri',
+      address: '901 E and 901 F, Sakar -9, Ashram Road, Ahmedabad',
+      gstNumber: '24AAJFE7254K1Z6',
+      logoUrl: '',
+      loginBackgroundUrl: '',
+      email: 'admin@studiomystri.com',
+      phone: '+91 98765 43210'
+  }));
+
   const [salesToday, setSalesToday] = useState(() => Number(localStorage.getItem('salesToday')) || 12450);
   const [activities, setActivities] = useState<Activity[]>(() => getStoredJSON('activities', MOCK_ACTIVITIES));
   const [projects, setProjects] = useState<Project[]>(() => getStoredJSON('projects', MOCK_PROJECTS));
@@ -126,6 +149,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [customers, setCustomers] = useState<Customer[]>(() => getStoredJSON('customers', MOCK_CUSTOMERS));
   const [shipments, setShipments] = useState<Shipment[]>(() => getStoredJSON('shipments', MOCK_SHIPMENTS));
   const [tasks, setTasks] = useState<Task[]>(() => getStoredJSON('tasks', []));
+  const [campaigns, setCampaigns] = useState<Campaign[]>(() => getStoredJSON('campaigns', MOCK_CAMPAIGNS));
+  const [integrations, setIntegrations] = useState<IntegrationStatus[]>(() => getStoredJSON('integrations', MOCK_INTEGRATIONS));
 
   // Policies (Mock Data)
   const [policies, setPolicies] = useState<CompanyPolicy[]>(() => getStoredJSON('policies', [
@@ -148,6 +173,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   useEffect(() => {
     localStorage.setItem('currency', currency);
+    localStorage.setItem('companySettings', JSON.stringify(companySettings));
     localStorage.setItem('salesToday', salesToday.toString());
     localStorage.setItem('activities', JSON.stringify(activities));
     localStorage.setItem('projects', JSON.stringify(projects));
@@ -168,7 +194,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem('shipments', JSON.stringify(shipments));
     localStorage.setItem('policies', JSON.stringify(policies));
     localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [currency, salesToday, activities, projects, userRoles, currentUser, users, isShiftOpen, leads, notifications, invoices, employees, inventory, products, customers, systemLogs, teamMessages, teamChannels, shipments, policies, tasks]);
+    localStorage.setItem('campaigns', JSON.stringify(campaigns));
+    localStorage.setItem('integrations', JSON.stringify(integrations));
+  }, [currency, companySettings, salesToday, activities, projects, userRoles, currentUser, users, isShiftOpen, leads, notifications, invoices, employees, inventory, products, customers, systemLogs, teamMessages, teamChannels, shipments, policies, tasks, campaigns, integrations]);
+
+  const updateCompanySettings = (settings: Partial<CompanySettings>) => setCompanySettings(prev => ({ ...prev, ...settings }));
 
   const exchangeRate = 84;
   const formatCurrency = (amount: number) => {
@@ -245,7 +275,9 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
   };
   
+  // FIXED: Deduct stock from BOTH Products list and Inventory Warehouse
   const deductStock = (items: { id: string; quantity: number; sku?: string; name?: string; selectedVariant?: any }[]) => {
+    // 1. Update Products (POS View)
     setProducts(prev => prev.map(p => {
       const saleItem = items.find(i => i.id === p.id);
       
@@ -262,6 +294,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
       }
       return p;
+    }));
+
+    // 2. Sync with Warehouse Inventory (ERP View)
+    setInventory(prevInv => prevInv.map(invItem => {
+       const saleItem = items.find(i => i.id === invItem.id || i.name === invItem.name); // Match by ID or Name
+       if (saleItem) {
+           return { ...invItem, quantity: Math.max(0, invItem.quantity - saleItem.quantity) };
+       }
+       return invItem;
     }));
   };
 
@@ -311,9 +352,51 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const addInventoryItem = (item: InventoryItem) => { setInventory(prev => [item, ...prev]); logAction('Stock', `Added: ${item.name}`, 'ERP'); };
   const updateInventoryStock = (id: string, qty: number) => setInventory(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
-  const updateInventoryItem = (id: string, data: Partial<InventoryItem>) => setInventory(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
+  const updateInventoryItem = (id: string, data: Partial<InventoryItem>) => {
+      setInventory(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
+      // Also sync product price if item is linked to a product
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, stock: data.quantity || p.stock, price: data.cost ? data.cost * 1.5 : p.price } : p));
+  };
   const deleteInventoryItem = (id: string) => setInventory(prev => prev.filter(i => i.id !== id));
   
+  // Production Logic
+  const manufactureProduct = (itemId: string, qty: number): { success: boolean; message: string } => {
+      const item = inventory.find(i => i.id === itemId);
+      if (!item || !item.bom || item.bom.length === 0) return { success: false, message: 'Item has no BOM configured.' };
+
+      // 1. Check raw material availability
+      const materialsNeeded: { item: InventoryItem; needed: number }[] = [];
+      
+      for (const bomItem of item.bom) {
+          const rawMaterial = inventory.find(i => i.name === bomItem.itemName); // Matching by name for now as BOM stores name
+          if (!rawMaterial) return { success: false, message: `Raw material "${bomItem.itemName}" not found in inventory.` };
+          
+          const totalNeeded = bomItem.qty * qty;
+          if (rawMaterial.quantity < totalNeeded) {
+              return { success: false, message: `Insufficient stock for ${rawMaterial.name}. Need ${totalNeeded}, have ${rawMaterial.quantity}.` };
+          }
+          materialsNeeded.push({ item: rawMaterial, needed: totalNeeded });
+      }
+
+      // 2. Deduct Materials and Add Finished Good
+      setInventory(prev => prev.map(invItem => {
+          // Increase stock of finished good
+          if (invItem.id === itemId) return { ...invItem, quantity: invItem.quantity + qty };
+          
+          // Decrease stock of raw materials
+          const material = materialsNeeded.find(m => m.item.id === invItem.id);
+          if (material) return { ...invItem, quantity: invItem.quantity - material.needed };
+          
+          return invItem;
+      }));
+
+      // Also update Product list for POS sync
+      setProducts(prev => prev.map(p => p.id === itemId ? { ...p, stock: p.stock + qty } : p));
+
+      logAction('Production', `Manufactured ${qty} units of ${item.name}`, 'WAREHOUSE');
+      return { success: true, message: `Successfully produced ${qty} ${item.name}(s)` };
+  };
+
   const addCustomer = (c: Customer) => setCustomers(prev => [...prev, c]);
   const updateCustomer = (id: string, data: Partial<Customer>) => setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
   
@@ -341,9 +424,23 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       });
   };
 
+  const toggleCampaignStatus = (id: string) => {
+    setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: c.status === 'Active' ? 'Paused' : 'Active' } : c));
+  };
+
+  const toggleIntegration = (name: string) => {
+      setIntegrations(prev => prev.map(i => i.name === name ? { ...i, status: i.status === 'Connected' ? 'Disconnected' : 'Connected' } : i));
+  };
+
+  const syncIntegrations = async () => {
+      // Mock sync
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setIntegrations(prev => prev.map(i => ({...i, lastSync: 'Just now'})));
+  };
+
   return (
     <GlobalContext.Provider value={{
-      currency, setCurrency, formatCurrency,
+      currency, setCurrency, formatCurrency, companySettings, updateCompanySettings,
       salesToday, addSale, activities, addActivity, projects, addProject, updateProject, deleteProject,
       userRoles, addRole, currentUser, setCurrentUser,
       isShiftOpen, startShift, closeShift,
@@ -352,14 +449,16 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       notifications, markNotificationRead,
       invoices, addInvoice, updateInvoicePayment, updateInvoice, deleteInvoice,
       employees, addEmployee, updateEmployee, policies, updatePolicy,
-      inventory, addInventoryItem, updateInventoryStock, deleteInventoryItem, updateInventoryItem,
+      inventory, addInventoryItem, updateInventoryStock, deleteInventoryItem, updateInventoryItem, manufactureProduct,
       systemLogs, logAction, editLog,
       customers, addCustomer, updateCustomer,
       teamMessages, addTeamMessage, teamChannels, addTeamChannel,
       shipments, addShipment, updateShipment,
       users, addUser, deleteUser, updateUserStatus,
       tasks, addTask, updateTask, deleteTask,
-      permissions, updatePermission
+      permissions, updatePermission,
+      campaigns, toggleCampaignStatus,
+      integrations, toggleIntegration, syncIntegrations
     }}>
       {children}
     </GlobalContext.Provider>

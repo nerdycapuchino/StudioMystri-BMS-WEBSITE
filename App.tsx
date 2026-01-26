@@ -17,7 +17,6 @@ import { ActivityLog } from './components/ActivityLog';
 import { TeamHub } from './components/TeamHub';
 import { InvoiceGenerator } from './components/InvoiceGenerator';
 import { Scanner } from './components/Scanner';
-import { Settings as SettingsComponent } from './components/Settings';
 import { AppModule } from './types';
 import { Menu, MenuSquare, LogOut, ChevronRight, LayoutDashboard, Store, Users, Briefcase, Box, Wallet, BadgeCheck, MessageSquare, Truck, ClipboardList, Settings, UserCircle, Contact, Receipt, ScanLine } from 'lucide-react';
 
@@ -53,7 +52,6 @@ const MainLayout: React.FC = () => {
     { id: AppModule.LOGISTICS, label: 'Logistics', icon: Truck },
     { id: AppModule.ACTIVITY, label: 'Audit Logs', icon: ClipboardList },
     { id: AppModule.ADMIN, label: 'Admin', icon: Settings },
-        { id: AppModule.SETTINGS, label: 'Settings', icon: Settings },
   ];
 
   const navItems = allNavItems.filter(item => allowedModules.includes(item.id));
@@ -76,7 +74,6 @@ const MainLayout: React.FC = () => {
       case AppModule.SCANNER: return <Scanner />;
       default: return <Dashboard changeModule={setActiveModule} />;
     }
-          case AppModule.SETTINGS: return <SettingsComponent />;
   };
 
   return (

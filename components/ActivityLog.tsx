@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Clock, ShieldAlert, Edit2, Check, X, History, ChevronDown, ChevronUp, Filter, Calendar } from 'lucide-react';
 
 export const ActivityLog: React.FC = () => {
-  const { systemLogs, userRole, editLog } = useGlobal();
+  const { systemLogs, currentUser, editLog } = useGlobal();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
@@ -84,7 +85,7 @@ export const ActivityLog: React.FC = () => {
                      <th className="px-6 py-4">Module</th>
                      <th className="px-6 py-4">Action</th>
                      <th className="px-6 py-4">Details</th>
-                     {userRole === 'Super Admin' && <th className="px-6 py-4 text-right">Admin</th>}
+                     {currentUser?.role === 'Super Admin' && <th className="px-6 py-4 text-right">Admin</th>}
                   </tr>
                </thead>
                <tbody className="divide-y divide-white/5">
@@ -109,7 +110,7 @@ export const ActivityLog: React.FC = () => {
                                  <span className="max-w-md truncate block" title={log.details}>{log.details}</span>
                               )}
                            </td>
-                           {userRole === 'Super Admin' && (
+                           {currentUser?.role === 'Super Admin' && (
                               <td className="px-6 py-4 text-right">
                                  <div className="flex justify-end items-center gap-2">
                                     {log.editHistory && log.editHistory.length > 0 && (
