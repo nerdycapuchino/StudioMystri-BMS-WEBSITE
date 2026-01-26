@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Send, Sparkles, MessageSquare, Mail, Loader2, X, Pause, Play, Edit } from 'lucide-react';
-import { generateMarketingContent } from '../services/gemini';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const Marketing: React.FC = () => {
@@ -16,8 +15,8 @@ export const Marketing: React.FC = () => {
   const handleGenerate = async () => {
     if (!topic || !audience) return;
     setIsLoading(true);
-    const content = await generateMarketingContent(topic, audience, channel);
-    setGeneratedContent(content);
+    // Mock content generation - Replace with your own AI service or external API if needed
+    const content = `[${channel}] Marketing Campaign: ${topic}\n\nTargeted to: ${audience}\n\nThis is a mock generated content. Integrate your preferred AI service (OpenAI, Anthropic, etc.) to generate real marketing copy.`;    setGeneratedContent(content);
     setIsLoading(false);
   };
 
