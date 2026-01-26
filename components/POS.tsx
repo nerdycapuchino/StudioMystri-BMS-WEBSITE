@@ -251,7 +251,7 @@ export const POS: React.FC = () => {
   };
 
   const completeTransaction = (method: string) => {
-      // 1. Sync Stock - Now correctly calls context which syncs Inventory too
+      // 1. Sync Stock - Calls GlobalContext function which syncs both POS Products and Warehouse Inventory
       deductStock(cart.map(i => ({ 
           id: i.id, 
           quantity: i.quantity, 
@@ -278,7 +278,7 @@ export const POS: React.FC = () => {
           gstNumber: selectedCustomer?.gstNumber,
           history: [],
           items: cart.map(c => ({ 
-              desc: c.name, 
+              desc: c.name || 'Item', 
               qty: c.quantity, 
               rate: c.price, 
               total: c.price * c.quantity,
@@ -780,39 +780,39 @@ export const POS: React.FC = () => {
                               <table className="w-full text-left border-collapse">
                                   <thead>
                                       <tr className="border-b border-black bg-gray-100 text-black">
-                                          <th className="border-r border-black p-2 w-10 text-center">SI</th>
-                                          <th className="border-r border-black p-2 text-center">Description of Services</th>
-                                          <th className="border-r border-black p-2 w-20 text-center">HSN/SAC</th>
-                                          <th className="border-r border-black p-2 w-12 text-center">GST</th>
-                                          <th className="border-r border-black p-2 w-16 text-center">Qty</th>
-                                          <th className="border-r border-black p-2 w-24 text-center">Rate</th>
-                                          <th className="p-2 w-24 text-center">Amount</th>
+                                          <th className="border-r border-black p-2 w-10 text-center text-black font-bold">SI</th>
+                                          <th className="border-r border-black p-2 text-center text-black font-bold">Description of Services</th>
+                                          <th className="border-r border-black p-2 w-20 text-center text-black font-bold">HSN/SAC</th>
+                                          <th className="border-r border-black p-2 w-12 text-center text-black font-bold">GST</th>
+                                          <th className="border-r border-black p-2 w-16 text-center text-black font-bold">Qty</th>
+                                          <th className="border-r border-black p-2 w-24 text-center text-black font-bold">Rate</th>
+                                          <th className="p-2 w-24 text-center text-black font-bold">Amount</th>
                                       </tr>
                                   </thead>
                                   <tbody>
                                       {showInvoice.items?.map((item, i) => (
-                                          <tr key={i} className="align-top border-b border-black last:border-b-0">
-                                              <td className="border-r border-black p-2 text-center">{i + 1}</td>
-                                              <td className="border-r border-black p-2 font-bold">
-                                                  {item.desc}
-                                                  {item.variant && <span className="block font-normal text-[10px] text-gray-600">Variant: {item.variant}</span>}
+                                          <tr key={i} className="align-top border-b border-black last:border-b-0 text-black">
+                                              <td className="border-r border-black p-2 text-center text-black">{i + 1}</td>
+                                              <td className="border-r border-black p-2 font-bold text-black">
+                                                  {item.desc || 'Item'}
+                                                  {item.variant && <span className="block font-normal text-[10px] text-black">Variant: {item.variant}</span>}
                                               </td>
-                                              <td className="border-r border-black p-2 text-center">{item.hsn || '9403'}</td>
-                                              <td className="border-r border-black p-2 text-center">{item.gstRate || 18}%</td>
-                                              <td className="border-r border-black p-2 text-center font-bold">{item.qty}</td>
-                                              <td className="border-r border-black p-2 text-right">{item.rate.toFixed(2)}</td>
-                                              <td className="p-2 text-right font-bold">{item.total.toFixed(2)}</td>
+                                              <td className="border-r border-black p-2 text-center text-black">{item.hsn || '9403'}</td>
+                                              <td className="border-r border-black p-2 text-center text-black">{item.gstRate || 18}%</td>
+                                              <td className="border-r border-black p-2 text-center font-bold text-black">{item.qty}</td>
+                                              <td className="border-r border-black p-2 text-right text-black">{item.rate.toFixed(2)}</td>
+                                              <td className="p-2 text-right font-bold text-black">{item.total.toFixed(2)}</td>
                                           </tr>
                                       ))}
                                       {showInvoice.deliveryCost !== undefined && (
-                                          <tr className="align-top border-b border-black">
-                                              <td className="border-r border-black p-2 text-center">{showInvoice.items!.length + 1}</td>
-                                              <td className="border-r border-black p-2 font-bold">Delivery Charges {showInvoice.deliveryType === 'Free' ? '(Waived)' : ''}</td>
-                                              <td className="border-r border-black p-2 text-center">9965</td>
-                                              <td className="border-r border-black p-2 text-center">-</td>
-                                              <td className="border-r border-black p-2 text-center font-bold">1</td>
-                                              <td className="border-r border-black p-2 text-right">{showInvoice.deliveryCost.toFixed(2)}</td>
-                                              <td className="p-2 text-right font-bold">{showInvoice.deliveryCost.toFixed(2)}</td>
+                                          <tr className="align-top border-b border-black text-black">
+                                              <td className="border-r border-black p-2 text-center text-black">{showInvoice.items!.length + 1}</td>
+                                              <td className="border-r border-black p-2 font-bold text-black">Delivery Charges {showInvoice.deliveryType === 'Free' ? '(Waived)' : ''}</td>
+                                              <td className="border-r border-black p-2 text-center text-black">9965</td>
+                                              <td className="border-r border-black p-2 text-center text-black">-</td>
+                                              <td className="border-r border-black p-2 text-center font-bold text-black">1</td>
+                                              <td className="border-r border-black p-2 text-right text-black">{showInvoice.deliveryCost.toFixed(2)}</td>
+                                              <td className="p-2 text-right font-bold text-black">{showInvoice.deliveryCost.toFixed(2)}</td>
                                           </tr>
                                       )}
                                   </tbody>
@@ -831,7 +831,7 @@ export const POS: React.FC = () => {
                                       <div className="flex-1 border-r border-black text-right p-2 font-bold">Add: SGST (9%)</div>
                                       <div className="w-24 text-right p-2">{(showInvoice.taxAmount! / 2).toFixed(2)}</div>
                                   </div>
-                                  <div className="flex bg-gray-200">
+                                  <div className="flex bg-gray-200 text-black">
                                       <div className="flex-1 border-r border-black text-right p-2 font-bold uppercase">Total Payable</div>
                                       <div className="w-24 text-right p-2 font-bold">₹ {showInvoice.amount.toFixed(2)}</div>
                                   </div>

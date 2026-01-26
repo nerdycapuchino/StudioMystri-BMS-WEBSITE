@@ -1,5 +1,5 @@
 
-// This service has been disabled to prevent dependency errors.
+// This service has been disabled to prevent dependency errors and crashes.
 // All content generation is now handled via local templates in the Marketing component.
 
 export const generateMarketingContent = async (
@@ -8,5 +8,5 @@ export const generateMarketingContent = async (
   channel: 'Email' | 'WhatsApp'
 ): Promise<string> => {
   // Return a static mock response
-  return `(Templates Mode)\n\nSubject: Exclusive Offer on ${topic}!\n\nHi ${targetAudience},\n\nWe are excited to introduce our latest ${topic} collection designed just for you. Visit Studio Mystri today!`;
+  return `(Templates Mode - AI Disabled)\n\nSubject: Exclusive Offer on ${topic}!\n\nHi ${targetAudience},\n\nWe are excited to introduce our latest ${topic} collection designed just for you. Visit Studio Mystri today!`;
 };
