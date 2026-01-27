@@ -1,5 +1,4 @@
 
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Project, Activity, Lead, IntegrationStatus, Notification, Invoice, Employee, InventoryItem, Shipment, User, Order, SystemLog, Product, Customer, ChatMessage, Channel, AppModule, UserRole, CompanyPolicy, Task, CompanySettings, Campaign } from '../types';
 import { MOCK_PROJECTS, MOCK_ACTIVITIES, MOCK_LEADS, MOCK_INTEGRATIONS, MOCK_NOTIFICATIONS, MOCK_INVOICES, MOCK_EMPLOYEES, MOCK_INVENTORY, MOCK_SHIPMENTS, MOCK_USERS, MOCK_ORDERS, MOCK_LOGS, MOCK_PRODUCTS, MOCK_CUSTOMERS, MOCK_CAMPAIGNS } from '../constants';
@@ -144,7 +143,26 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [notifications, setNotifications] = useState<Notification[]>(() => getStoredJSON('notifications', MOCK_NOTIFICATIONS));
   const [invoices, setInvoices] = useState<Invoice[]>(() => getStoredJSON('invoices', MOCK_INVOICES));
   const [employees, setEmployees] = useState<Employee[]>(() => getStoredJSON('employees', MOCK_EMPLOYEES));
-  const [inventory, setInventory] = useState<InventoryItem[]>(() => getStoredJSON('inventory', MOCK_INVENTORY));
+  
+  // Data Logic: Initialize Inventory with Finished Goods from POS if missing
+  const [inventory, setInventory] = useState<InventoryItem[]>(() => {
+      const stored = getStoredJSON('inventory', MOCK_INVENTORY) as InventoryItem[];
+      // Sync logic: Add existing products to inventory if not present
+      const existingIds = new Set(stored.map(i => i.id));
+      const finishedGoods = MOCK_PRODUCTS.map(p => ({
+          id: p.id,
+          name: p.name,
+          type: 'Finished Good' as const,
+          quantity: p.stock,
+          unit: 'pcs',
+          reorderLevel: 2,
+          cost: p.price * 0.6, // Estimated cost
+          location: 'Showroom'
+      })).filter(item => !existingIds.has(item.id));
+      
+      return [...stored, ...finishedGoods];
+  });
+
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>(() => getStoredJSON('systemLogs', MOCK_LOGS));
   const [customers, setCustomers] = useState<Customer[]>(() => getStoredJSON('customers', MOCK_CUSTOMERS));
   const [shipments, setShipments] = useState<Shipment[]>(() => getStoredJSON('shipments', MOCK_SHIPMENTS));
@@ -269,10 +287,41 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   
   const addProduct = (product: Product) => {
     setProducts(prev => [...prev, product]);
+    
+    // Updated Logic: If product has variants, add each variant as a separate inventory item
+    if (product.variants && product.variants.length > 0) {
+        const variantItems: InventoryItem[] = product.variants.map(v => ({
+            id: `${product.id}-${v.id}`, // Unique ID linking variant
+            name: `${product.name} (${v.name})`, // Friendly Name
+            type: 'Finished Good',
+            quantity: v.stock,
+            unit: 'pcs',
+            reorderLevel: 5,
+            cost: (product.cost || v.price * 0.6), // Use base cost or estimate
+            location: 'Showroom'
+        }));
+        setInventory(prev => [...prev, ...variantItems]);
+    } else {
+        // Fallback for single products
+        setInventory(prev => [...prev, {
+            id: product.id,
+            name: product.name,
+            type: 'Finished Good',
+            quantity: product.stock,
+            unit: 'pcs',
+            reorderLevel: 5,
+            cost: product.cost || product.price * 0.6,
+            location: 'Showroom'
+        }]);
+    }
+    
     logAction('Inventory', `Added Product ${product.name}`, 'POS');
   };
+  
   const updateProduct = (id: string, data: Partial<Product>) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+    // Sync updates to Inventory (simplified, assumes 1-to-1 link for base products)
+    setInventory(prev => prev.map(i => i.id === id ? { ...i, name: data.name || i.name, quantity: data.stock !== undefined ? data.stock : i.quantity } : i));
   };
   
   // FIXED: Deduct stock from BOTH Products list and Inventory Warehouse
@@ -298,7 +347,14 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // 2. Sync with Warehouse Inventory (ERP View)
     setInventory(prevInv => prevInv.map(invItem => {
-       const saleItem = items.find(i => i.id === invItem.id || i.name === invItem.name); // Match by ID or Name
+       // Check for exact ID match (Variant ID) OR Product ID match
+       const saleItem = items.find(i => {
+           if (i.selectedVariant) {
+               return invItem.id === `${i.id}-${i.selectedVariant.id}`;
+           }
+           return i.id === invItem.id;
+       });
+
        if (saleItem) {
            return { ...invItem, quantity: Math.max(0, invItem.quantity - saleItem.quantity) };
        }

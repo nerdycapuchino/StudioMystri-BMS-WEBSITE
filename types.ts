@@ -33,7 +33,8 @@ export interface Product {
   id: string;
   name: string;
   sku: string;
-  price: number; 
+  price: number;
+  cost?: number; // Added cost price
   category: string;
   image: string; // Keep for backward compatibility/thumbnail
   media?: ProductMedia[]; // New field for multiple uploads

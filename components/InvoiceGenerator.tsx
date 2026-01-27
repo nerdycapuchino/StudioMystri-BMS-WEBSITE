@@ -2,17 +2,22 @@
 import React, { useState, useEffect } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Invoice } from '../types';
-import { Printer, Save, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { Printer, Save, Plus, Trash2, RefreshCw, ArrowLeft, Search, MapPin, Calculator } from 'lucide-react';
 
 export const InvoiceGenerator: React.FC = () => {
-  const { addInvoice, formatCurrency, companySettings } = useGlobal();
+  const { addInvoice, formatCurrency, companySettings, products, inventory } = useGlobal();
   
+  // States for State & Pincode logic
+  const [sellerState, setSellerState] = useState('Gujarat');
+  const [buyerState, setBuyerState] = useState('Gujarat');
+  const [buyerPincode, setBuyerPincode] = useState('');
+
   const [data, setData] = useState<Partial<Invoice>>({
       id: `INV-${Date.now().toString().substr(-6)}`,
       date: new Date().toISOString().split('T')[0],
       client: '',
       buyerAddress: '',
-      gstNumber: '', // Buyer GST
+      gstNumber: '', 
       shippingAddress: '',
       sellerName: companySettings.name,
       sellerAddress: companySettings.address,
@@ -33,7 +38,7 @@ export const InvoiceGenerator: React.FC = () => {
       jurisdiction: 'Ahmedabad'
   });
 
-  // Sync settings if they change
+  // Sync settings
   useEffect(() => {
       setData(prev => ({
           ...prev,
@@ -44,7 +49,26 @@ export const InvoiceGenerator: React.FC = () => {
       }));
   }, [companySettings]);
 
-  const [newItem, setNewItem] = useState({ desc: '', hsn: '9403', qty: 1, rate: 0, gstRate: 18 });
+  // Determine Tax Type
+  // Logic: IGST if states are different. CGST+SGST if states are same.
+  const isInterState = buyerState.trim().toLowerCase() !== sellerState.trim().toLowerCase();
+
+  const [newItem, setNewItem] = useState({ id: '', desc: '', hsn: '9403', qty: 1, rate: 0, gstRate: 18 });
+
+  // Handle Product Selection from Dropdown
+  const handleProductSelect = (prodId: string) => {
+      const prod = products.find(p => p.id === prodId);
+      if(prod) {
+          setNewItem({ 
+              id: prod.id, 
+              desc: prod.name, 
+              rate: prod.price, 
+              hsn: '9403', // Default HSN, can be updated if product has it
+              qty: 1, 
+              gstRate: 18 
+          });
+      }
+  };
 
   const addItem = () => {
       if(newItem.desc && newItem.rate > 0) {
@@ -59,7 +83,7 @@ export const InvoiceGenerator: React.FC = () => {
                   total: newItem.qty * newItem.rate 
               }]
           }));
-          setNewItem({ desc: '', hsn: '9403', qty: 1, rate: 0, gstRate: 18 });
+          setNewItem({ id: '', desc: '', hsn: '9403', qty: 1, rate: 0, gstRate: 18 });
       }
   };
 
@@ -69,7 +93,7 @@ export const InvoiceGenerator: React.FC = () => {
 
   const calculateTotals = () => {
       const subtotal = data.items?.reduce((acc, item) => acc + (item.qty * item.rate), 0) || 0;
-      const taxAmount = subtotal * 0.18; // Simplified 18% for demo, ideally per item
+      const taxAmount = subtotal * 0.18; // Simplified for demo. In real app, calculate per item based on GST Rate
       return { subtotal, taxAmount, total: subtotal + taxAmount };
   };
 
@@ -92,15 +116,19 @@ export const InvoiceGenerator: React.FC = () => {
       alert("Invoice Saved to Finance!");
   };
 
-  // Helper function to convert number to words (Simplified)
-  const toWords = (n: number) => `Rupees ${Math.floor(n)} Only`; 
+  const toWords = (n: number) => {
+      // Very basic implementation for demo
+      return `Rupees ${Math.floor(n)} Only`; 
+  };
 
   return (
-    <div className="h-full flex flex-col md:flex-row bg-black overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row bg-black overflow-hidden relative">
         {/* Editor Panel */}
-        <div className="w-full md:w-1/2 flex flex-col border-r border-white/10 bg-surface-darker h-full">
+        <div className="w-full md:w-1/2 flex flex-col border-r border-white/10 bg-surface-darker h-full no-print">
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-surface-dark">
-                <h2 className="text-xl font-black text-white uppercase tracking-tight">Invoice Editor</h2>
+                <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-black text-white uppercase tracking-tight">Invoice Editor</h2>
+                </div>
                 <div className="flex gap-2">
                     <button onClick={() => setData(prev => ({...prev, id: `INV-${Date.now().toString().substr(-6)}`}))} className="p-2 bg-white/5 rounded hover:text-white text-zinc-400"><RefreshCw className="w-4 h-4"/></button>
                     <button onClick={handleSave} className="px-4 py-2 bg-primary text-black font-bold rounded text-xs uppercase tracking-widest hover:bg-[#2ecc71]">Save Record</button>
@@ -121,16 +149,37 @@ export const InvoiceGenerator: React.FC = () => {
 
                 {/* 2. Parties */}
                 <section>
-                    <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Buyer & Consignee</h3>
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Buyer Info</h3>
                     <div className="space-y-4">
                         <input value={data.client} onChange={e => setData({...data, client: e.target.value})} placeholder="Buyer Name" className="w-full bg-black/20 border border-white/10 rounded p-2 text-white text-sm" />
-                        <textarea value={data.buyerAddress} onChange={e => setData({...data, buyerAddress: e.target.value})} placeholder="Billing Address" className="w-full bg-black/20 border border-white/10 rounded p-2 text-white text-sm h-20" />
                         <input value={data.gstNumber} onChange={e => setData({...data, gstNumber: e.target.value})} placeholder="Buyer GSTIN" className="w-full bg-black/20 border border-white/10 rounded p-2 text-white text-sm" />
+                        <textarea value={data.buyerAddress} onChange={e => setData({...data, buyerAddress: e.target.value})} placeholder="Billing Address" className="w-full bg-black/20 border border-white/10 rounded p-2 text-white text-sm h-20" />
                         <textarea value={data.shippingAddress} onChange={e => setData({...data, shippingAddress: e.target.value})} placeholder="Shipping Address (leave empty if same)" className="w-full bg-black/20 border border-white/10 rounded p-2 text-white text-sm h-20" />
                     </div>
                 </section>
 
-                {/* 3. Logistics */}
+                {/* 3. Tax & Location Logic */}
+                <section className="bg-primary/5 p-4 rounded-2xl border border-primary/20">
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2"><MapPin className="w-4 h-4"/> Tax & Location Details</h3>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label className="text-[10px] text-zinc-500 uppercase font-bold ml-1">Buyer State</label>
+                            <input value={buyerState} onChange={e => setBuyerState(e.target.value)} placeholder="e.g. Maharashtra" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" />
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-zinc-500 uppercase font-bold ml-1">Buyer Pincode</label>
+                            <input value={buyerPincode} onChange={e => setBuyerPincode(e.target.value)} placeholder="e.g. 400050" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" />
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                        <span className="text-zinc-400">Seller State: <strong className="text-white">{sellerState}</strong></span>
+                        <span className={`font-bold px-2 py-1 rounded ${isInterState ? 'bg-amber-500/20 text-amber-500' : 'bg-green-500/20 text-green-500'}`}>
+                            Type: {isInterState ? 'Inter-State (IGST)' : 'Intra-State (CGST+SGST)'}
+                        </span>
+                    </div>
+                </section>
+
+                {/* 4. Logistics */}
                 <section>
                     <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Dispatch & Shipping</h3>
                     <div className="grid grid-cols-2 gap-4">
@@ -142,23 +191,40 @@ export const InvoiceGenerator: React.FC = () => {
                     </div>
                 </section>
 
-                {/* 4. Items */}
+                {/* 5. Items */}
                 <section>
                     <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Line Items</h3>
-                    <div className="grid grid-cols-12 gap-2 mb-2">
-                        <input value={newItem.desc} onChange={e => setNewItem({...newItem, desc: e.target.value})} placeholder="Description" className="col-span-5 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
-                        <input value={newItem.hsn} onChange={e => setNewItem({...newItem, hsn: e.target.value})} placeholder="HSN" className="col-span-2 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
-                        <input type="number" value={newItem.qty} onChange={e => setNewItem({...newItem, qty: Number(e.target.value)})} placeholder="Qty" className="col-span-1 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
-                        <input type="number" value={newItem.rate} onChange={e => setNewItem({...newItem, rate: Number(e.target.value)})} placeholder="Rate" className="col-span-2 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
-                        <button onClick={addItem} className="col-span-2 bg-white/10 hover:bg-white/20 text-white rounded font-bold text-xs"><Plus className="w-4 h-4 mx-auto"/></button>
+                    <div className="space-y-2 mb-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div className="relative mb-2">
+                            <select 
+                                value={newItem.id} 
+                                onChange={(e) => handleProductSelect(e.target.value)}
+                                className="w-full bg-black/20 border border-white/10 rounded p-2 text-white text-sm appearance-none focus:outline-none focus:border-primary"
+                            >
+                                <option value="">-- Select Product from Inventory --</option>
+                                {products.map(p => <option key={p.id} value={p.id}>{p.name} - ₹{p.price}</option>)}
+                            </select>
+                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none"/>
+                        </div>
+
+                        <div className="grid grid-cols-12 gap-2">
+                            <input value={newItem.desc} onChange={e => setNewItem({...newItem, desc: e.target.value})} placeholder="Description" className="col-span-5 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
+                            <input value={newItem.hsn} onChange={e => setNewItem({...newItem, hsn: e.target.value})} placeholder="HSN" className="col-span-2 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
+                            <input type="number" value={newItem.qty} onChange={e => setNewItem({...newItem, qty: Number(e.target.value)})} placeholder="Qty" className="col-span-1 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
+                            <input type="number" value={newItem.rate} onChange={e => setNewItem({...newItem, rate: Number(e.target.value)})} placeholder="Rate" className="col-span-2 bg-black/20 border border-white/10 rounded p-2 text-white text-xs" />
+                            <div className="col-span-2">
+                                <button onClick={addItem} className="w-full h-full bg-primary text-black rounded font-bold text-xs flex items-center justify-center gap-1"><Plus className="w-3 h-3"/> Add</button>
+                            </div>
+                        </div>
                     </div>
+
                     <div className="space-y-1">
                         {data.items?.map((item, i) => (
                             <div key={i} className="flex justify-between items-center bg-black/40 p-2 rounded border border-white/5 text-xs text-zinc-300">
-                                <span className="w-5/12 truncate">{item.desc}</span>
-                                <span className="w-2/12">{item.hsn}</span>
-                                <span className="w-1/12">{item.qty}</span>
-                                <span className="w-2/12">{item.rate}</span>
+                                <span className="w-5/12 truncate font-bold">{item.desc}</span>
+                                <span className="w-2/12 text-center">{item.hsn}</span>
+                                <span className="w-1/12 text-center text-white">{item.qty}</span>
+                                <span className="w-2/12 text-right">{item.rate}</span>
                                 <button onClick={() => removeItem(i)} className="text-red-500 hover:text-white"><Trash2 className="w-3 h-3"/></button>
                             </div>
                         ))}
@@ -168,12 +234,14 @@ export const InvoiceGenerator: React.FC = () => {
         </div>
 
         {/* Preview Panel (A4) */}
-        <div className="w-full md:w-1/2 bg-zinc-900 overflow-y-auto p-8 flex items-start justify-center">
-            <div id="invoice-print-area" className="bg-white text-black w-[210mm] min-h-[297mm] shadow-2xl p-[10mm] text-xs font-sans leading-tight relative my-4 mx-auto">
-                <div className="absolute top-4 right-4 print:hidden">
-                    <button onClick={() => window.print()} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded font-bold hover:bg-gray-800"><Printer className="w-4 h-4"/> Print</button>
-                </div>
+        <div className="w-full md:w-1/2 bg-zinc-900 overflow-y-auto p-8 flex items-start justify-center relative">
+            
+            {/* Floating Exit Button for Full Screen / Mobile Context */}
+            <div className="fixed top-4 right-8 z-50 flex gap-2 no-print">
+                <button onClick={() => window.print()} className="flex items-center gap-2 bg-primary text-black px-6 py-2.5 rounded-full font-bold shadow-glow hover:scale-105 transition-transform"><Printer className="w-4 h-4"/> Print A4</button>
+            </div>
 
+            <div id="invoice-print-area" className="bg-white text-black w-[210mm] min-h-[297mm] shadow-2xl p-[10mm] text-xs font-sans leading-tight relative my-4 mx-auto">
                 <div className="h-full flex flex-col">
                     {/* Optional Logo */}
                     {companySettings.logoUrl && (
@@ -193,7 +261,7 @@ export const InvoiceGenerator: React.FC = () => {
                                 <h2 className="font-bold text-lg">{data.sellerName}</h2>
                                 <p className="whitespace-pre-wrap">{data.sellerAddress}</p>
                                 <p className="mt-1"><span className="font-bold">GSTIN:</span> {data.sellerGst}</p>
-                                <p><span className="font-bold">State:</span> Gujarat (24)</p>
+                                <p><span className="font-bold">State:</span> {sellerState}</p>
                                 <p><span className="font-bold">Email:</span> {companySettings.email}</p>
                             </div>
                             <div className="flex flex-col">
@@ -224,6 +292,7 @@ export const InvoiceGenerator: React.FC = () => {
                                 <h4 className="font-bold mb-1">Buyer (Bill to):</h4>
                                 <p className="font-bold">{data.client}</p>
                                 <p className="whitespace-pre-wrap">{data.buyerAddress}</p>
+                                <p className="font-bold">State: {buyerState} {buyerPincode ? `- ${buyerPincode}` : ''}</p>
                                 <p className="mt-1"><span className="font-bold">GSTIN:</span> {data.gstNumber || 'Unregistered'}</p>
                             </div>
                             <div className="p-2">
@@ -303,14 +372,23 @@ export const InvoiceGenerator: React.FC = () => {
                                     <div className="flex-1 border-r border-black text-right p-2 font-bold">Taxable Amount</div>
                                     <div className="w-24 text-right p-2">{subtotal.toFixed(2)}</div>
                                 </div>
-                                <div className="flex border-b border-black">
-                                    <div className="flex-1 border-r border-black text-right p-2 font-bold">Add: CGST (9%)</div>
-                                    <div className="w-24 text-right p-2">{(taxAmount/2).toFixed(2)}</div>
-                                </div>
-                                <div className="flex border-b border-black">
-                                    <div className="flex-1 border-r border-black text-right p-2 font-bold">Add: SGST (9%)</div>
-                                    <div className="w-24 text-right p-2">{(taxAmount/2).toFixed(2)}</div>
-                                </div>
+                                {isInterState ? (
+                                    <div className="flex border-b border-black">
+                                        <div className="flex-1 border-r border-black text-right p-2 font-bold">Add: IGST (18%)</div>
+                                        <div className="w-24 text-right p-2">{taxAmount.toFixed(2)}</div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex border-b border-black">
+                                            <div className="flex-1 border-r border-black text-right p-2 font-bold">Add: CGST (9%)</div>
+                                            <div className="w-24 text-right p-2">{(taxAmount/2).toFixed(2)}</div>
+                                        </div>
+                                        <div className="flex border-b border-black">
+                                            <div className="flex-1 border-r border-black text-right p-2 font-bold">Add: SGST (9%)</div>
+                                            <div className="w-24 text-right p-2">{(taxAmount/2).toFixed(2)}</div>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="flex bg-gray-200">
                                     <div className="flex-1 border-r border-black text-right p-2 font-bold uppercase">Total Payable</div>
                                     <div className="w-24 text-right p-2 font-bold">₹ {total.toFixed(2)}</div>

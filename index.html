@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39+Text&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     
     <!-- Tailwind -->
@@ -34,7 +35,8 @@
             },
             fontFamily: {
               "display": ["Public Sans", "sans-serif"],
-              "mono": ["Space Mono", "monospace"]
+              "mono": ["Space Mono", "monospace"],
+              "barcode": ["'Libre Barcode 39 Text'", "cursive"]
             },
             borderRadius: {
               "DEFAULT": "1rem", 
@@ -98,7 +100,7 @@
           left: 0;
           top: 0;
           width: 210mm;
-          height: 297mm;
+          min-height: 297mm;
           margin: 0;
           padding: 0;
           background: white !important;
@@ -108,7 +110,7 @@
         }
         /* Hide scrollbars and UI elements */
         ::-webkit-scrollbar { display: none; }
-        button, .no-print { display: none !important; }
+        button, .no-print, header, aside { display: none !important; }
       }
     </style>
     <!-- HTML5-QRCode Library for Real Scanning -->
