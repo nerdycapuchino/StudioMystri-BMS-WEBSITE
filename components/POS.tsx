@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Product, CartItem, Customer, Invoice, ProductVariant } from '../types';
-import { Search, X, CreditCard, Banknote, Printer, Trash2, Box, Scan, Plus, User, MapPin, Calculator, FileText, ChevronDown } from 'lucide-react';
+import { Search, X, CreditCard, Banknote, Printer, Trash2, Box, Scan, Plus, User, MapPin, Calculator, FileText, ChevronDown, Image as ImageIcon, Upload, Layers, Barcode, Edit2 } from 'lucide-react';
 
 export const POS: React.FC = () => {
   const { 
-    addSale, addActivity, isShiftOpen, startShift, closeShift, products, updateProduct, deductStock, formatCurrency, customers, addCustomer, addInvoice, companySettings, addInventoryItem
+    addSale, addActivity, isShiftOpen, startShift, closeShift, products, addProduct, updateProduct, deductStock, formatCurrency, customers, addCustomer, addInvoice, companySettings, addInventoryItem
   } = useGlobal();
 
   // --- STATE ---
@@ -25,6 +25,15 @@ export const POS: React.FC = () => {
   const [showVariantSelector, setShowVariantSelector] = useState<Product | null>(null);
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   const [custSearchTerm, setCustSearchTerm] = useState('');
+  
+  // Product Management State (Restored)
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productForm, setProductForm] = useState<Partial<Product>>({ 
+      name: '', price: 0, cost: 0, stock: 0, category: 'General', description: '', materials: '', dimensions: '', manualUrl: '', sku: '', barcode: '',
+      media: [], documents: [], variants: []
+  });
+  const [newVariant, setNewVariant] = useState<Partial<ProductVariant>>({ name: '', price: 0, stock: 0, sku: '' });
 
   // Register State
   const [openingBalance, setOpeningBalance] = useState('');
@@ -146,6 +155,59 @@ export const POS: React.FC = () => {
       setDiscount(0);
   };
 
+  // --- PRODUCT MANAGEMENT HANDLERS ---
+  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+          const files = Array.from(e.target.files);
+          const newMedia = files.map((file: any) => ({
+              type: file.type.startsWith('video') ? 'video' : 'image',
+              url: URL.createObjectURL(file),
+              file: file
+          }));
+          setProductForm(prev => ({ ...prev, media: [...(prev.media || []), ...newMedia] as any }));
+      }
+  };
+
+  const addVariant = () => {
+      if (newVariant.name && newVariant.price) {
+          setProductForm(prev => ({
+              ...prev,
+              variants: [...(prev.variants || []), {
+                  id: Math.random().toString(36).substr(2, 5),
+                  name: newVariant.name!,
+                  price: newVariant.price!,
+                  stock: newVariant.stock !== undefined ? newVariant.stock : 0,
+                  sku: newVariant.sku || `${prev.sku}-${prev.variants?.length || 0}`
+              }]
+          }));
+          setNewVariant({ name: '', price: 0, stock: 0, sku: '' });
+      }
+  };
+
+  const generateBarcode = () => {
+      const code = `890${Math.floor(Math.random() * 10000000000)}`;
+      setProductForm(prev => ({ ...prev, barcode: code }));
+  };
+
+  const handleSaveProduct = () => {
+      if (!productForm.name || !productForm.price) return;
+      
+      const mainImage = productForm.media && productForm.media.length > 0 ? productForm.media[0].url : 'https://via.placeholder.com/300?text=No+Image';
+
+      const newProdData = {
+          ...productForm,
+          image: mainImage,
+          id: editingProduct ? editingProduct.id : Math.random().toString(36).substr(2, 9),
+      } as Product;
+
+      if (editingProduct) updateProduct(editingProduct.id, newProdData);
+      else addProduct(newProdData);
+      
+      setShowProductModal(false);
+      setEditingProduct(null);
+      setProductForm({ name: '', price: 0, cost: 0, stock: 0, category: 'General', description: '', materials: '', dimensions: '', manualUrl: '', sku: '', barcode: '', media: [], documents: [], variants: [] });
+  };
+
   const filteredProducts = products.filter(p => {
       const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(searchQuery.toLowerCase());
       const matchCat = activeCategory === 'All' || p.category === activeCategory;
@@ -199,6 +261,16 @@ export const POS: React.FC = () => {
             {/* Grid */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {/* ADD PRODUCT TILE (Restored) */}
+                    <div onClick={() => { setEditingProduct(null); setProductForm({name:'', price:0, cost:0, stock:0, category: 'Furniture', sku: '', media: [], documents: [], variants: [], materials: '', dimensions: '', barcode: ''}); setShowProductModal(true); }} 
+                        className="bg-primary/5 border-2 border-dashed border-primary/20 rounded-2xl p-3 cursor-pointer transition-all hover:bg-primary/10 hover:border-primary/50 group flex flex-col items-center justify-center min-h-[200px]"
+                    >
+                        <div className="size-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <Plus className="w-8 h-8 text-primary" />
+                        </div>
+                        <span className="font-bold text-primary text-sm uppercase tracking-wider">Add Product</span>
+                    </div>
+
                     {filteredProducts.map(p => {
                         const hasVariants = p.variants && p.variants.length > 0;
                         const totalStock = hasVariants ? p.variants?.reduce((sum, v) => sum + v.stock, 0) : p.stock;
@@ -210,6 +282,10 @@ export const POS: React.FC = () => {
                                 onClick={() => !isOut && (hasVariants ? setShowVariantSelector(p) : addToCart(p))}
                                 className={`bg-surface-dark border border-white/5 rounded-2xl p-3 cursor-pointer transition-all hover:border-primary/50 group relative flex flex-col ${isOut ? 'opacity-50 grayscale' : ''}`}
                             >
+                                <button onClick={(e) => { e.stopPropagation(); setEditingProduct(p); setProductForm(p); setShowProductModal(true); }} className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-primary text-white rounded-full z-10 opacity-0 group-hover:opacity-100 transition-all">
+                                    <Edit2 className="w-3 h-3" />
+                                </button>
+
                                 <div className="aspect-square bg-background-dark rounded-xl mb-3 overflow-hidden relative">
                                     <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                     {isOut && <div className="absolute inset-0 bg-black/60 flex items-center justify-center font-black text-white text-xs uppercase tracking-widest">Out of Stock</div>}
@@ -358,6 +434,131 @@ export const POS: React.FC = () => {
         </div>
 
         {/* --- MODALS --- */}
+
+        {/* Add Product Modal (Restored) */}
+        {showProductModal && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+                <div className="bg-surface-dark border border-white/10 rounded-[2.5rem] w-full max-w-4xl shadow-2xl p-6 md:p-10 space-y-6 max-h-[90vh] overflow-y-auto">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-2xl font-black text-white">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+                        <button onClick={() => setShowProductModal(false)} className="text-zinc-500 hover:text-white"><X className="w-6 h-6"/></button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Left Col: Basics */}
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Product Name</label>
+                                <input value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" placeholder="Name" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">SKU Code (Auto)</label>
+                                    <input value={productForm.sku} onChange={e => setProductForm({...productForm, sku: e.target.value})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white font-mono focus:outline-none focus:border-primary" placeholder="Generated Automatically" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Barcode</label>
+                                    <div className="flex gap-2">
+                                        <input value={productForm.barcode} onChange={e => setProductForm({...productForm, barcode: e.target.value})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white font-mono focus:outline-none focus:border-primary" placeholder="Scan or Gen" />
+                                        <button onClick={generateBarcode} className="p-3 bg-white/5 rounded-xl hover:bg-white/10" title="Generate Barcode"><Barcode className="w-5 h-5"/></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Selling Price</label>
+                                    <input type="number" value={productForm.price || ''} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" placeholder="0.00" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Cost Price (Inv)</label>
+                                    <input type="number" value={productForm.cost || ''} onChange={e => setProductForm({...productForm, cost: Number(e.target.value)})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" placeholder="0.00" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Initial Stock</label>
+                                    <input 
+                                        type="number" 
+                                        value={productForm.stock || ''} 
+                                        onChange={e => setProductForm({...productForm, stock: Number(e.target.value)})} 
+                                        className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" 
+                                        placeholder="0" 
+                                        disabled={productForm.variants && productForm.variants.length > 0} 
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Dimensions</label>
+                                    <input value={productForm.dimensions || ''} onChange={e => setProductForm({...productForm, dimensions: e.target.value})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" placeholder="L x W x H" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Materials</label>
+                                    <input value={productForm.materials || ''} onChange={e => setProductForm({...productForm, materials: e.target.value})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary" placeholder="Wood, Metal..." />
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase text-zinc-500 ml-2">Description</label>
+                                <textarea value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full bg-background-dark border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-primary h-24" placeholder="Detailed product description..." />
+                            </div>
+                        </div>
+
+                        {/* Right Col: Media & Variants */}
+                        <div className="space-y-6">
+                            {/* Media Upload */}
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                                <h4 className="text-xs font-bold text-zinc-400 uppercase mb-3 flex items-center gap-2"><ImageIcon className="w-4 h-4"/> Media Gallery</h4>
+                                <div className="grid grid-cols-4 gap-2 mb-3">
+                                    {productForm.media?.map((m, i) => (
+                                        <div key={i} className="aspect-square rounded-lg overflow-hidden relative border border-white/10">
+                                            {m.type === 'video' ? <video src={m.url} className="w-full h-full object-cover" /> : <img src={m.url} className="w-full h-full object-cover" />}
+                                        </div>
+                                    ))}
+                                    <label className="aspect-square rounded-lg border-2 border-dashed border-white/10 hover:border-primary/50 flex flex-col items-center justify-center cursor-pointer transition-colors">
+                                        <Upload className="w-5 h-5 text-zinc-500 mb-1" />
+                                        <span className="text-[9px] text-zinc-500 font-bold uppercase">Upload</span>
+                                        <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleMediaUpload} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Variants */}
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                                <h4 className="text-xs font-bold text-zinc-400 uppercase mb-3 flex items-center gap-2"><Layers className="w-4 h-4"/> Product Variants</h4>
+                                <div className="flex gap-2 mb-2 items-end">
+                                    <div className="flex-1">
+                                        <label className="text-[9px] uppercase font-bold text-zinc-500 ml-1">Name</label>
+                                        <input value={newVariant.name} onChange={e => setNewVariant({...newVariant, name: e.target.value})} placeholder="e.g. Red / Large" className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-xs text-white" />
+                                    </div>
+                                    <div className="w-20">
+                                        <label className="text-[9px] uppercase font-bold text-zinc-500 ml-1">Price</label>
+                                        <input type="number" value={newVariant.price || ''} onChange={e => setNewVariant({...newVariant, price: Number(e.target.value)})} placeholder="0.00" className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-xs text-white" />
+                                    </div>
+                                    <div className="w-16">
+                                        <label className="text-[9px] uppercase font-bold text-zinc-500 ml-1">Stock</label>
+                                        <input type="number" value={newVariant.stock || ''} onChange={e => setNewVariant({...newVariant, stock: Number(e.target.value)})} placeholder="0" className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-xs text-white" />
+                                    </div>
+                                    <button onClick={addVariant} className="p-2 bg-primary text-black rounded-lg mb-[1px] h-[34px] flex items-center justify-center"><Plus className="w-4 h-4"/></button>
+                                </div>
+                                <div className="max-h-32 overflow-y-auto space-y-1 custom-scrollbar">
+                                    {productForm.variants?.map((v, i) => (
+                                        <div key={i} className="flex justify-between items-center text-xs bg-black/20 p-2 rounded">
+                                            <span className="text-white font-bold">{v.name}</span>
+                                            <div className="flex gap-4">
+                                                <span className="text-zinc-400">Stock: {v.stock}</span>
+                                                <span className="text-zinc-400">{formatCurrency(v.price)}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 mt-4">
+                        <button onClick={handleSaveProduct} className="w-full py-4 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl shadow-glow hover:scale-[1.01] transition-transform">Save Product to Inventory</button>
+                    </div>
+                </div>
+            </div>
+        )}
 
         {/* Variant Selector */}
         {showVariantSelector && (
