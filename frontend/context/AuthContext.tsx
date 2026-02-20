@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import axios from 'axios';
 import api from '../services/api';
 import { setAccessToken, clearAccessToken } from '../services/tokenStore';
+import { connectSocket, disconnectSocket } from '../services/socket';
 
 interface AuthUser {
     id: string;
@@ -39,6 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setAccessToken(token);
                 const { data: meData } = await api.get('/auth/me');
                 setUser(meData.data || meData);
+                connectSocket();
             } catch {
                 setUser(null);
             } finally {
@@ -48,11 +50,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         restoreSession();
     }, []);
 
+    useEffect(() => {
+        const handleForceLogout = () => {
+            clearAccessToken();
+            setUser(null);
+            disconnectSocket();
+        };
+        window.addEventListener('force_logout', handleForceLogout);
+        return () => window.removeEventListener('force_logout', handleForceLogout);
+    }, []);
+
     const login = useCallback(async (email: string, password: string) => {
         const { data } = await api.post('/auth/login', { email, password });
         const token = data.data?.accessToken || data.accessToken;
         setAccessToken(token);
         setUser(data.data?.user || data.user);
+        connectSocket();
     }, []);
 
     const logout = useCallback(async () => {
@@ -61,6 +74,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } catch {
             // ignore errors on logout
         }
+        disconnectSocket();
         clearAccessToken();
         setUser(null);
     }, []);

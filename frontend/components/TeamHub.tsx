@@ -1,16 +1,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useChannels, useMessages, useSendMessage } from '../hooks/useTeam';
+import { useChannels, useMessages } from '../hooks/useTeam';
 import { useEmployees } from '../hooks/useHR';
 import { ChatMessage, Channel } from '../types';
-import { Plus, Hash, Lock, User, Send, Video, X, Shield, Search, Paperclip, Download } from 'lucide-react';
+import { Plus, Hash, Lock, User, Send, Video, X, Shield, Search, Paperclip, Download, Trash2 } from 'lucide-react';
+import { getSocket } from '../services/socket';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const TeamHub: React.FC = () => {
    const { user: currentUser } = useAuth();
    const { data: channelData } = useChannels();
    const { data: empData } = useEmployees();
-   const sendMessageMut = useSendMessage();
+   const qc = useQueryClient();
 
    const teamChannels: Channel[] = Array.isArray(channelData?.data || channelData) ? (channelData?.data || channelData) as Channel[] : [];
    const employees: any[] = Array.isArray(empData?.data || empData) ? (empData?.data || empData) as any[] : [];
@@ -26,6 +28,12 @@ export const TeamHub: React.FC = () => {
    const localVideoRef = useRef<HTMLVideoElement>(null);
    const streamRef = useRef<MediaStream | null>(null);
 
+   // Socket specific state
+   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+   const messagesEndRef = useRef<HTMLDivElement>(null);
+   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
    // Modal States
    const [showChannelModal, setShowChannelModal] = useState(false);
    const [showDMModal, setShowDMModal] = useState(false);
@@ -37,6 +45,61 @@ export const TeamHub: React.FC = () => {
          setSelectedChannel(teamChannels[0]);
       }
    }, [teamChannels]);
+
+   // Real-time Socket bindings
+   useEffect(() => {
+      const socket = getSocket();
+      if (!socket.connected) socket.connect();
+
+      socket.emit('channel:join', selectedChannel.id);
+
+      const onNewMessage = (message: any) => {
+         if (message.channel !== selectedChannel.id) return;
+         qc.setQueryData(['team', 'messages', selectedChannel.id, undefined], (old: any) => ({
+            ...old,
+            data: [...(old?.data || []), message]
+         }));
+         // Scroll on new message
+         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      };
+
+      const onMessageDeleted = ({ messageId, channel }: any) => {
+         if (channel !== selectedChannel.id) return;
+         qc.setQueryData(['team', 'messages', selectedChannel.id, undefined], (old: any) => ({
+            ...old,
+            data: (old?.data || []).filter((m: any) => m.id !== messageId)
+         }));
+      };
+
+      const onTypingUpdate = ({ userName, isTyping, channel }: any) => {
+         if (channel !== selectedChannel.id) return;
+         setTypingUsers(prev =>
+            isTyping
+               ? Array.from(new Set([...prev, userName]))
+               : prev.filter(u => u !== userName)
+         );
+      };
+
+      const onPresenceUpdate = (userIds: string[]) => {
+         setOnlineUserIds(userIds);
+      };
+
+      // Request initial presence ping
+      socket.emit('presence:ping');
+
+      socket.on('message:new', onNewMessage);
+      socket.on('message:deleted', onMessageDeleted);
+      socket.on('typing:update', onTypingUpdate);
+      socket.on('presence:update', onPresenceUpdate);
+
+      return () => {
+         socket.off('message:new', onNewMessage);
+         socket.off('message:deleted', onMessageDeleted);
+         socket.off('typing:update', onTypingUpdate);
+         socket.off('presence:update', onPresenceUpdate);
+         socket.emit('channel:leave', selectedChannel.id);
+      };
+   }, [selectedChannel.id, qc]);
 
    const startCall = async () => {
       try {
@@ -61,11 +124,22 @@ export const TeamHub: React.FC = () => {
    const handleSendMessage = (e: React.FormEvent) => {
       e.preventDefault();
       if (!newMessage.trim() || !currentUser) return;
-      sendMessageMut.mutate({
-         channelId: selectedChannel.id,
-         content: newMessage,
-      } as any);
+      const socket = getSocket();
+      socket.emit('message:send', { channel: selectedChannel.id, content: newMessage });
       setNewMessage('');
+   };
+
+   const handleDeleteMessage = (messageId: string) => {
+      getSocket().emit('message:delete', messageId);
+   };
+
+   const handleKeyDown = () => {
+      const socket = getSocket();
+      socket.emit('typing:start', selectedChannel.id);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+         socket.emit('typing:stop', selectedChannel.id);
+      }, 2000);
    };
 
    const handleCreateChannel = () => {
@@ -156,7 +230,7 @@ export const TeamHub: React.FC = () => {
                            onClick={() => setSelectedChannel(ch)}
                            className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
                         >
-                           <div className="size-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
+                           <div className={`size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(ch.id.replace('dm-', '').replace(currentUser?.id || '', '').replace('-', '')) ? 'bg-green-500' : 'bg-transparent border border-white/20 shadow-none'}`}></div>
                            {ch.name}
                         </button>
                      ))}
@@ -189,6 +263,7 @@ export const TeamHub: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col-reverse custom-scrollbar">
+               <div ref={messagesEndRef} />
                {[...currentMessages].reverse().map(msg => (
                   <div key={msg.id} className={`flex gap-4 ${msg.sender === (currentUser?.name || '') ? 'flex-row-reverse' : ''}`}>
                      <div className={`size-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 border border-white/5 shadow-inner ${msg.sender === (currentUser?.name || '') ? 'bg-primary text-background-dark' : 'bg-zinc-800 text-zinc-300'}`}>
@@ -199,8 +274,13 @@ export const TeamHub: React.FC = () => {
                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{msg.sender}</p>
                            <p className="text-[10px] text-zinc-600 font-medium">{msg.timestamp}</p>
                         </div>
-                        <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-lg ${msg.sender === (currentUser?.name || '') ? 'bg-primary/10 text-primary border border-primary/20 rounded-tr-none' : 'bg-surface-darker rounded-tl-none text-zinc-300 border border-white/5'}`}>
+                        <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-lg relative group ${msg.sender === (currentUser?.name || '') ? 'bg-primary/10 text-primary border border-primary/20 rounded-tr-none' : 'bg-surface-darker rounded-tl-none text-zinc-300 border border-white/5'}`}>
                            {msg.content}
+                           {msg.sender === (currentUser?.name || '') && (
+                              <button type="button" onClick={() => handleDeleteMessage(msg.id)} className="absolute opacity-0 group-hover:opacity-100 -left-10 top-1/2 -translate-y-1/2 p-2 hover:text-red-500 text-zinc-500 transition-all">
+                                 <Trash2 className="w-4 h-4" />
+                              </button>
+                           )}
                         </div>
                      </div>
                   </div>
@@ -213,7 +293,14 @@ export const TeamHub: React.FC = () => {
                )}
             </div>
 
-            <form onSubmit={handleSendMessage} className="p-6 bg-surface-dark shrink-0">
+            <div className="px-6 pb-2">
+               {typingUsers.length > 0 && (
+                  <p className="text-xs text-zinc-400 font-medium">
+                     {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                  </p>
+               )}
+            </div>
+            <form onSubmit={handleSendMessage} className="p-6 pt-2 bg-surface-dark shrink-0">
                <div className="bg-background-dark rounded-full p-1.5 border border-white/10 flex items-center focus-within:ring-2 focus-within:ring-primary/30 transition-all shadow-2xl">
                   <button type="button" className="p-2.5 text-zinc-400 hover:text-white transition-colors">
                      <Paperclip className="w-5 h-5" />
@@ -221,6 +308,7 @@ export const TeamHub: React.FC = () => {
                   <input
                      value={newMessage}
                      onChange={e => setNewMessage(e.target.value)}
+                     onKeyDown={handleKeyDown}
                      className="flex-1 bg-transparent border-none text-sm px-4 focus:ring-0 outline-none placeholder:text-zinc-700"
                      placeholder={`Message ${selectedChannel.type === 'dm' ? '@' : '#'}${selectedChannel.name}...`}
                   />
@@ -358,7 +446,7 @@ export const TeamHub: React.FC = () => {
                               <p className="font-bold text-white">{emp.name}</p>
                               <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{emp.email}</p>
                            </div>
-                           <div className="ml-auto size-2 bg-green-500 rounded-full"></div>
+                           <div className={`ml-auto size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(emp.id) ? 'bg-green-500' : 'bg-transparent border border-white/20 shadow-none'}`}></div>
                         </button>
                      ))}
                   </div>

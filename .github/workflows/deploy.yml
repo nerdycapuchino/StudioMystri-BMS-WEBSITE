@@ -1,0 +1,36 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Hostinger VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            chmod +x /var/www/studiomystri/scripts/deploy.sh
+            /var/www/studiomystri/scripts/deploy.sh
+
+      - name: Notify success
+        if: success()
+        run: echo "✅ Deployment to production successful"
+
+      - name: Notify failure
+        if: failure()
+        run: echo "❌ Deployment failed — check VPS logs at /var/log/studiomystri/deploy.log"

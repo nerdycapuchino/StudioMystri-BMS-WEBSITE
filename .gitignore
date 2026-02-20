@@ -8,21 +8,26 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Dependencies
-node_modules
+node_modules/
 
 # Build output
-dist
+dist/
 dist-ssr
+backend/dist/
+frontend/dist/
 
 # Environment
 *.local
 .env
+.env.local
+.env.production
 !.env.example
 
 # Uploads
 uploads/
+backend/uploads/
 
-# Editor directories and files
+# OS and Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -32,9 +37,11 @@ uploads/
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
+
+# Misc production deployment artifacts
+/var/
 
 # Prisma
 backend/prisma/migrations/
-
-# OS
-Thumbs.db
+backend/prisma/dev.db

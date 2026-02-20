@@ -24,6 +24,9 @@ import { PageLoader } from './components/ui/Skeleton';
 import { useUnreadCount } from './hooks/useNotifications';
 import { AppModule } from './types';
 import { Menu, MenuSquare, LogOut, LayoutDashboard, Store, Users, Briefcase, Box, Wallet, BadgeCheck, MessageSquare, Truck, ClipboardList, Settings, Contact, Receipt, ScanLine, Megaphone, GanttChart, ListTodo, Bell } from 'lucide-react';
+import { getSocket } from './services/socket';
+import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 const MainLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -33,6 +36,35 @@ const MainLayout: React.FC = () => {
   const [currency, setCurrency] = useState<'INR' | 'USD'>(() => (localStorage.getItem('currency') as 'INR' | 'USD') || 'INR');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { data: unreadCount } = useUnreadCount();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const socket = getSocket();
+
+    // Request current count on connect
+    if (socket.connected) {
+      socket.emit('notifications:ping');
+    }
+
+    socket.on('notifications:count', ({ unread }) => {
+      qc.setQueryData(['notifications', 'unread'], unread);
+    });
+
+    socket.on('notification:new', (notification) => {
+      qc.setQueryData(['notifications', undefined], (old: any) => ({
+        ...old,
+        data: [notification, ...(old?.data || [])]
+      }));
+      toast(notification.title, { icon: '🔔' });
+    });
+
+    return () => {
+      socket.off('notifications:count');
+      socket.off('notification:new');
+    };
+  }, [isAuthenticated, qc]);
 
   useEffect(() => {
     localStorage.setItem('currency', currency);

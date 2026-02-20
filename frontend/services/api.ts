@@ -71,7 +71,7 @@ api.interceptors.response.use(
             } catch (refreshError) {
                 processQueue(refreshError);
                 clearAccessToken();
-                window.location.href = '/login';
+                window.dispatchEvent(new Event('force_logout'));
                 return Promise.reject(refreshError);
             } finally {
                 isRefreshing = false;

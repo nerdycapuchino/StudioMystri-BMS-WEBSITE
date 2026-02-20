@@ -8,7 +8,6 @@ export const useUnreadCount = () =>
     useQuery({
         queryKey: ['notifications', 'unread'],
         queryFn: getUnreadCount,
-        refetchInterval: 30000, // poll every 30s
     });
 
 export const useMarkNotificationRead = () => {
