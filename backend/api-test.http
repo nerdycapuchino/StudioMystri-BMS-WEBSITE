@@ -1,0 +1,762 @@
+### Studio Mystri BMS — API Test Collection
+### Base URL
+@base = http://localhost:5000/api/v1
+@token = Bearer YOUR_ACCESS_TOKEN
+
+### ═══════════════════════════════════════════════════════════
+### HEALTH CHECK
+### ═══════════════════════════════════════════════════════════
+
+### Health
+GET {{base}}/health
+
+### ═══════════════════════════════════════════════════════════
+### AUTH
+### ═══════════════════════════════════════════════════════════
+
+### Register
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Admin User",
+  "email": "admin@studiomystri.com",
+  "password": "Admin@123"
+}
+
+### Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@studiomystri.com",
+  "password": "Admin@123"
+}
+
+### Refresh Token
+POST {{base}}/auth/refresh
+Content-Type: application/json
+
+### Me (Profile)
+GET {{base}}/auth/me
+Authorization: {{token}}
+
+### Logout
+POST {{base}}/auth/logout
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### DASHBOARD
+### ═══════════════════════════════════════════════════════════
+
+### Get Dashboard Stats
+GET {{base}}/dashboard
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### CUSTOMERS
+### ═══════════════════════════════════════════════════════════
+
+### List Customers
+GET {{base}}/customers?page=1&limit=10&search=test
+Authorization: {{token}}
+
+### Create Customer
+POST {{base}}/customers
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Test Customer",
+  "email": "customer@test.com",
+  "phone": "+91 9876543210",
+  "company": "Test Corp",
+  "address": "123 Test Street"
+}
+
+### Get Customer by ID
+GET {{base}}/customers/CUSTOMER_ID
+Authorization: {{token}}
+
+### Update Customer
+PATCH {{base}}/customers/CUSTOMER_ID
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "phone": "+91 1234567890"
+}
+
+### Delete Customer
+DELETE {{base}}/customers/CUSTOMER_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### LEADS
+### ═══════════════════════════════════════════════════════════
+
+### List Leads
+GET {{base}}/leads?page=1&limit=10&stage=NEW
+Authorization: {{token}}
+
+### Create Lead
+POST {{base}}/leads
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "companyName": "Acme Corp",
+  "pocName": "John Doe",
+  "email": "john@acme.com",
+  "phone": "+91 9876543210",
+  "value": 500000,
+  "source": "Website"
+}
+
+### Get Lead
+GET {{base}}/leads/LEAD_ID
+Authorization: {{token}}
+
+### Update Lead
+PATCH {{base}}/leads/LEAD_ID
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "value": 750000,
+  "notes": "Interested in premium package"
+}
+
+### Update Lead Stage
+PATCH {{base}}/leads/LEAD_ID/stage
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "stage": "CONTACTED"
+}
+
+### Get Lead Pipeline
+GET {{base}}/leads/pipeline
+Authorization: {{token}}
+
+### Delete Lead
+DELETE {{base}}/leads/LEAD_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### PRODUCTS
+### ═══════════════════════════════════════════════════════════
+
+### List Products
+GET {{base}}/products?page=1&limit=10&category=Furniture
+Authorization: {{token}}
+
+### Create Product
+POST {{base}}/products
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Executive Desk",
+  "sku": "DESK-001",
+  "category": "Furniture",
+  "price": 25000,
+  "cost": 15000,
+  "stock": 10,
+  "unit": "pcs"
+}
+
+### Get Product
+GET {{base}}/products/PRODUCT_ID
+Authorization: {{token}}
+
+### Update Product
+PATCH {{base}}/products/PRODUCT_ID
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "price": 27000,
+  "stock": 15
+}
+
+### Scan Barcode
+GET {{base}}/products/barcode/DESK-001
+Authorization: {{token}}
+
+### Add Variant
+POST {{base}}/products/PRODUCT_ID/variants
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Walnut Finish",
+  "sku": "DESK-001-WAL",
+  "price": 28000,
+  "stock": 5,
+  "attributes": { "color": "walnut", "material": "solid wood" }
+}
+
+### Add Image (multipart)
+POST {{base}}/products/PRODUCT_ID/images
+Authorization: {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="image"; filename="product.jpg"
+Content-Type: image/jpeg
+
+< ./test-image.jpg
+--boundary--
+
+### Delete Product
+DELETE {{base}}/products/PRODUCT_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### ORDERS
+### ═══════════════════════════════════════════════════════════
+
+### List Orders
+GET {{base}}/orders?page=1&limit=10
+Authorization: {{token}}
+
+### Create Order
+POST {{base}}/orders
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "items": [
+    { "productId": "PRODUCT_ID", "name": "Executive Desk", "quantity": 2, "price": 25000 }
+  ],
+  "customerId": "CUSTOMER_ID",
+  "paymentMethod": "UPI",
+  "discount": 0,
+  "notes": "Express delivery"
+}
+
+### Get Order
+GET {{base}}/orders/ORDER_ID
+Authorization: {{token}}
+
+### Cancel Order
+PATCH {{base}}/orders/ORDER_ID/cancel
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### INVOICES
+### ═══════════════════════════════════════════════════════════
+
+### List Invoices
+GET {{base}}/invoices?page=1&limit=10&status=DRAFT
+Authorization: {{token}}
+
+### Create Invoice
+POST {{base}}/invoices
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "customerId": "CUSTOMER_ID",
+  "items": [
+    { "name": "Executive Desk", "hsn": "9403", "quantity": 2, "rate": 25000, "unit": "pcs" }
+  ],
+  "taxRate": 18,
+  "dueDate": "2026-03-15"
+}
+
+### Get Invoice
+GET {{base}}/invoices/INVOICE_ID
+Authorization: {{token}}
+
+### Update Invoice Status
+PATCH {{base}}/invoices/INVOICE_ID
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "status": "SENT"
+}
+
+### Download Invoice PDF
+GET {{base}}/invoices/INVOICE_ID/pdf
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### FINANCE
+### ═══════════════════════════════════════════════════════════
+
+### List Transactions
+GET {{base}}/finance?page=1&limit=10&type=INCOME
+Authorization: {{token}}
+
+### Create Transaction
+POST {{base}}/finance
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "type": "INCOME",
+  "category": "Sales",
+  "amount": 50000,
+  "description": "Desk sale",
+  "reference": "INV-001"
+}
+
+### Get Transaction
+GET {{base}}/finance/TRANSACTION_ID
+Authorization: {{token}}
+
+### Finance Summary
+GET {{base}}/finance/summary?period=month
+Authorization: {{token}}
+
+### Cashflow (12 months)
+GET {{base}}/finance/cashflow
+Authorization: {{token}}
+
+### Delete Transaction
+DELETE {{base}}/finance/TRANSACTION_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### INVENTORY
+### ═══════════════════════════════════════════════════════════
+
+### List Items
+GET {{base}}/inventory?page=1&limit=10&type=RAW
+Authorization: {{token}}
+
+### Low Stock Items
+GET {{base}}/inventory?lowStock=true
+Authorization: {{token}}
+
+### Create Inventory Item
+POST {{base}}/inventory
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Teak Wood Plank",
+  "type": "RAW",
+  "quantity": 100,
+  "unit": "sqft",
+  "reorderPoint": 20,
+  "cost": 850
+}
+
+### Get Item
+GET {{base}}/inventory/ITEM_ID
+Authorization: {{token}}
+
+### Record Stock Transaction
+POST {{base}}/inventory/ITEM_ID/transactions
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "type": "OUT",
+  "quantity": 10,
+  "reason": "Used for project X"
+}
+
+### List Stock Transactions
+GET {{base}}/inventory/transactions?itemId=ITEM_ID
+Authorization: {{token}}
+
+### Delete Item
+DELETE {{base}}/inventory/ITEM_ID
+Authorization: {{token}}
+
+### List Suppliers
+GET {{base}}/inventory/suppliers?search=wood
+Authorization: {{token}}
+
+### Create Supplier
+POST {{base}}/inventory/suppliers
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Premium Woods Ltd",
+  "contactPerson": "Rajesh",
+  "email": "rajesh@premiumwoods.com",
+  "phone": "+91 9876543210"
+}
+
+### ═══════════════════════════════════════════════════════════
+### PROJECTS
+### ═══════════════════════════════════════════════════════════
+
+### List Projects
+GET {{base}}/projects?page=1&limit=10
+Authorization: {{token}}
+
+### Create Project
+POST {{base}}/projects
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Living Room Redesign",
+  "description": "Modern minimalist living room",
+  "budget": 500000,
+  "customerId": "CUSTOMER_ID"
+}
+
+### Get Project
+GET {{base}}/projects/PROJECT_ID
+Authorization: {{token}}
+
+### Update Stage
+PATCH {{base}}/projects/PROJECT_ID/stage
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "stage": "DESIGN",
+  "progress": 20
+}
+
+### Add Payment
+POST {{base}}/projects/PROJECT_ID/payments
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "amount": 100000,
+  "method": "BANK_TRANSFER",
+  "note": "Advance payment"
+}
+
+### List Payments
+GET {{base}}/projects/PROJECT_ID/payments
+Authorization: {{token}}
+
+### Project Stats
+GET {{base}}/projects/stats
+Authorization: {{token}}
+
+### Delete Project
+DELETE {{base}}/projects/PROJECT_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### HR
+### ═══════════════════════════════════════════════════════════
+
+### List Employees
+GET {{base}}/hr/employees?page=1&limit=10
+Authorization: {{token}}
+
+### Create Employee
+POST {{base}}/hr/employees
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Rahul Kumar",
+  "email": "rahul@studiomystri.com",
+  "department": "Design",
+  "role": "Interior Designer",
+  "salary": 35000
+}
+
+### Get Employee
+GET {{base}}/hr/employees/EMPLOYEE_ID
+Authorization: {{token}}
+
+### Mark Attendance
+POST {{base}}/hr/attendance
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "employeeId": "EMPLOYEE_ID",
+  "date": "2026-02-20",
+  "status": "PRESENT",
+  "checkIn": "2026-02-20T09:00:00Z"
+}
+
+### List Attendance
+GET {{base}}/hr/attendance?employeeId=EMPLOYEE_ID&month=2&year=2026
+Authorization: {{token}}
+
+### Upload Document
+POST {{base}}/hr/employees/EMPLOYEE_ID/documents
+Authorization: {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="document"; filename="idproof.pdf"
+Content-Type: application/pdf
+
+< ./test-doc.pdf
+--boundary--
+
+### HR Summary
+GET {{base}}/hr/summary
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### LOGISTICS
+### ═══════════════════════════════════════════════════════════
+
+### List Shipments
+GET {{base}}/logistics?page=1&limit=10
+Authorization: {{token}}
+
+### Create Shipment
+POST {{base}}/logistics
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "origin": "Mumbai Warehouse",
+  "destination": "Pune",
+  "carrier": "BlueDart",
+  "trackingNumber": "BD123456",
+  "estimatedDelivery": "2026-02-25",
+  "customerId": "CUSTOMER_ID"
+}
+
+### Get Shipment
+GET {{base}}/logistics/SHIPMENT_ID
+Authorization: {{token}}
+
+### Update Shipment Status
+PATCH {{base}}/logistics/SHIPMENT_ID/status
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "status": "IN_TRANSIT"
+}
+
+### Delete Shipment
+DELETE {{base}}/logistics/SHIPMENT_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### TASKS
+### ═══════════════════════════════════════════════════════════
+
+### List Tasks
+GET {{base}}/tasks?page=1&limit=10&status=TODO
+Authorization: {{token}}
+
+### My Tasks
+GET {{base}}/tasks/my
+Authorization: {{token}}
+
+### Create Task
+POST {{base}}/tasks
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "title": "Design living room layout",
+  "description": "Create 3D render",
+  "priority": "HIGH",
+  "dueDate": "2026-03-01",
+  "projectId": "PROJECT_ID"
+}
+
+### Get Task
+GET {{base}}/tasks/TASK_ID
+Authorization: {{token}}
+
+### Update Task
+PATCH {{base}}/tasks/TASK_ID
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS"
+}
+
+### Delete Task
+DELETE {{base}}/tasks/TASK_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### TEAM HUB
+### ═══════════════════════════════════════════════════════════
+
+### List Channels
+GET {{base}}/team/channels
+Authorization: {{token}}
+
+### Send Message
+POST {{base}}/team/messages
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "content": "Hello team!",
+  "channel": "general"
+}
+
+### Get Messages
+GET {{base}}/team/messages?channel=general&page=1&limit=20
+Authorization: {{token}}
+
+### Delete Message
+DELETE {{base}}/team/messages/MESSAGE_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### MARKETING
+### ═══════════════════════════════════════════════════════════
+
+### List Campaigns
+GET {{base}}/marketing?page=1&limit=10
+Authorization: {{token}}
+
+### Create Campaign
+POST {{base}}/marketing
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Spring Sale 2026",
+  "channel": "Instagram",
+  "content": "Flat 20% off on all furniture"
+}
+
+### Get Campaign
+GET {{base}}/marketing/CAMPAIGN_ID
+Authorization: {{token}}
+
+### Update Campaign
+PATCH {{base}}/marketing/CAMPAIGN_ID
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "status": "Paused"
+}
+
+### Campaign Stats
+GET {{base}}/marketing/stats
+Authorization: {{token}}
+
+### Delete Campaign
+DELETE {{base}}/marketing/CAMPAIGN_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### ERP
+### ═══════════════════════════════════════════════════════════
+
+### Create Purchase Order
+POST {{base}}/erp/purchase-orders
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "items": [
+    { "name": "Teak Wood", "quantity": 50, "unitPrice": 850, "unit": "sqft" }
+  ],
+  "supplierId": "SUPPLIER_ID",
+  "notes": "Urgent delivery"
+}
+
+### List Purchase Orders
+GET {{base}}/erp/purchase-orders?page=1&limit=10
+Authorization: {{token}}
+
+### ERP Stats
+GET {{base}}/erp/stats
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### ACTIVITY LOG (Admin Only)
+### ═══════════════════════════════════════════════════════════
+
+### List Activity Logs
+GET {{base}}/activity-log?page=1&limit=20&module=CUSTOMERS
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### NOTIFICATIONS
+### ═══════════════════════════════════════════════════════════
+
+### List Notifications
+GET {{base}}/notifications?page=1&limit=20
+Authorization: {{token}}
+
+### Unread Count
+GET {{base}}/notifications/unread-count
+Authorization: {{token}}
+
+### Mark as Read
+PATCH {{base}}/notifications/NOTIFICATION_ID/read
+Authorization: {{token}}
+
+### Mark All as Read
+PATCH {{base}}/notifications/read-all
+Authorization: {{token}}
+
+### Delete Notification
+DELETE {{base}}/notifications/NOTIFICATION_ID
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════════════════════
+### ADMIN (Admin Only)
+### ═══════════════════════════════════════════════════════════
+
+### List Users
+GET {{base}}/admin/users?page=1&limit=10
+Authorization: {{token}}
+
+### Create User
+POST {{base}}/admin/users
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "New User",
+  "email": "newuser@studiomystri.com",
+  "password": "User@123",
+  "role": "SALES"
+}
+
+### Update User
+PATCH {{base}}/admin/users/USER_ID
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "role": "MANAGER"
+}
+
+### Deactivate User
+PATCH {{base}}/admin/users/USER_ID/deactivate
+Authorization: {{token}}
+
+### Get Company Settings
+GET {{base}}/admin/settings
+Authorization: {{token}}
+
+### Update Company Settings
+PATCH {{base}}/admin/settings
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Studio Mystri",
+  "email": "info@studiomystri.com",
+  "phone": "+91 22 1234 5678",
+  "currency": "INR"
+}
+
+### ═══════════════════════════════════════════════════════════
+### GLOBAL SEARCH
+### ═══════════════════════════════════════════════════════════
+
+### Search
+GET {{base}}/search?q=test
+Authorization: {{token}}
