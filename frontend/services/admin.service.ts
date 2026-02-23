@@ -8,16 +8,16 @@ export const createUser = (data: Record<string, unknown>) =>
     api.post('/admin/users', data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const updateUser = ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-    api.patch(`/admin/users/${id}`, data).then(r => ('data' in r.data ? r.data.data : r.data));
+    api.put(`/admin/users/${id}`, data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const deactivateUser = (id: string) =>
-    api.patch(`/admin/users/${id}/deactivate`).then(r => ('data' in r.data ? r.data.data : r.data));
+    api.delete(`/admin/users/${id}`).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const getCompanySettings = (): Promise<CompanySettings> =>
     api.get('/admin/settings').then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const updateCompanySettings = (data: Partial<CompanySettings>) =>
-    api.patch('/admin/settings', data).then(r => ('data' in r.data ? r.data.data : r.data));
+    api.put('/admin/settings', data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const uploadCompanyLogo = (file: File) => {
     const fd = new FormData();

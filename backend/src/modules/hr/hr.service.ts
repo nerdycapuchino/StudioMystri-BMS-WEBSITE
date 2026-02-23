@@ -45,8 +45,8 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
     return prisma.employee.create({
         data: {
             ...data,
-            joinDate: data.joinDate ? new Date(data.joinDate) : undefined,
-            dob: data.dob ? new Date(data.dob) : undefined,
+            joinDate: data.joinDate && data.joinDate.trim() !== '' ? new Date(data.joinDate) : undefined,
+            dob: data.dob && data.dob.trim() !== '' ? new Date(data.dob) : undefined,
         },
     });
 };
@@ -57,8 +57,8 @@ export const updateEmployee = async (id: string, data: Partial<CreateEmployeeInp
         where: { id },
         data: {
             ...data,
-            joinDate: data.joinDate ? new Date(data.joinDate) : undefined,
-            dob: data.dob ? new Date(data.dob) : undefined,
+            joinDate: data.joinDate && data.joinDate.trim() !== '' ? new Date(data.joinDate) : undefined,
+            dob: data.dob && data.dob.trim() !== '' ? new Date(data.dob) : undefined,
         },
     });
 };
