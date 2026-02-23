@@ -18,13 +18,13 @@ export const getCustomers = (params?: CustomerParams): Promise<PaginatedResponse
     api.get('/customers', { params }).then(r => r.data);
 
 export const getCustomer = (id: string): Promise<Customer> =>
-    api.get(`/customers/${id}`).then(r => r.data.data || r.data);
+    api.get(`/customers/${id}`).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const createCustomer = (data: Partial<Customer>): Promise<Customer> =>
-    api.post('/customers', data).then(r => r.data.data || r.data);
+    api.post('/customers', data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const updateCustomer = ({ id, data }: { id: string; data: Partial<Customer> }): Promise<Customer> =>
-    api.patch(`/customers/${id}`, data).then(r => r.data.data || r.data);
+    api.patch(`/customers/${id}`, data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const deleteCustomer = (id: string): Promise<void> =>
     api.delete(`/customers/${id}`).then(() => undefined);

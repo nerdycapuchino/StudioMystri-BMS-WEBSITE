@@ -14,13 +14,13 @@ export interface DashboardStats {
 }
 
 export const getDashboardStats = (): Promise<DashboardStats> =>
-    api.get('/dashboard').then(r => r.data.data || r.data);
+    api.get('/dashboard').then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const getRevenueChart = (period: '7d' | '30d' | '90d' | '12m' = '7d') =>
-    api.get(`/dashboard/revenue-chart?period=${period}`).then(r => r.data.data || r.data);
+    api.get(`/dashboard/revenue-chart?period=${period}`).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const getRecentActivity = () =>
-    api.get('/dashboard/recent-activity').then(r => r.data.data || r.data);
+    api.get('/dashboard/recent-activity').then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const getTopProducts = () =>
-    api.get('/dashboard/top-products').then(r => r.data.data || r.data);
+    api.get('/dashboard/top-products').then(r => ('data' in r.data ? r.data.data : r.data));

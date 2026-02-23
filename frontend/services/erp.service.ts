@@ -7,13 +7,13 @@ export interface ERPParams {
 }
 
 export const getERPSuppliers = () =>
-    api.get('/erp/suppliers').then(r => r.data.data || r.data);
+    api.get('/erp/suppliers').then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const getPurchaseOrders = (params?: ERPParams) =>
     api.get('/erp/purchase-orders', { params }).then(r => r.data);
 
 export const createPurchaseOrder = (data: Record<string, unknown>) =>
-    api.post('/erp/purchase-orders', data).then(r => r.data.data || r.data);
+    api.post('/erp/purchase-orders', data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const getERPStats = () =>
-    api.get('/erp/stats').then(r => r.data.data || r.data);
+    api.get('/erp/stats').then(r => ('data' in r.data ? r.data.data : r.data));

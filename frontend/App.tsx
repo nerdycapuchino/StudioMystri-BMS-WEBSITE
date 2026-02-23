@@ -287,9 +287,14 @@ const MainLayout: React.FC = () => {
           />
         )}
 
-        <div className="flex-1 overflow-hidden relative">
-          {renderModule()}
-          <GlobalSearch onClose={() => setIsSearchOpen(false)} onChangeModule={setActiveModule} />
+        <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 md:ml-64 ${sidebarExpanded ? 'md:ml-20 !ml-20' : ''}`}>
+          <main className="flex-1 overflow-y-auto relative z-10 custom-scrollbar h-screen">
+            {renderModule()}
+          </main>
+          {/* Global Search Overlay overlaying everything except sidebar */}
+          <div className={sidebarExpanded ? 'md:ml-20' : 'md:ml-64'}>
+            <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} onChangeModule={(m) => setActiveModule(m as AppModule)} />
+          </div>
         </div>
       </main>
     </div>
