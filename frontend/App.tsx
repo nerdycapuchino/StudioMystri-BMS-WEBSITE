@@ -45,7 +45,13 @@ const MainLayout: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const socket = getSocket();
+    let socket: ReturnType<typeof getSocket>;
+    try {
+      socket = getSocket();
+    } catch {
+      return;
+    }
+    if (!socket) return;
 
     // Request current count on connect
     if (socket.connected) {
@@ -61,12 +67,14 @@ const MainLayout: React.FC = () => {
         ...old,
         data: [notification, ...(old?.data || [])]
       }));
-      toast(notification.title, { icon: '🔔' });
+      toast(notification?.title || 'New notification', { icon: '🔔' });
     });
 
     return () => {
-      socket.off('notifications:count');
-      socket.off('notification:new');
+      try {
+        socket.off('notifications:count');
+        socket.off('notification:new');
+      } catch { /* ignore */ }
     };
   }, [isAuthenticated, qc]);
 
@@ -228,11 +236,11 @@ const MainLayout: React.FC = () => {
           {sidebarExpanded && (
             <div className="flex items-center gap-3 p-2 rounded-xl bg-white/80 border border-slate-200 overflow-hidden animate-fade-in shadow-sm">
               <div className="size-8 rounded-full bg-gradient-to-br from-primary to-secondary border border-white flex items-center justify-center text-white font-bold shadow-inner text-xs shrink-0">
-                {user.name.substring(0, 2).toUpperCase()}
+                {user?.name?.substring(0, 2).toUpperCase() || 'U'}
               </div>
               <div className="overflow-hidden">
-                <p className="text-xs font-bold text-slate-800 truncate">{user.name}</p>
-                <p className="text-[10px] text-slate-500 truncate">{user.role || 'Staff'}</p>
+                <p className="text-xs font-bold text-slate-800 truncate">{user?.name || 'User'}</p>
+                <p className="text-[10px] text-slate-500 truncate">{user?.role || 'Staff'}</p>
               </div>
             </div>
           )}
@@ -268,7 +276,7 @@ const MainLayout: React.FC = () => {
                 )}
               </div>
               <div className="size-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-xs font-bold text-white border border-white shadow-sm">
-                {user.name.substring(0, 2).toUpperCase()}
+                {user?.name?.substring(0, 2).toUpperCase() || 'U'}
               </div>
             </div>
           </header>
@@ -291,11 +299,42 @@ const MainLayout: React.FC = () => {
   );
 }
 
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-8">
+          <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl p-10 max-w-md text-center shadow-xl">
+            <h2 className="text-xl font-bold text-slate-800 mb-2">Something went wrong</h2>
+            <p className="text-sm text-slate-500 mb-4">{this.state.error?.message || 'An unexpected error occurred.'}</p>
+            <button onClick={() => window.location.reload()} className="btn-primary px-6 py-3 text-sm font-bold rounded-xl">
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <MainLayout />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 
