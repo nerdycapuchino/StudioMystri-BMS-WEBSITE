@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Inventory &amp; Supply Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-light": "#e0f2fe", // For hover states/backgrounds
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for table if needed */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex min-h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="hidden lg:flex w-72 flex-col bg-slate-50 border-r border-slate-200 h-screen fixed left-0 top-0 overflow-y-auto">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 px-2 py-4 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Abstract architectural pattern logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA94CN58EPOKrQITaA2r0hSoOtpoM1PS0KwRzb6oxJ-TFGy8AwI4Cm5P8Q7TgAR9UVVFAl_nFelfy6k110VO0BRn_8a6Urzw0Y09yb6ZqyoOTDiib2OGB4Vic7y7JVK07jpsEbEz3rP-PUx1orjB48cfJX3hdEuK89UIaM1oNHITT4FJqRnlihBM9-EreHzRemMxtd9VX8BdDnz0a3VcBQ9V2JHHWEjYjAQasnDAFWWZFAyzWvUxpjiSxg9tZrsbH1AwCMMk4SWPyXB");'></div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 text-base font-bold leading-normal">ArchFirm ERP</h1>
+<p class="text-slate-500 text-xs font-normal leading-normal">Admin Console</p>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary">work</span>
+<span class="text-sm font-medium">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="text-sm font-bold">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary">attach_money</span>
+<span class="text-sm font-medium">Finance</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</div>
+</div>
+<div class="p-4 bg-slate-100 rounded-xl mt-auto mb-4">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">info</span>
+<div>
+<p class="text-xs font-semibold text-slate-800 mb-1">Stock Alert</p>
+<p class="text-xs text-slate-500 leading-relaxed">3 items are low in stock. Review pending shipments.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 lg:ml-72 flex flex-col h-screen overflow-hidden bg-background-light">
+<!-- Header -->
+<header class="flex-none bg-white border-b border-slate-200 px-6 py-4">
+<div class="flex flex-col gap-4">
+<!-- Top Row: Title & User -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="lg:hidden text-slate-500 hover:text-slate-800">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div>
+<h2 class="text-slate-900 text-xl font-bold leading-tight">Inventory &amp; Supply Ledger</h2>
+<p class="text-slate-500 text-sm">Manage materials, furniture, and stock levels.</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+<div class="h-8 w-px bg-slate-200"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-medium text-slate-900">Alex Morgan</p>
+<p class="text-xs text-slate-500">Lead Architect</p>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-white shadow-sm" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC-DRHN0zNZ5UwWDkdgYkTWmQAbau3m0MoEuxexPrLy05FT-PoILvXWfGk_fVDIHesOuMx4tCqS8eRwBrvSFPCKeRYFbcH28ZEP1JtmRMccPAxwxExiY_U4vE4ynbQmYHvoxTviOClILlwlIcH8Ok2RcT54DXcG1ESY0FkK1CkxPFDza1PAKTESVBg9iGti7hRhuv0ArtBdTh-J5QhVBKk2JtO2tokXRWuDCUckBf8CAMVNlcn7PJh84oCxQUu6QJDaQuTpMr2md1xM");'></div>
+</div>
+</div>
+</div>
+<!-- Bottom Row: Controls -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
+<!-- Tabs -->
+<div class="flex border-b border-slate-200 w-full md:w-auto overflow-x-auto">
+<a class="px-4 py-2 text-sm font-semibold text-primary border-b-2 border-primary whitespace-nowrap" href="#">
+                            Inventory List
+                        </a>
+<a class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 transition-colors whitespace-nowrap" href="#">
+                            Logistics &amp; Shipments
+                        </a>
+<a class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent hover:border-slate-300 transition-colors whitespace-nowrap" href="#">
+                            Suppliers
+                        </a>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-3 self-end md:self-auto">
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="hidden sm:inline">Export Report</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Add Item</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-auto custom-scrollbar p-6">
+<!-- Filters Section -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+<div class="flex flex-col lg:flex-row gap-4">
+<!-- Search -->
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Search by SKU, Name, or Material..." type="text"/>
+</div>
+<!-- Dropdowns -->
+<div class="flex flex-wrap gap-3">
+<div class="relative group">
+<select class="appearance-none bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:bg-slate-100 transition-colors min-w-[140px]">
+<option>Category: All</option>
+<option>Raw Material</option>
+<option>Finished Good</option>
+<option>Hardware</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-[18px]">expand_more</span>
+</div>
+<div class="relative group">
+<select class="appearance-none bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:bg-slate-100 transition-colors min-w-[140px]">
+<option>Supplier: All</option>
+<option>Italian Stone Co.</option>
+<option>Velvet Luxe</option>
+<option>Timber Bros</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-[18px]">expand_more</span>
+</div>
+<div class="relative group">
+<select class="appearance-none bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer hover:bg-slate-100 transition-colors min-w-[140px]">
+<option>Status: All</option>
+<option>In Stock</option>
+<option>Low Stock</option>
+<option>Out of Stock</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 border-b border-slate-200">
+<th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 w-[40%]">Item Name &amp; SKU</th>
+<th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 w-[15%]">Category</th>
+<th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 w-[25%]">Stock Level</th>
+<th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 w-[15%] text-right">Unit Price</th>
+<th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 w-[5%]"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-200 bg-cover bg-center shrink-0 border border-slate-200" data-alt="Walnut wood texture sample" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA5RLWFRyIaJh43xljYErIPAsnze3hNk4Od7lZqPvZuW32w929qw3Yb7dgB_OozAoRoB8FrimM4mwiaMnA3dpkiXdpXvyNfQEfMOFAVvgWfm9a0bnzlvMLG7ai2vbVW3Mu-qpiUbObZaGhoVPM8dH5Z3i13_kB0Cb--7yUeN7Jtybl1tFHGNrtr3y0vCUyF5PoVOmpq0F7jJyEph9Fij7tkPmAHddwRQ6JURXCAT1FixZo0Gxxrva-Vlu5YvnuTrXE6k_bec36uTXnU');"></div>
+<div>
+<p class="font-semibold text-slate-900 group-hover:text-primary transition-colors">American Black Walnut</p>
+<p class="text-sm text-slate-500 font-mono mt-0.5">SKU: W-992</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                        Raw Material
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700">420 <span class="text-xs text-slate-400 font-normal">bdft</span></span>
+<span class="text-xs text-emerald-600 font-medium">Healthy</span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<p class="font-medium text-slate-900 tabular-nums">$12.50</p>
+<p class="text-xs text-slate-400">per bdft</p>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-200 bg-cover bg-center shrink-0 border border-slate-200" data-alt="Dark green velvet armchair" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCDY4xczUw2VCqveEHUPgcHoCU1r1-sf4OgdsWAL8S9ro7ZbS0Rcr8ouT6U-_aJ9S96_razDkmvHEcmZgZpbcTa6LqQ2NI2EbHK-3a8-I7wCICeXrTtaUSVkuUbvo9Cbxv_bwdSA6EkWxh0TAi_gLzI3ut6dz5n18M1Er__5-xgoKlkoNLT6KobWKSEcPJmVHq0uh7kddHN2ndI7mERU8bnX1mcx2Sku-3K48pL6UJwHEQpOaqvpZG9fu1zomZZeTvkqmE3jaRmtTG8');"></div>
+<div>
+<p class="font-semibold text-slate-900 group-hover:text-primary transition-colors">Tuscan Velvet Armchair</p>
+<p class="text-sm text-slate-500 font-mono mt-0.5">SKU: F-201</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                                        Finished Good
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700">3 <span class="text-xs text-slate-400 font-normal">units</span></span>
+<span class="text-xs text-rose-600 font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span> Low Stock
+                                            </span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+<div class="bg-rose-500 h-1.5 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<p class="font-medium text-slate-900 tabular-nums">$2,400.00</p>
+<p class="text-xs text-slate-400">per unit</p>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-200 bg-cover bg-center shrink-0 border border-slate-200" data-alt="White marble texture sample" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD5Lmvb03K9UAcZNXBE3iKWR84YA-rclxNOvECoNF9KNia3qqr6zSWJgRrSdjBNGx_Hmo_o9bhWBq7_9wBo5WnaGyCLfluCU7gVIhxsh0-AzAnpTuBZ4iyt7zGjjupm-zWwkE6IZJ9uzcPWVidbhzmYn_NIlj18_4ACkRMO7_dRsz0TzpkXmwnzV_gb_oYJE6psC0O1Qc576UZLeu0fRKMNUmCNfgbdYaWbxK9TkrE_WHH0uQ-4i82WC4uLi5WeINRFjLtth0iNzIdJ');"></div>
+<div>
+<p class="font-semibold text-slate-900 group-hover:text-primary transition-colors">Carrara Marble Slab</p>
+<p class="text-sm text-slate-500 font-mono mt-0.5">SKU: S-114</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                        Raw Material
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700">15 <span class="text-xs text-slate-400 font-normal">units</span></span>
+<span class="text-xs text-primary font-medium">Medium</span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<p class="font-medium text-slate-900 tabular-nums">$140.00</p>
+<p class="text-xs text-slate-400">per sqft</p>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-200 bg-cover bg-center shrink-0 border border-slate-200" data-alt="Brass cabinet handle" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1SgZMYqOzMkk4-2uygxyAhbIloIcrbBWAj1kWDguLH_c_o4seqYp5Cces5RZUYDb6JlYSdl6fF28cRVAQgRYFJGoxodzh5QQ8pMIEYsnEqZRVNeGVb_51132yYV4QkIw31E3-SeP4rd33DM7YyoRlaHS5aTzRKNsAkEnp71lC6noQJcIMk5tCaeV_8rQDiKbsoq_VT5b1peie4Ost_I3KlSzbBezFcA7grTiZ5j1BbGDeJizFONkqGJeqGowx22G_59Z_2T2e3NMX');"></div>
+<div>
+<p class="font-semibold text-slate-900 group-hover:text-primary transition-colors">Brushed Brass Handle</p>
+<p class="text-sm text-slate-500 font-mono mt-0.5">SKU: H-442</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                        Hardware
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700">2,500 <span class="text-xs text-slate-400 font-normal">units</span></span>
+<span class="text-xs text-emerald-600 font-medium">Overstock</span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<p class="font-medium text-slate-900 tabular-nums">$18.50</p>
+<p class="text-xs text-slate-400">per unit</p>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="py-4 px-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-200 bg-cover bg-center shrink-0 border border-slate-200" data-alt="Blue linen fabric texture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAsFwTqf3Unym0qbXPzLBeWzqKdKbeuc9jFWoz-JOWlvNLkfTT7NCT7m4wXYT0rg94vzXKD1L_qJLA8Fj7-84ho15dq-FAs8GqJpBXPspbywsE_HzPMHyOJRcCmB1UJNyaOWiDa7Qq1V4xYuGavZa9DMkDULKL6rSmBvPCQGaXJAVp1ECbzvXsPasy9hueJRlSU-I3mBxAKWULHS8VLvq_V7Gh1AGyEle9inFlGw6ir1BgD_xeNC4_xO-7QB2LNRv61PTxjj9Q8mlfS');"></div>
+<div>
+<p class="font-semibold text-slate-900 group-hover:text-primary transition-colors">Belgian Linen (Navy)</p>
+<p class="text-sm text-slate-500 font-mono mt-0.5">SKU: T-881</p>
+</div>
+</div>
+</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                        Raw Material
+                                    </span>
+</td>
+<td class="py-4 px-6">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<span class="text-sm font-medium text-slate-700">85 <span class="text-xs text-slate-400 font-normal">yards</span></span>
+<span class="text-xs text-emerald-600 font-medium">Healthy</span>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 70%"></div>
+</div>
+</div>
+</td>
+<td class="py-4 px-6 text-right">
+<p class="font-medium text-slate-900 tabular-nums">$45.00</p>
+<p class="text-xs text-slate-400">per yard</p>
+</td>
+<td class="py-4 px-6 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="bg-white px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+<p class="text-sm text-slate-500">Showing <span class="font-medium text-slate-900">1-5</span> of <span class="font-medium text-slate-900">128</span> items</p>
+<div class="flex gap-2">
+<button class="px-3 py-1 text-sm border border-slate-200 rounded text-slate-500 hover:bg-slate-50 disabled:opacity-50">Previous</button>
+<button class="px-3 py-1 text-sm border border-slate-200 rounded text-slate-500 hover:bg-slate-50">Next</button>
+</div>
+</div>
+</div>
+<div class="mt-8 text-center">
+<p class="text-xs text-slate-400">© 2023 ArchFirm ERP. All rights reserved.</p>
+</div>
+</div>
+</main>
+</body></html>

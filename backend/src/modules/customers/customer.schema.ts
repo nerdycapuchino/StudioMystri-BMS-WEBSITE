@@ -14,5 +14,14 @@ export const createCustomerSchema = z.object({
 
 export const updateCustomerSchema = createCustomerSchema.partial();
 
+export const listCustomerQuerySchema = z.object({
+    page: z.string().regex(/^\d+$/).transform(Number).optional(),
+    limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+    sortBy: z.string().optional(),
+    order: z.enum(['asc', 'desc']).optional(),
+    search: z.string().optional(),
+});
+
 export type CreateCustomerInput = z.infer<typeof createCustomerSchema>;
 export type UpdateCustomerInput = z.infer<typeof updateCustomerSchema>;
+export type ListCustomerQuery = z.infer<typeof listCustomerQuerySchema>;

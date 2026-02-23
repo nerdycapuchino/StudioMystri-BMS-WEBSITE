@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Global Search Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "glow": "0 0 20px -5px rgba(19, 127, 236, 0.15)"
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit browsers */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
+<!-- Backdrop Overlay -->
+<div class="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] sm:pt-[15vh] px-4 backdrop-blur-sm bg-slate-900/40 transition-opacity">
+<!-- Modal Container -->
+<div class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-[#1e293b] shadow-2xl shadow-slate-900/20 ring-1 ring-slate-900/5 dark:ring-slate-100/10 transition-all flex flex-col max-h-[70vh]">
+<!-- Search Header -->
+<div class="relative border-b border-slate-100 dark:border-slate-700/50">
+<div class="flex items-center px-4 py-4">
+<span class="material-symbols-outlined text-primary text-2xl mr-3 select-none">search</span>
+<input autofocus="" class="h-10 w-full bg-transparent border-0 text-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-0 p-0" placeholder="Search projects, clients, inventory, or type a command..." type="text" value=""/>
+<div class="hidden sm:flex items-center gap-1">
+<kbd class="hidden sm:inline-block rounded border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">ESC</kbd>
+</div>
+</div>
+</div>
+<!-- Results List -->
+<div class="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-4 scroll-smooth">
+<!-- Group: Projects -->
+<div>
+<h3 class="px-3 pb-2 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Projects</h3>
+<!-- Active Item (simulated focus state) -->
+<div class="group flex cursor-pointer select-none items-center justify-between rounded-lg bg-primary/10 px-3 py-2.5 text-primary">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-white dark:bg-slate-800 shadow-sm ring-1 ring-slate-900/5 dark:ring-slate-100/10">
+<span class="material-symbols-outlined text-primary">apartment</span>
+</div>
+<div class="flex flex-col">
+<span class="font-semibold text-slate-900 dark:text-white">Loft 404 Renovation</span>
+<span class="text-sm text-primary/80">#PRJ-2024-88 • In Progress</span>
+</div>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary opacity-100 text-[20px]">keyboard_return</span>
+</div>
+</div>
+<div class="group flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<span class="material-symbols-outlined text-slate-400">apartment</span>
+</div>
+<div class="flex flex-col">
+<span class="font-semibold">Modern Loft Conversion</span>
+<span class="text-sm text-slate-500 dark:text-slate-400">#PRJ-2023-12 • Completed</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: Clients -->
+<div>
+<h3 class="px-3 pb-2 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clients</h3>
+<div class="group flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<span class="material-symbols-outlined text-slate-400">domain</span>
+</div>
+<div class="flex flex-col">
+<span class="font-semibold">Acme Corp HQ</span>
+<span class="text-sm text-slate-500 dark:text-slate-400">Contact: Sarah Jenkins</span>
+</div>
+</div>
+<div class="hidden group-hover:flex items-center gap-2">
+<span class="text-xs text-slate-400">Jump to</span>
+<kbd class="hidden sm:inline-block rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">↵</kbd>
+</div>
+</div>
+<div class="group flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<span class="material-symbols-outlined text-slate-400">domain</span>
+</div>
+<div class="flex flex-col">
+<span class="font-semibold">Zenith Designs</span>
+<span class="text-sm text-slate-500 dark:text-slate-400">Contact: Mike Ross</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: Inventory -->
+<div>
+<h3 class="px-3 pb-2 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Inventory Items</h3>
+<div class="group flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+<span class="material-symbols-outlined text-slate-400">chair</span>
+</div>
+<div class="flex flex-col">
+<span class="font-semibold">Eames Lounge Chair</span>
+<span class="text-sm text-slate-500 dark:text-slate-400">SKU: FUR-009 • 12 in stock</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: Team Members -->
+<div>
+<h3 class="px-3 pb-2 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Team Members</h3>
+<div class="group flex cursor-pointer select-none items-center justify-between rounded-lg px-3 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 overflow-hidden">
+<!-- Avatar Placeholder -->
+<img alt="Portrait of David Ross" class="h-full w-full object-cover" data-alt="Portrait of David Ross" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgDfS7bZqSg0lWBeCDHAlaHqONDWCjivdHRCCU2beKOV0gs2djSSuYqApI5SpFyGa72aqUo9hIlMTiqtVs01UqzQlFmu6CbrrcesmPnZA6gqw1iRGD4CiQLatNAJ16MG73XdsWT-ox2fn2_ys9d-TfXvyqX-nLu-0q31XQdV5j-9GGWL3d9nfZh0GFkX5zf7QjuKuvfNGkzcgBlDklEmmtmQ5B7sTGWTjaSTmyIbKKp-WxqiuLoaYlijOLxaf13aznibRVGL0RYEF5"/>
+</div>
+<div class="flex flex-col">
+<span class="font-semibold">David Ross</span>
+<span class="text-sm text-slate-500 dark:text-slate-400">Senior Architect • Available</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer / Shortcuts -->
+<div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700/50 px-4 py-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+<div class="flex gap-4">
+<span class="flex items-center gap-1">
+<kbd class="font-sans rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 shadow-sm text-[10px]">↵</kbd>
+                        to select
+                    </span>
+<span class="flex items-center gap-1">
+<kbd class="font-sans rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 shadow-sm text-[10px]">↑</kbd>
+<kbd class="font-sans rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-1.5 py-0.5 shadow-sm text-[10px]">↓</kbd>
+                        to navigate
+                    </span>
+</div>
+<div class="flex gap-4">
+<span class="flex items-center gap-1 group cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+                        Create new Project
+                    </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Context (Blurred out UI behind the modal for context) -->
+<!-- This section simulates the app behind the overlay -->
+<div aria-hidden="true" class="h-screen w-full flex flex-col opacity-30 pointer-events-none">
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 bg-white dark:bg-slate-900">
+<div class="flex items-center gap-4">
+<div class="h-8 w-8 bg-primary rounded"></div>
+<div class="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+</div>
+</header>
+<div class="flex flex-1">
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden md:block p-6 space-y-4">
+<div class="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+<div class="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded"></div>
+<div class="h-4 w-5/6 bg-slate-200 dark:bg-slate-800 rounded"></div>
+</aside>
+<main class="flex-1 p-8 bg-background-light dark:bg-background-dark grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="h-40 bg-white dark:bg-slate-800 rounded-xl shadow-sm"></div>
+<div class="h-40 bg-white dark:bg-slate-800 rounded-xl shadow-sm"></div>
+<div class="h-40 bg-white dark:bg-slate-800 rounded-xl shadow-sm"></div>
+<div class="col-span-2 h-64 bg-white dark:bg-slate-800 rounded-xl shadow-sm"></div>
+</main>
+</div>
+</div>
+</body></html>

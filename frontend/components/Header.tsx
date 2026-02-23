@@ -4,13 +4,10 @@ import { useSearch } from '../hooks/useSearch';
 import { useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const [query, setQuery] = useState('');
     const { data: results, isFetching: isSearching } = useSearch(query);
     const navigate = useNavigate();
-
-    const firstName = user?.name?.split(' ')[0] || 'User';
-    const lastName = user?.name?.split(' ').slice(1).join(' ') || '';
 
     const handleSelectResult = (path: string) => {
         setQuery('');
@@ -18,71 +15,79 @@ export const Header: React.FC = () => {
     }
 
     return (
-        <header className="h-20 bg-surface-elevated/80 backdrop-blur-xl border-b border-border-solid flex items-center justify-between px-8 sticky top-0 z-40">
-            {/* Search Bar */}
-            <div className="max-w-xl w-full relative group">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors">search</span>
+        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 px-8 backdrop-blur-md z-40 sticky top-0 transition-colors duration-300">
+            <div className="flex w-full max-w-lg items-center relative group">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <span className="material-symbols-outlined text-slate-400 text-[20px] group-focus-within:text-primary transition-colors">search</span>
+                </div>
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search orders, clients, projects... (Ctrl+K)"
-                    className="w-full bg-surface-dark border border-border-solid rounded-xl py-3 pl-12 pr-4 text-sm text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder-text-muted/50"
+                    placeholder="Search modules, projects, or staff..."
+                    className="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 pl-10 pr-12 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary placeholder:text-slate-400 transition-all"
                 />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-surface-hover rounded text-[10px] font-mono text-text-muted border border-border-glass">
-                    CTRL K
-                </button>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <kbd className="inline-flex items-center rounded border border-slate-300 dark:border-slate-600 px-2 py-0.5 font-sans text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Ctrl K</kbd>
+                </div>
 
                 {/* Search Results Dropdown Overlay */}
                 {query.length >= 2 && (
-                    <div className="absolute top-14 left-0 w-full bg-surface-elevated border border-border-solid rounded-xl shadow-xl shadow-black/40 overflow-hidden z-50">
+                    <div className="absolute top-12 left-0 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                         {isSearching ? (
-                            <div className="p-4 text-center text-sm text-text-muted animate-pulse">Searching...</div>
+                            <div className="p-4 text-center text-sm text-slate-500 animate-pulse">Scanning database...</div>
                         ) : results?.data && results.data.length > 0 ? (
-                            <ul className="max-h-64 overflow-y-auto custom-scrollbar">
-                                {results.data.map((r: any, i: number) => (
-                                    <li key={i} onClick={() => handleSelectResult(r.url)} className="px-4 py-3 hover:bg-surface-hover cursor-pointer border-b border-border-solid last:border-0 flex justify-between items-center transition-colors">
-                                        <div>
-                                            <p className="text-sm font-medium text-text-primary">{r.title}</p>
-                                            <p className="text-xs text-text-muted">{r.subtitle || r.id}</p>
+                            <div className="max-h-[450px] overflow-y-auto custom-scrollbar">
+                                {Object.entries(
+                                    results.data.reduce((acc: any, item: any) => {
+                                        if (!acc[item.type]) acc[item.type] = [];
+                                        acc[item.type].push(item);
+                                        return acc;
+                                    }, {})
+                                ).map(([type, items]: [string, any]) => (
+                                    <div key={type} className="border-b last:border-0 border-slate-100 dark:border-slate-800">
+                                        <div className="bg-slate-50/80 dark:bg-slate-800/50 px-5 py-2">
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 dark:text-slate-500">
+                                                {type === 'staff' ? 'Team Hub' : type === 'lead' ? 'CRM Pipeline' : type}
+                                            </span>
                                         </div>
-                                        <span className="text-[10px] uppercase font-bold tracking-wider text-text-muted bg-surface-dark px-2 py-1 rounded">{r.type}</span>
-                                    </li>
+                                        <ul>
+                                            {items.map((r: any, i: number) => (
+                                                <li key={i} onClick={() => handleSelectResult(r.url)} className="px-5 py-3 hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer flex justify-between items-center group transition-colors">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <p className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{r.title}</p>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{r.subtitle || r.id}</p>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-[18px]">arrow_forward</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         ) : (
-                            <div className="p-4 text-center text-sm text-text-muted">No results found for "{query}"</div>
+                            <div className="p-6 text-center text-sm text-slate-500">
+                                <span className="material-symbols-outlined block text-3xl mb-2 opacity-20">search_off</span>
+                                No results found for "<span className="font-semibold text-slate-900 dark:text-white">{query}</span>"
+                            </div>
                         )}
                     </div>
                 )}
             </div>
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-6">
-                <button className="relative text-text-muted hover:text-white transition-colors group">
+            <div className="flex items-center gap-4">
+                <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition group">
                     <span className="material-symbols-outlined group-hover:scale-110 transition-transform">notifications</span>
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface-elevated animate-pulse"></span>
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"></span>
                 </button>
-                <div className="w-px h-8 bg-border-solid"></div>
-
-                <div className="flex items-center gap-4 cursor-pointer group">
-                    <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold text-text-primary capitalize">{firstName} {lastName}</p>
-                        <p className="text-[11px] text-primary uppercase font-bold tracking-widest">{user?.role || 'Administrator'}</p>
-                    </div>
-                    <img
-                        src={`https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=38e07b&color=122017&bold=true`}
-                        alt="Profile"
-                        className="w-10 h-10 rounded-xl border border-border-solid group-hover:border-primary transition-colors object-cover"
-                    />
-                    <button
-                        onClick={() => logout()}
-                        className="text-text-muted hover:text-error transition-colors ml-2"
-                        title="Logout"
-                    >
-                        <span className="material-symbols-outlined">logout</span>
-                    </button>
-                </div>
+                <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                <button
+                    onClick={() => logout()}
+                    className="flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-800 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-slate-800 dark:hover:bg-slate-700 transition transform active:scale-95"
+                >
+                    <span className="material-symbols-outlined text-[18px]">logout</span>
+                    <span>Systems Exit</span>
+                </button>
             </div>
         </header>
     );

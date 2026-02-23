@@ -35,19 +35,17 @@ export const login = async (input: LoginInput) => {
     // Find user by email
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
+    // Timing attack mitigation: always perform a password compare
+    const dummyHash = '$2a$10$0G6s0Pz60G6s0Pz60G6s0Ou1o0S0v0I0v0I0v0I0v0I0v0I0v0I'; // Validly formatted Bcrypt hash
+    const passwordToCompare = user ? user.passwordHash : dummyHash;
+    const isPasswordValid = await bcrypt.compare(password, passwordToCompare);
+
+    if (!user || !isPasswordValid) {
         throw createError(401, 'Invalid email or password');
     }
 
     if (!user.isActive) {
         throw createError(403, 'Account is deactivated. Contact your administrator.');
-    }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-
-    if (!isPasswordValid) {
-        throw createError(401, 'Invalid email or password');
     }
 
     // Generate tokens

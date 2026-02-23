@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DesignPOS Sales Interface</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-content": "#ffffff",
+                        "secondary": "#3b82f6", 
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e293b",
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation -->
+<header class="h-16 flex-none bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark px-6 flex items-center justify-between z-20 shadow-sm">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-slate-900 dark:text-white">
+<div class="w-8 h-8 flex items-center justify-center bg-primary rounded text-white">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight">DesignPOS</h1>
+</div>
+<nav class="hidden md:flex items-center gap-1 ml-4">
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded" href="#">Sales</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="#">Inventory</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="#">Customers</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-background-light dark:bg-background-dark rounded border border-border-light dark:border-border-dark">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">Register Open</span>
+</div>
+<button class="relative p-2 text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-surface-dark"></span>
+</button>
+<div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 bg-center bg-cover border-2 border-white dark:border-surface-dark shadow-sm" data-alt="User Avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDVk5yimBs407zf-Og5eO-gtOqKKVFQjP-vbkkGVdprTAl845ikbL7EUgD29w0Z-tMh7hOrfXyVWsHC_US6MzQkIaFtFgOBp-u0Gil0scTGVh8UDurVA9kM-pLpTCTBw_HSW9Gs7P8LV3kG8lGC4wPne_cWnM5Doa6ck-Du7_jISwLEcBGlpRdNo78Zklnwl9F3RGz3nxgPKK-40YllSLErB3ZiKC47NAfYFNrk9Rhn2D7-c9jWEFz0p5cjGpkESvHO2KPwAbRkSUnG');"></div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Column: Product Catalog (65%) -->
+<section class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark overflow-hidden relative">
+<!-- Filters & Search Header -->
+<div class="p-6 pb-2">
+<div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
+<div class="relative w-full max-w-md group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm text-sm" placeholder="Search furniture, decor, SKU..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+                            Filters
+                        </button>
+</div>
+</div>
+<!-- Category Pills -->
+<div class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+<button class="flex-none px-4 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium shadow-sm">All Items</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors text-sm font-medium shadow-sm">Lighting</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors text-sm font-medium shadow-sm">Seating</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors text-sm font-medium shadow-sm">Decor</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors text-sm font-medium shadow-sm">Textiles</button>
+<button class="flex-none px-4 py-1.5 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary transition-colors text-sm font-medium shadow-sm">Outdoor</button>
+</div>
+</div>
+<!-- Product Grid -->
+<div class="flex-1 overflow-y-auto px-6 pb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+<!-- Product Card 1 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
+<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Modern wooden armchair" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAxJwcToTX-q5c91j3Xg8kZdaJEN5cmWdUG6Zc3W6UL31IkyDIJz0TCOeFQYWUXJGuxHi10bViS7-kk_mEVcd3-6nlXhOObd9iqp4ziOvByW806XjWFJGeiAeL7nG8_NpYv3jvG-tKDjU72pwcQETwHvPActtvJt9Xhf4xqgryPRwMyQz19Teeq6qvwM5c2z5oNUovid5XbHN3l2g_--4t7ysQK1vR-jv4FvkufKd9vvEC_ATnQ2oYTgbuVmsbBh1e4WDneC2VaJd44');"></div>
+<button class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-primary hover:scale-110 transition-transform opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-medium text-slate-900 dark:text-white line-clamp-1">Eames Lounge Chair</h3>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-3">Classic Design • Black Leather</p>
+<div class="mt-auto flex items-center justify-between">
+<span class="font-bold text-lg text-slate-900 dark:text-white">$1,200.00</span>
+<span class="text-xs font-medium px-2 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">5 in stock</span>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
+<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Luxurious velvet throw pillow" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAC1srgx7pVqzv4n4v-6mnjyp7AK8LCdEi4I67KvTnAruoRtvhsDwsdJ_6mnEwCbJgE837LwyNx5_RkLUAALmQHSV1oZiv3Gxnm17LFvn5OjQ_Z3kZfEDEqaz780OoVodKdPAy7Se_pWiRgcJjt0nDMMzxYWyFxP7f0YK9IAKIRxNPysX3sBjv8XAiGj25Uq_z9TyVye28vhystSNA_DvAQIXo23z1QeG2cHYErKS_3XFuLEUx0cXeoh0YLHHm8F-95PEpSljJgtelq');"></div>
+<button class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-primary hover:scale-110 transition-transform opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-medium text-slate-900 dark:text-white line-clamp-1">Velvet Throw Pillow</h3>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-3">Textiles • Navy Blue</p>
+<div class="mt-auto flex items-center justify-between">
+<span class="font-bold text-lg text-slate-900 dark:text-white">$45.00</span>
+<span class="text-xs font-medium px-2 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">24 in stock</span>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
+<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Modern pendant light" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDkZNfN_iIFg7tk_Ce-7et_tJHIfhPFAJ7wg1j_9AX_kqSTyyB6O5dCgdKdeRerMXzqWLxdztcAvujt9tw7mfJTCGQDSB4dazcIYeSlOHxJFrCMjzVN6w5NmTm7-zYbBngRdNNL3TkQz1vTK_3qOj6zqMQ56c168FzbVhbsjgj8gMS5IG7p1H0uHEltV_usoeqKWHXrSxAiW3G-Ffq4TgFtIEHCP2i4yN8SyOydcCdhQK9A9fAoThR8KMCX-bOLsVLnimdXgn6L4Vf7');"></div>
+<button class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-primary hover:scale-110 transition-transform opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-medium text-slate-900 dark:text-white line-clamp-1">Nordic Pendant Light</h3>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-3">Lighting • Matte Black</p>
+<div class="mt-auto flex items-center justify-between">
+<span class="font-bold text-lg text-slate-900 dark:text-white">$230.00</span>
+<span class="text-xs font-medium px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Low Stock</span>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
+<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Modern living room sofa" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAUFmaaBGh1J8nAI19m4RtucfGME-QuqBf_12nJiKOkkKuDHk1nLAUgJr6EhPXKddkpHW6mY6a7Tn1qrwKFfPCzlhFW6dKJKgtrDcvu70mZ1jykR14GP8t11gkbBuAWibXdmjPQ0KP0WTSzdIeEDubU0xRMH06auK6suP_015_NKRdTQU0XQZD7clNNfwGDa1tZ9ubE0Eq2JFgNPw45PoqeG7Pbuf02XCphrscYwHqZpRVslMk3gipunxd0MBbF0ho40Zq83y3vLKSr');"></div>
+<button class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-primary hover:scale-110 transition-transform opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-medium text-slate-900 dark:text-white line-clamp-1">Modular Sofa Section</h3>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-3">Seating • Grey Fabric</p>
+<div class="mt-auto flex items-center justify-between">
+<span class="font-bold text-lg text-slate-900 dark:text-white">$850.00</span>
+<span class="text-xs font-medium px-2 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">12 in stock</span>
+</div>
+</div>
+</div>
+<!-- Product Card 5 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
+<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Ceramic vase" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCc5lofKMI1dsmqnAjFpOy9uPKrwlwdxFXzrFO2pYHRfZwJSRj1RCwb86yua0ctkPwFxD7cMn9SrNa1iSyHtzVORuCq9UfhtvcDTbqJL5-uuKHV9h0POU2dDOezPLmlLaFyN1EIH-XHE02nv4QxqbRCN6gR4Pnf-SHz_Lwcuh2aCEKYqdT1nPX_CnNgzp2ymMVfBrQbmfYjsTBjLJGqHNIqKGBU82buovTycXKOiUOqFCh8V-zUm7vuOaUZ_XtqeOnR9c-B39cVBbp7');"></div>
+<button class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-primary hover:scale-110 transition-transform opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-medium text-slate-900 dark:text-white line-clamp-1">Minimalist Ceramic Vase</h3>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-3">Decor • Terracotta</p>
+<div class="mt-auto flex items-center justify-between">
+<span class="font-bold text-lg text-slate-900 dark:text-white">$65.00</span>
+<span class="text-xs font-medium px-2 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">8 in stock</span>
+</div>
+</div>
+</div>
+<!-- Product Card 6 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
+<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Office chair" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDJfJnuUxClYW23ONvZs3SkXDHwDE0IvDpO0KrawImfecOw7MK6qIN2chkWIsO5kNb7Y5-Wmh6u3V8u-v7pKhHGj4Ukz4v55suVYoYj4jfX9fOnijkKDbTRgxQ3ZLAQSCcpnxS1kP-QrarA8HCx3mvD_UHTk6r_I8UO5lo4a1Gu8yC1nfumEgCAQrw3C17ppEousjJ5fPQn_1Y1j0sNMgL94DtlCjshcD99XTDtghchBFztVMiruv76LbeeQ-jiPHd-BzT3z5C14tmi');"></div>
+<button class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-primary hover:scale-110 transition-transform opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-medium text-slate-900 dark:text-white line-clamp-1">Ergo Task Chair</h3>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-3">Office • Mesh Back</p>
+<div class="mt-auto flex items-center justify-between">
+<span class="font-bold text-lg text-slate-900 dark:text-white">$320.00</span>
+<span class="text-xs font-medium px-2 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Out of Stock</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Cart & Checkout (35%) -->
+<aside class="w-[400px] xl:w-[450px] flex flex-col bg-surface-light dark:bg-surface-dark border-l border-border-light dark:border-border-dark z-10 shadow-xl">
+<!-- Order Header -->
+<div class="p-6 border-b border-border-light dark:border-border-dark flex-none">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">Order #4023</h2>
+<span class="text-sm text-slate-500 dark:text-slate-400">Sept 12, 10:42 AM</span>
+</div>
+<!-- Customer Selector -->
+<div class="relative">
+<div class="flex items-center justify-between p-3 rounded-lg border border-border-light dark:border-border-dark bg-slate-50 dark:bg-slate-800/50 cursor-pointer hover:border-primary transition-colors group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">business</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Acme Architects</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">ID: 8829-22</p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+<button class="absolute -right-2 -top-2 w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-100 transition-colors">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<div class="mt-2 text-right">
+<a class="text-xs text-primary font-medium hover:underline" href="#">+ Add New Customer</a>
+</div>
+</div>
+<!-- Cart Items List -->
+<div class="flex-1 overflow-y-auto p-6 space-y-4">
+<!-- Cart Item 1 -->
+<div class="flex gap-4 group">
+<div class="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 bg-cover bg-center shrink-0" data-alt="Velvet pillow thumbnail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBHMAurdJU7Irhy36onSwSK2REjnVn2QpBg0aizvp2dZhYyPRwRUelBdCpfquDlj2YoxsJ91HfnaJKmfyfMZOLQF2yO_e5_JAmSaVSXnzRpUigeoojVEjzxohgqRlHB-FJKS7FKcNpIyIwgqS5c0tiE9ovCGLRw02ctPfxdDPksxnlk7JCRE4DKlARzqbSPLbyJVoWVsvinT4gQIFZO8C1y7x9ELsXLFH53OwjHR7QfzfUbqfW66e1QMxNaHpHUKJp20wmzU4SNOojh');"></div>
+<div class="flex-1 min-w-0 flex flex-col justify-between">
+<div class="flex justify-between items-start gap-2">
+<h4 class="text-sm font-medium text-slate-900 dark:text-white truncate">Velvet Throw Pillow</h4>
+<span class="text-sm font-bold text-slate-900 dark:text-white">$90.00</span>
+</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">Blue • $45.00/unit</div>
+<div class="flex items-center justify-between mt-1">
+<div class="flex items-center bg-background-light dark:bg-background-dark rounded border border-border-light dark:border-border-dark h-7">
+<button class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="w-8 text-center text-xs font-semibold">2</span>
+<button class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Cart Item 2 -->
+<div class="flex gap-4 group">
+<div class="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 bg-cover bg-center shrink-0" data-alt="Eames chair thumbnail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD_oZaXlcuRLBFQaLiBFNrOxhKI4p1BRGLpmqfcCjr2X-CCYh5XZDGcPACMgvUz1bsXKnpnoDY6LozngPN1FtyY-SphHsfo_sMMb9SIJ2ggU9Z31WsdYu5ieHUGscciQORxDWm9XRa5dNMkrYtIJQ8AWUJKPDXM4gB9kIlpgnWv-rBPFlgF08_ZkJw6M_V-eCaGg5IaC2_UpDJ4KByI9M5_ydXFTFGu5EgLKUBRh4E_1a50IPgL0mD4dsMGzq-ekM1MyZ8XJl3PbUc7');"></div>
+<div class="flex-1 min-w-0 flex flex-col justify-between">
+<div class="flex justify-between items-start gap-2">
+<h4 class="text-sm font-medium text-slate-900 dark:text-white truncate">Eames Lounge Chair</h4>
+<span class="text-sm font-bold text-slate-900 dark:text-white">$2,400.00</span>
+</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">Black • $1,200.00/unit</div>
+<div class="flex items-center justify-between mt-1">
+<div class="flex items-center bg-background-light dark:bg-background-dark rounded border border-border-light dark:border-border-dark h-7">
+<button class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="w-8 text-center text-xs font-semibold">2</span>
+<button class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Cart Item 3 -->
+<div class="flex gap-4 group">
+<div class="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 bg-cover bg-center shrink-0" data-alt="Sofa thumbnail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAaGIsiRKrkXPHYH89pejAI-ixhrLzT_Wzm9c0dswFXG9oUzSdMlBPvvUzugkcubhplZZ2_U6GxKzpx9AlwX4CQPjYHQIv-znsmECbQ3RNL0vJR_M0TuTkoCxJD69hWe6Fl1bZv1_FveE91ZPTNJWDSHbmjKaY5dOcx3ITyCpLcPPj9i6jbfc3kdIH7UpBdr8O-viNTlWWXe8ELeyJCQWrmGUbCNRdJ04vGICQz15WPG1V3CrTQHPO5fpyB7uKP5Vpa68Z0qqrEM_mI');"></div>
+<div class="flex-1 min-w-0 flex flex-col justify-between">
+<div class="flex justify-between items-start gap-2">
+<h4 class="text-sm font-medium text-slate-900 dark:text-white truncate">Modular Sofa</h4>
+<span class="text-sm font-bold text-slate-900 dark:text-white">$850.00</span>
+</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">Grey • $850.00/unit</div>
+<div class="flex items-center justify-between mt-1">
+<div class="flex items-center bg-background-light dark:bg-background-dark rounded border border-border-light dark:border-border-dark h-7">
+<button class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="w-8 text-center text-xs font-semibold">1</span>
+<button class="w-7 h-full flex items-center justify-center text-slate-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer / Payment -->
+<div class="flex-none p-6 border-t border-border-light dark:border-border-dark bg-slate-50 dark:bg-slate-900/50">
+<!-- Discount Code -->
+<div class="mb-4">
+<label class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 block">Discount / Voucher</label>
+<div class="flex gap-2">
+<input class="flex-1 h-9 px-3 text-sm bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-1 focus:ring-primary outline-none" placeholder="Enter code" type="text"/>
+<button class="px-3 h-9 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded text-sm font-medium hover:text-primary transition-colors">Apply</button>
+</div>
+</div>
+<!-- Totals -->
+<div class="space-y-2 mb-6">
+<div class="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+<span>Subtotal</span>
+<span>$3,340.00</span>
+</div>
+<div class="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+<span>VAT (10%)</span>
+<span>$334.00</span>
+</div>
+<div class="pt-3 border-t border-border-light dark:border-border-dark flex justify-between items-end">
+<span class="text-base font-bold text-slate-900 dark:text-white">Total</span>
+<span class="text-2xl font-bold text-primary">$3,674.00</span>
+</div>
+</div>
+<!-- Payment Methods Tabs -->
+<div class="grid grid-cols-3 gap-2 mb-4">
+<button class="flex flex-col items-center justify-center p-2 rounded border border-primary bg-primary/10 text-primary transition-all">
+<span class="material-symbols-outlined mb-1">credit_card</span>
+<span class="text-[10px] font-bold uppercase tracking-wide">Card</span>
+</button>
+<button class="flex flex-col items-center justify-center p-2 rounded border border-border-light dark:border-border-dark bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+<span class="material-symbols-outlined mb-1">payments</span>
+<span class="text-[10px] font-bold uppercase tracking-wide">Cash</span>
+</button>
+<button class="flex flex-col items-center justify-center p-2 rounded border border-border-light dark:border-border-dark bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+<span class="material-symbols-outlined mb-1">account_balance</span>
+<span class="text-[10px] font-bold uppercase tracking-wide">Transfer</span>
+</button>
+</div>
+<!-- Actions -->
+<div class="space-y-3">
+<button class="w-full h-12 flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white rounded-lg font-bold text-lg shadow-lg shadow-blue-500/20 transition-all transform hover:translate-y-[-1px]">
+                        Pay $3,674.00
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="w-full py-2.5 flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 hover:text-primary font-medium text-sm transition-colors border border-transparent hover:border-border-light dark:hover:border-border-dark rounded-lg">
+<span class="material-symbols-outlined text-[18px]">request_quote</span>
+                        Convert to Quotation
+                    </button>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

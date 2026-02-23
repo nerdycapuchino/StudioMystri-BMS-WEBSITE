@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Finance &amp; Asset Operations - ArchFirm ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 bg-white dark:bg-[#1a2634] border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="text-primary size-8 bg-primary/10 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">architecture</span>
+</div>
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">ArchFirm ERP</h1>
+</div>
+<!-- Search Bar -->
+<div class="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 w-64 border border-transparent focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+<input class="bg-transparent border-none text-sm w-full focus:ring-0 text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Search projects, assets..." type="text"/>
+</div>
+</div>
+<nav class="hidden lg:flex items-center gap-1">
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="#">Projects</a>
+<a class="px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg" href="#">Finance</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="#">Assets</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-slate-500 hover:text-primary transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#1a2634]"></span>
+</button>
+<div class="size-9 rounded-full bg-slate-200 overflow-hidden border border-slate-300 dark:border-slate-700" data-alt="User profile picture showing a smiling professional man" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAInfTWWnJ3Xau4KPCn6r1n66FkpVYJYe0ASFHpUMl0YBq2f6elEbVzrmbUJ6km3zkzte-adFkCnvyjkJTPNOMaUlw4GoeSJ4viJeHzsIGWd-KcawppoWslBDa-RDTO2j20ZQt-UQ_iJBfhCaz1Uzl4VKujDDwOAfclcooWp8RwJbGFDqJbZLuGqDHcx32sSMXDlu1pm--pk7kUn4MeizK5tityCwNeq7ywwA266qfpdlfapzv218V7Ug2ObIMxl-ujTfioh4mZ8mv4'); background-size: cover;"></div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 max-w-[1440px] w-full mx-auto px-6 py-8">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+<div>
+<h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">Finance &amp; Asset Operations</h2>
+<p class="text-slate-500 dark:text-slate-400">Manage company expenditures and track studio machinery status.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="hidden sm:flex items-center bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-lg p-1 shadow-sm">
+<button class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded">Export</button>
+<div class="w-[1px] h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+<button class="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                        Oct 2023
+                    </button>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-lg shadow-sm shadow-blue-500/30 transition-all font-semibold text-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                    New Expense
+                </button>
+</div>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<!-- Total Spending Card -->
+<div class="bg-white dark:bg-[#1a2634] p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="flex items-center text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px] mr-1">trending_up</span> +12%
+                    </span>
+</div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Monthly Spending</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">$12,450</h3>
+<div class="absolute -right-6 -bottom-6 text-slate-50 dark:text-slate-800/50 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-[120px]">payments</span>
+</div>
+</div>
+<!-- Budget Remaining Card -->
+<div class="bg-white dark:bg-[#1a2634] p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-lg">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+<span class="flex items-center text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px] mr-1">trending_down</span> -5%
+                    </span>
+</div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Budget Remaining</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">$7,550</h3>
+<div class="mt-3 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+<div class="bg-orange-500 h-1.5 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<!-- Budget Utilization Card -->
+<div class="bg-white dark:bg-[#1a2634] p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm md:col-span-2 flex flex-col justify-center">
+<div class="flex items-center justify-between mb-2">
+<h4 class="font-semibold text-slate-900 dark:text-white">Budget Utilization</h4>
+<span class="text-sm font-medium text-slate-500">62.25% used</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-4 mb-4 overflow-hidden relative">
+<div class="absolute inset-0 bg-slate-100 dark:bg-slate-800 w-full h-full"></div>
+<div class="relative bg-primary h-full rounded-full flex items-center justify-end px-2" style="width: 62.25%;">
+</div>
+</div>
+<div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+<div>
+<span class="block text-xs uppercase tracking-wider font-semibold mb-0.5">Spent</span>
+<span class="text-slate-900 dark:text-white font-medium">$12,450</span>
+</div>
+<div class="text-right">
+<span class="block text-xs uppercase tracking-wider font-semibold mb-0.5">Total Budget</span>
+<span class="text-slate-900 dark:text-white font-medium">$20,000</span>
+</div>
+</div>
+</div>
+</div>
+<div class="grid lg:grid-cols-3 gap-6">
+<!-- Expense Log Section (Left - Wider) -->
+<div class="lg:col-span-2 flex flex-col gap-4">
+<div class="bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Expense Log</h3>
+<div class="flex items-center gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+<input class="pl-9 pr-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary w-40 sm:w-64 placeholder-slate-400 text-slate-700 dark:text-slate-200" placeholder="Search expenses..." type="text"/>
+</div>
+<button class="p-1.5 text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+<tr>
+<th class="px-6 py-3 font-semibold">Description</th>
+<th class="px-6 py-3 font-semibold">Category</th>
+<th class="px-6 py-3 font-semibold">Date</th>
+<th class="px-6 py-3 font-semibold text-right">Amount</th>
+<th class="px-6 py-3 font-semibold text-center">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">Teak Wood Batch A4</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                            Raw Materials
+                                        </span>
+</td>
+<td class="px-6 py-4 text-slate-500">Oct 12, 2023</td>
+<td class="px-6 py-4 text-right font-medium text-slate-900 dark:text-white">$4,200.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-md">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Paid
+                                        </span>
+</td>
+</tr>
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">Site Visit: Villa K</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                            Travel
+                                        </span>
+</td>
+<td class="px-6 py-4 text-slate-500">Oct 14, 2023</td>
+<td class="px-6 py-4 text-right font-medium text-slate-900 dark:text-white">$150.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-1 rounded-md">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Pending
+                                        </span>
+</td>
+</tr>
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">Monthly Studio Lease</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                            Studio Rent
+                                        </span>
+</td>
+<td class="px-6 py-4 text-slate-500">Oct 01, 2023</td>
+<td class="px-6 py-4 text-right font-medium text-slate-900 dark:text-white">$2,500.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-md">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Paid
+                                        </span>
+</td>
+</tr>
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">Client Dinner (Arch Digest)</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300">
+                                            Marketing
+                                        </span>
+</td>
+<td class="px-6 py-4 text-slate-500">Oct 10, 2023</td>
+<td class="px-6 py-4 text-right font-medium text-slate-900 dark:text-white">$320.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-md">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Paid
+                                        </span>
+</td>
+</tr>
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4 font-medium text-slate-900 dark:text-white">Software Licenses (Q4)</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                            Software
+                                        </span>
+</td>
+<td class="px-6 py-4 text-slate-500">Oct 05, 2023</td>
+<td class="px-6 py-4 text-right font-medium text-slate-900 dark:text-white">$850.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-md">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Paid
+                                        </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<span class="text-sm text-slate-500">Showing 1-5 of 48 expenses</span>
+<div class="flex gap-1">
+<button class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 text-slate-600 dark:text-slate-300" disabled="">Previous</button>
+<button class="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">Next</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Asset Management Section (Right - Narrower) -->
+<div class="lg:col-span-1">
+<div class="bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm h-full flex flex-col">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Studio Assets</h3>
+<a class="text-sm font-semibold text-primary hover:text-primary/80" href="#">View All</a>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4">
+<!-- Asset Item 1 -->
+<div class="flex items-start gap-4 p-3 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="size-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined">print</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">CNC Router X5</h4>
+<div class="size-2.5 rounded-full bg-green-500 ring-2 ring-green-100 dark:ring-green-900" title="Operational"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 mb-1">ID: #AST-0024 • Bought Jan 2022</p>
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-400">Next Service:</span>
+<span class="font-medium text-slate-700 dark:text-slate-300">Dec 15, 2023</span>
+</div>
+</div>
+</div>
+<!-- Asset Item 2 -->
+<div class="flex items-start gap-4 p-3 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="size-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined">3d_rotation</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">3D Printer (Formlabs)</h4>
+<div class="size-2.5 rounded-full bg-orange-500 ring-2 ring-orange-100 dark:ring-orange-900" title="Maintenance Due"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 mb-1">ID: #AST-0105 • Bought Mar 2023</p>
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-400">Status:</span>
+<span class="font-medium text-orange-600 dark:text-orange-400">Maintenance Due</span>
+</div>
+</div>
+</div>
+<!-- Asset Item 3 -->
+<div class="flex items-start gap-4 p-3 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="size-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined">architecture</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">Plotter HP DesignJet</h4>
+<div class="size-2.5 rounded-full bg-green-500 ring-2 ring-green-100 dark:ring-green-900" title="Operational"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 mb-1">ID: #AST-0089 • Bought Jun 2021</p>
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-400">Next Service:</span>
+<span class="font-medium text-slate-700 dark:text-slate-300">Nov 02, 2023</span>
+</div>
+</div>
+</div>
+<!-- Asset Item 4 -->
+<div class="flex items-start gap-4 p-3 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="size-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex items-center justify-center text-slate-400">
+<span class="material-symbols-outlined">chair</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h4 class="text-sm font-semibold text-slate-900 dark:text-white truncate">Herman Miller Aeron (x12)</h4>
+<div class="size-2.5 rounded-full bg-green-500 ring-2 ring-green-100 dark:ring-green-900" title="Operational"></div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 mb-1">ID: #AST-0050 • Bought Feb 2020</p>
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-400">Condition:</span>
+<span class="font-medium text-slate-700 dark:text-slate-300">Good</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+<button class="w-full py-2 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors border border-dashed border-slate-300 dark:border-slate-600 rounded-lg hover:border-primary hover:bg-white dark:hover:bg-slate-800">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+                            Register New Asset
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

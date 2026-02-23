@@ -1,96 +1,219 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export const Sidebar: React.FC = () => {
+    const { user } = useAuth();
+    const firstName = user?.name?.split(' ')[0] || 'User';
+    const role = user?.role || 'Administrator';
+
     return (
-        <aside className="w-64 bg-surface-dark border-r border-border-solid hidden md:flex flex-col h-full shrink-0">
-            {/* Logo Area */}
-            <div className="h-16 flex items-center px-6 border-b border-border-solid shrink-0">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-zinc-800 rounded flex items-center justify-center">
-                        <span className="text-primary font-bold text-lg">M</span>
+        <aside className="flex w-64 flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto shrink-0 transition-colors duration-300">
+            <div>
+                {/* Header */}
+                <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/30">
+                        <span className="material-symbols-outlined">architecture</span>
                     </div>
-                    <span className="font-playfair text-xl font-bold text-white tracking-wide">MYSTRI</span>
+                    <div className="flex flex-col overflow-hidden">
+                        <h1 className="text-base font-semibold leading-none text-slate-900 dark:text-white tracking-tight truncate">Studio Mystri</h1>
+                        <p className="mt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Management System</p>
+                    </div>
                 </div>
-            </div>
 
-            {/* Navigation Links */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar py-6 px-4">
-                <nav className="space-y-1">
-                    {/* Dashboard */}
-                    <NavLink to="/dashboard" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <span className="material-symbols-outlined text-xl">dashboard</span>
-                        <span className="text-sm">Command Center</span>
-                    </NavLink>
-
-                    {/* POS / Sales */}
-                    <div className="pt-4 pb-2 px-3">
-                        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Sales & POS</span>
-                    </div>
-                    <NavLink to="/pos" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <span className="material-symbols-outlined text-xl">point_of_sale</span>
-                        <span className="text-sm">Point of Sale</span>
-                    </NavLink>
-                    <NavLink to="/orders" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <span className="material-symbols-outlined text-xl">receipt_long</span>
-                        <span className="text-sm">Order History</span>
-                    </NavLink>
-                    <NavLink to="/clients" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <span className="material-symbols-outlined text-xl">group</span>
-                        <span className="text-sm">Client Directory</span>
+                {/* Nav Links */}
+                <nav className="flex flex-col gap-1.5 px-4 mt-6">
+                    <NavLink
+                        to="/dashboard"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined" data-weight="fill">dashboard</span>
+                        <span className="text-sm font-medium">Dashboard</span>
                     </NavLink>
 
-                    {/* Operations */}
-                    <div className="pt-4 pb-2 px-3">
-                        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Operations</span>
-                    </div>
-                    <NavLink to="/projects" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <span className="material-symbols-outlined text-xl">architecture</span>
-                        <span className="text-sm">Project Portfolio</span>
-                    </NavLink>
-                    <NavLink to="/inventory" className={({ isActive }) => `flex items-center justify-between px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <div className="flex items-center gap-3">
-                            <span className="material-symbols-outlined text-xl">inventory_2</span>
-                            <span className="text-sm">Inventory</span>
-                        </div>
-                        <span className="bg-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3 LOW</span>
-                    </NavLink>
-                    <NavLink to="/finance" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <span className="material-symbols-outlined text-xl">account_balance</span>
-                        <span className="text-sm">Finance & ERP</span>
-                    </NavLink>
-                    <NavLink to="/hr" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <span className="material-symbols-outlined text-xl">badge</span>
-                        <span className="text-sm">HR & Staff</span>
+                    <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
+                    <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pipeline & Sales</p>
+
+                    <NavLink
+                        to="/crm"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">rocket_launch</span>
+                        <span className="text-sm font-medium">CRM Pipeline</span>
                     </NavLink>
 
-                    {/* Communications */}
-                    <div className="pt-4 pb-2 px-3">
-                        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Team</span>
-                    </div>
-                    <NavLink to="/team-hub" className={({ isActive }) => `flex items-center justify-between px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
-                        <div className="flex items-center gap-3">
-                            <span className="material-symbols-outlined text-xl">forum</span>
-                            <span className="text-sm">Team Hub</span>
-                        </div>
-                        <span className="bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold px-2 py-0.5 rounded-full">5</span>
+                    <NavLink
+                        to="/clients"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">group</span>
+                        <span className="text-sm font-medium">Clients</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/pos"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">point_of_sale</span>
+                        <span className="text-sm font-medium">POS Terminal</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/orders"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">shopping_cart</span>
+                        <span className="text-sm font-medium">Orders</span>
+                    </NavLink>
+
+                    <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
+                    <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Execution & Supply</p>
+
+                    <NavLink
+                        to="/projects"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">architecture</span>
+                        <span className="text-sm font-medium">Projects</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/inventory"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">inventory_2</span>
+                        <span className="text-sm font-medium">Warehouse</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/logistics"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">local_shipping</span>
+                        <span className="text-sm font-medium">Logistics</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/scanner"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">qr_code_scanner</span>
+                        <span className="text-sm font-medium">Universal Scanner</span>
+                    </NavLink>
+
+                    <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
+                    <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Organization</p>
+
+                    <NavLink
+                        to="/finance"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">payments</span>
+                        <span className="text-sm font-medium">Finance & Invoicing</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/erp"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">settings_suggest</span>
+                        <span className="text-sm font-medium">ERP Core</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/hr"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">badge</span>
+                        <span className="text-sm font-medium">HR Management</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/team-hub"
+                        className={({ isActive }) =>
+                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                            }`
+                        }
+                    >
+                        <span className="material-symbols-outlined">forum</span>
+                        <span className="text-sm font-medium">Team Hub</span>
                     </NavLink>
                 </nav>
             </div>
 
-            {/* Bottom System Status */}
-            <div className="p-4 border-t border-border-solid shrink-0">
-                <div className="bg-surface-elevated rounded-lg p-3 border border-border-glass">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                        <span className="text-xs font-mono text-text-muted">System Normal</span>
-                    </div>
-                    <div className="h-1 bg-surface-dark rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-[32%]"></div>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                        <span className="text-[10px] text-text-muted">CPU</span>
-                        <span className="text-[10px] text-text-muted">32%</span>
+            {/* User Profile */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 p-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer group">
+                    <img
+                        src={`https://ui-avatars.com/api/?name=${firstName}&background=137fec&color=fff&bold=true`}
+                        alt="Profile"
+                        className="h-9 w-9 rounded-full bg-slate-200 object-cover border border-white dark:border-slate-700"
+                    />
+                    <div className="flex flex-col overflow-hidden">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{firstName}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide font-medium">{role}</p>
                     </div>
                 </div>
             </div>

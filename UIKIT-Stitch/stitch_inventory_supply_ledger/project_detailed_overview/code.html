@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Project Detailed Overview - DesignFlow ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light text-slate-900 font-display antialiased overflow-x-hidden min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 bg-white px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-slate-900">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined text-4xl">architecture</span>
+</div>
+<h2 class="text-slate-900 text-lg font-bold leading-tight tracking-[-0.015em]">DesignFlow ERP</h2>
+</div>
+<label class="hidden lg:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full border border-slate-200 bg-slate-50">
+<div class="text-slate-400 flex items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 focus:outline-0 focus:ring-0 border-none bg-slate-50 focus:border-none h-full placeholder:text-slate-400 px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal" placeholder="Search projects..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-8 items-center">
+<nav class="hidden md:flex items-center gap-9">
+<a class="text-slate-600 hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Dashboard</a>
+<a class="text-primary text-sm font-medium leading-normal" href="#">Projects</a>
+<a class="text-slate-600 hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Clients</a>
+<a class="text-slate-600 hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Finances</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="relative text-slate-500 hover:text-slate-700">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-slate-100" data-alt="User profile avatar of a smiling man" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD2B4JB8czixsJPOvWLkjyQwXItgLOHjYPN4sg4y0ki5Wml7BE9pb1OjG_mpSrXxnWkF4OLTW7mcCOMpnIubDcVGEaW-UXKyBsf02Sc1rrZSox7mdwaWiAinRWiiUF7FV_FVWgMfN0TpzlvaDe1UVATBmVOScH7bWTV7wbInTTao2E_OuFZqjoiOrjVnvWNAtOtNMHQOSdp2-9xXNDKhh3FAmXgiSzMcmdKhqnKvbQF1-52XOjonKD8zAxpf4kyAojgOLGWOHh2J8Sl");'></div>
+</div>
+</div>
+</header>
+<main class="flex-1 layout-container flex flex-col w-full max-w-[1440px] mx-auto px-4 md:px-10 py-8 gap-8">
+<!-- Breadcrumb & Header -->
+<div class="flex flex-col gap-6">
+<div class="flex items-center gap-2 text-sm text-slate-500">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Projects</a>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+<span class="text-slate-900 font-medium">Villa Serenity - Phase 2</span>
+</div>
+<div class="flex flex-wrap justify-between items-start gap-4">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-4">
+<h1 class="text-slate-900 text-3xl md:text-4xl font-bold tracking-tight">Villa Serenity - Phase 2</h1>
+<span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full border border-green-200">In Progress</span>
+</div>
+<p class="text-slate-500 text-sm">Project ID: #1024 • Started: Jan 15, 2024 • Target: Dec 20, 2024</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">upload_file</span>
+                        Upload File
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Add Expense
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+                        Edit Project
+                    </button>
+</div>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+<!-- Left Column: Main Overview (2/3 width on large screens) -->
+<div class="xl:col-span-2 flex flex-col gap-8">
+<!-- Progress Card -->
+<div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+<div class="flex justify-between items-end mb-4">
+<div>
+<h3 class="text-slate-900 text-lg font-bold">Project Progress</h3>
+<p class="text-slate-500 text-sm">Phase: Construction &amp; Installation</p>
+</div>
+<span class="text-2xl font-bold text-primary">75%</span>
+</div>
+<div class="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-6">
+<div class="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-500" style="width: 75%"></div>
+</div>
+<div class="flex justify-between text-xs font-medium text-slate-500">
+<div class="flex flex-col gap-1 items-start">
+<span class="text-slate-900">Concept</span>
+<span class="text-slate-400">Jan 15</span>
+</div>
+<div class="flex flex-col gap-1 items-center">
+<span class="text-slate-900">Schematic</span>
+<span class="text-slate-400">Mar 01</span>
+</div>
+<div class="flex flex-col gap-1 items-center">
+<span class="text-primary font-bold">Construction</span>
+<span class="text-primary">Current</span>
+</div>
+<div class="flex flex-col gap-1 items-end">
+<span class="text-slate-400">Completion</span>
+<span class="text-slate-400">Dec 20</span>
+</div>
+</div>
+</div>
+<!-- Financials Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col gap-2">
+<div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
+<span class="material-symbols-outlined text-lg">account_balance_wallet</span>
+                            Total Budget
+                        </div>
+<p class="text-slate-900 text-2xl font-bold tracking-tight">$150,000</p>
+<p class="text-green-600 text-xs font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">trending_flat</span> On Track
+                        </p>
+</div>
+<div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col gap-2">
+<div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
+<span class="material-symbols-outlined text-lg">credit_card</span>
+                            Amount Spent
+                        </div>
+<p class="text-slate-900 text-2xl font-bold tracking-tight">$120,000</p>
+<p class="text-slate-400 text-xs font-medium">80% of total</p>
+</div>
+<div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col gap-2">
+<div class="flex items-center gap-2 text-slate-500 text-sm font-medium">
+<span class="material-symbols-outlined text-lg">savings</span>
+                            Remaining
+                        </div>
+<p class="text-slate-900 text-2xl font-bold tracking-tight">$30,000</p>
+<p class="text-orange-600 text-xs font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">warning</span> Tight Margin
+                        </p>
+</div>
+</div>
+<!-- Document Repository -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+<div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+<h3 class="text-slate-900 text-lg font-bold">Project Files</h3>
+<a class="text-primary text-sm font-medium hover:underline" href="#">View All</a>
+</div>
+<!-- Tabs -->
+<div class="flex border-b border-slate-100 px-6 gap-6">
+<button class="py-3 text-primary border-b-2 border-primary text-sm font-medium">All Files</button>
+<button class="py-3 text-slate-500 hover:text-slate-700 text-sm font-medium">Blueprints</button>
+<button class="py-3 text-slate-500 hover:text-slate-700 text-sm font-medium">Site Photos</button>
+<button class="py-3 text-slate-500 hover:text-slate-700 text-sm font-medium">Contracts</button>
+</div>
+<!-- Files Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-6 bg-slate-50/50">
+<!-- File Card 1 -->
+<div class="group bg-white border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
+<div class="relative aspect-video bg-slate-100 rounded-md overflow-hidden mb-3">
+<img alt="Architectural blueprint detail" class="object-cover w-full h-full opacity-90 group-hover:opacity-100 transition-opacity" data-alt="Detailed architectural blueprint schematic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9qNahsWqfDqElr2Nj79dGkJFYZT7OQu8yc2WM4sQl1XklOiBFMWXg9H8jHLuhwxDhHYEQUcXtkwsBQ4fLzqwHhj4aUz0QjdTOCB8MoJDL2D64rYwWJImb8d3f_jzlaBxtshyA1U5dhFHTMj0ak_I1VhexX5OKLr8oz9mRlROkZmRH0ARVLw5fbnjVQd7-CQRYWxH1nl6anWrEuvhB-YVD6d8Phu3txN6ezX1Q31axZlImMVBEniKNZE1tzFaU7O7Kn1tS8u242BwK"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+</div>
+<div class="flex items-start justify-between">
+<div>
+<p class="text-slate-900 text-sm font-medium truncate w-32">Ground_Floor_v2.pdf</p>
+<p class="text-slate-500 text-xs">2.4 MB • Today</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg">more_vert</span>
+</div>
+</div>
+<!-- File Card 2 -->
+<div class="group bg-white border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
+<div class="relative aspect-video bg-slate-100 rounded-md overflow-hidden mb-3">
+<img alt="Modern kitchen interior render" class="object-cover w-full h-full opacity-90 group-hover:opacity-100 transition-opacity" data-alt="High quality render of modern kitchen interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7F5alm0l1I9yQWRGE7xUgjv5ItonuWjAVSDU6qiRsUeh0HTRM5HVvir43hbueE_xLXJK9PakqUdkXYzHs5Csi4vSCF6b9fxX-jwER16Lp87dcrY3J-BIkIAef3k-T9AwB6fhYyyIDOF87QGI4UdHaU9QX2HIK3dznCjSQDERhifZiM-awS6FybzvVDFUa7LjAtj-T-yVUMCTmIgkNiA9-_8QCuK6yg4mpjg6HAOLAFU7H64EChTPrEqi8aHUr0v3PCs41iOR9Jw9n"/>
+</div>
+<div class="flex items-start justify-between">
+<div>
+<p class="text-slate-900 text-sm font-medium truncate w-32">Kitchen_Render_Final.jpg</p>
+<p class="text-slate-500 text-xs">4.1 MB • Yesterday</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg">more_vert</span>
+</div>
+</div>
+<!-- File Card 3 -->
+<div class="group bg-white border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
+<div class="relative aspect-video bg-slate-100 rounded-md overflow-hidden mb-3 flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-slate-300">description</span>
+</div>
+<div class="flex items-start justify-between">
+<div>
+<p class="text-slate-900 text-sm font-medium truncate w-32">Client_Contract_Signed.pdf</p>
+<p class="text-slate-500 text-xs">156 KB • Oct 24</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg">more_vert</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Sidebar (1/3 width) -->
+<div class="flex flex-col gap-8">
+<!-- Team Widget -->
+<div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-slate-900 text-lg font-bold">Team Members</h3>
+<button class="text-primary hover:bg-primary/10 p-1 rounded transition-colors">
+<span class="material-symbols-outlined text-xl">person_add</span>
+</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Member 1 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Sarah Jenning avatar" class="size-10 rounded-full object-cover ring-2 ring-white shadow-sm" data-alt="Professional headshot of a woman in business attire" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOCdMjFJHQG0Ddrs-HqJYSDM0qjT5_GQcqBMi4hj6GRnNyWpYXo14YPtxguRTwKNguLyB054-bY7nw4vlsu0CQN7_c1k3VVP1pVRW8ZOaFXNoauOr3SwJNYJB5MBwpcQOFKYLVB7N9NLl1aXv_D3Nk-JN6DXfcIXdPqtkkqjj2ro5nma_qjf1ieicWt3sESP5W00on7v92igqyPzP-VccgtnFj8B94Iv8DTmdjIFNawF2SUXd1msHggXIePTIMsyq-F4vkgbUg6XmB"/>
+<div>
+<p class="text-slate-900 text-sm font-semibold">Sarah Jennings</p>
+<p class="text-slate-500 text-xs">Lead Architect</p>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wide rounded border border-indigo-100">Manager</span>
+</div>
+<!-- Member 2 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Michael Ross avatar" class="size-10 rounded-full object-cover ring-2 ring-white shadow-sm" data-alt="Professional headshot of a man with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZdZHeObIfRizSQEPtsSvC6QneRCm2SCJWDYpULyLwEeOGfZHrYps0k9TAKP9NlXhXeZTTw51oxyUfQXYlc7Wxfr2uJj5jp_DxYaCrMKAIM6TCAHglRHDywv__WJgmGHtza8MJBTuEKhBd5vdthbXcoFB--M5-roySLARdSWxWyDFLyoo-Eo_E1cJeCh4FvTsVoE6smvpGfGmdDdLDT89QPtr4Kh9rHdTnGc8_MrXIDF6T4NkRH8mOys31fQUuBAK8PhkAh0L5skY3"/>
+<div>
+<p class="text-slate-900 text-sm font-semibold">Michael Ross</p>
+<p class="text-slate-500 text-xs">Site Supervisor</p>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wide rounded border border-slate-200">Staff</span>
+</div>
+<!-- Member 3 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img alt="Elena Rodriguez avatar" class="size-10 rounded-full object-cover ring-2 ring-white shadow-sm" data-alt="Professional headshot of a woman smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBW0c8EUe3b5BVAJw_5ZbJLqFMhx8QwI_W7fFYldEpGyTZTCsjw0NY91guSn_iMpKpJEs2SY9X-gb18JEV8nuPLJUTUKGJZjVudbRkoXhIRJBh7mOdB8GTMQcOWxLWuXgFAUIF_f0JfbGH5AEgJqmyzKj40rtBRC7CyvyPd6MvTTrentByeXnFOCOEMqgL8_KKrMN8JoZ-n6QCefhdLDI4GERg2VIx19zKAOyNXEGHoViaV3f5FMN0nKRY1wBhkuZQCS3r9fBz7W3gC"/>
+<div>
+<p class="text-slate-900 text-sm font-semibold">Elena Rodriguez</p>
+<p class="text-slate-500 text-xs">Interior Designer</p>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wide rounded border border-slate-200">Staff</span>
+</div>
+<!-- Member 4 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200">
+                                    +2
+                                </div>
+<p class="text-slate-500 text-sm italic">Contractors assigned</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Client Info Card -->
+<div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+<h3 class="text-slate-900 text-lg font-bold mb-4">Client Details</h3>
+<div class="flex items-center gap-4 mb-4">
+<div class="size-12 rounded-full bg-blue-50 flex items-center justify-center text-primary font-bold text-xl">
+                            JD
+                        </div>
+<div>
+<p class="text-slate-900 text-sm font-semibold">John &amp; Jane Doe</p>
+<p class="text-slate-500 text-xs">Private Residence</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3 text-sm text-slate-600">
+<span class="material-symbols-outlined text-slate-400">mail</span>
+<a class="hover:text-primary" href="mailto:client@example.com">johndoe@email.com</a>
+</div>
+<div class="flex items-center gap-3 text-sm text-slate-600">
+<span class="material-symbols-outlined text-slate-400">phone</span>
+<span>+1 (555) 123-4567</span>
+</div>
+<div class="flex items-center gap-3 text-sm text-slate-600">
+<span class="material-symbols-outlined text-slate-400">location_on</span>
+<span>45 Serenity Lane, Beverly Hills, CA</span>
+</div>
+</div>
+</div>
+<!-- Recent Activity Feed -->
+<div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex-1">
+<h3 class="text-slate-900 text-lg font-bold mb-4">Recent Activity</h3>
+<div class="relative border-l border-slate-200 ml-2 space-y-6">
+<div class="ml-6 relative">
+<span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full bg-primary border-2 border-white ring-1 ring-slate-200"></span>
+<p class="text-sm font-medium text-slate-900">New File Uploaded</p>
+<p class="text-xs text-slate-500 mt-0.5">Elena R. uploaded <span class="text-primary cursor-pointer">Kitchen_Render_Final.jpg</span></p>
+<p class="text-[10px] text-slate-400 mt-1">2 hours ago</p>
+</div>
+<div class="ml-6 relative">
+<span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white ring-1 ring-slate-200"></span>
+<p class="text-sm font-medium text-slate-900">Milestone Completed</p>
+<p class="text-xs text-slate-500 mt-0.5">Schematic Design phase approved by client.</p>
+<p class="text-[10px] text-slate-400 mt-1">Yesterday</p>
+</div>
+<div class="ml-6 relative">
+<span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white ring-1 ring-slate-200"></span>
+<p class="text-sm font-medium text-slate-900">Expense Added</p>
+<p class="text-xs text-slate-500 mt-0.5">Michael R. added invoice #4022 for Material Supply.</p>
+<p class="text-[10px] text-slate-400 mt-1">Oct 25</p>
+</div>
+<div class="ml-6 relative">
+<span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white ring-1 ring-slate-200"></span>
+<p class="text-sm font-medium text-slate-900">Project Created</p>
+<p class="text-xs text-slate-500 mt-0.5">Project #1024 initiated by Sarah Jennings.</p>
+<p class="text-[10px] text-slate-400 mt-1">Oct 10</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

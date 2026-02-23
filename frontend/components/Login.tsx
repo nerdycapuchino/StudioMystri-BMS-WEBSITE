@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCompanySettings } from '../hooks/useAdmin';
-import { Mail, Lock, Eye, EyeOff, HardHat, Moon, Sun } from 'lucide-react'; // Fallback icons if material symbols fail
+import { Mail, Lock, Eye, EyeOff, HardHat, Moon, Sun } from 'lucide-react';
 
 export const Login: React.FC = () => {
    const { login } = useAuth();
@@ -56,7 +56,7 @@ export const Login: React.FC = () => {
                         </span>
                      </div>
                      <h2 className="text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl max-w-2xl drop-shadow-md">
-                        Constructing the future, <br /> <span className="text-slate-300">one project at a time.</span>
+                        Constructing the future, <br /> <span className="text-slate-300">one blueprint at a time.</span>
                      </h2>
                      <p className="mt-4 max-w-lg text-lg text-slate-300/90 font-light drop-shadow">
                         Seamlessly manage your architectural projects, assets, and workflows in one unified ecosystem.
@@ -66,23 +66,13 @@ export const Login: React.FC = () => {
 
                {/* Right Side: Login Form */}
                <div className="flex w-full flex-col justify-center bg-background-light dark:bg-background-dark px-6 py-12 md:w-1/2 md:px-12 lg:w-2/5 lg:px-16 xl:w-1/3 xl:px-20 border-l border-slate-200 dark:border-slate-800 relative z-30 transition-colors duration-300 shadow-2xl md:shadow-none">
-                  {/* Mobile specific header image */}
-                  <div
-                     className="md:hidden absolute top-0 left-0 w-full h-40 bg-cover bg-center opacity-30"
-                     style={{ backgroundImage: "url('https://images.unsplash.com/photo-1600607686527-6fb886090705?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')", WebkitMaskImage: "linear-gradient(to bottom, black 50%, transparent 100%)" }}
-                  ></div>
-
                   <div className="w-full max-w-md mx-auto relative z-10 animate-in fade-in slide-in-from-right-8 duration-700">
                      <div className="mb-10 flex flex-col gap-2">
                         <div className="flex items-center gap-3 mb-2">
-                           {settings.logoUrl ? (
-                              <img src={settings.logoUrl} alt="Logo" className="h-10 w-auto object-contain rounded" />
-                           ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-lg shadow-primary/30">
-                                 <HardHat className="w-6 h-6" />
-                              </div>
-                           )}
-                           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{settings.name || 'Blueprint ERP'}</h1>
+                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-lg shadow-primary/30">
+                              <HardHat className="w-6 h-6" />
+                           </div>
+                           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Studio Mystri BMS</h1>
                         </div>
                         <h2 className="text-base font-normal text-slate-500 dark:text-slate-400">
                            Welcome back. Please enter your details.
@@ -103,7 +93,7 @@ export const Login: React.FC = () => {
                                  type="email"
                                  value={email}
                                  onChange={e => setEmail(e.target.value)}
-                                 placeholder="architect@domain.com"
+                                 placeholder="architect@blueprint.com"
                                  required
                               />
                            </div>
@@ -138,17 +128,12 @@ export const Login: React.FC = () => {
                         {/* Session Management & Recovery */}
                         <div className="flex items-center justify-between">
                            <label className="flex items-center gap-2 cursor-pointer group">
-                              <div className="relative flex items-center justify-center">
-                                 <input
-                                    className="peer h-4 w-4 appearance-none rounded border border-slate-300 checked:border-primary checked:bg-primary dark:border-slate-600 dark:bg-slate-800 dark:checked:border-primary dark:checked:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all cursor-pointer"
-                                    type="checkbox"
-                                    checked={rememberMe}
-                                    onChange={e => setRememberMe(e.target.checked)}
-                                 />
-                                 <span className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity">
-                                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                 </span>
-                              </div>
+                              <input
+                                 className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600 dark:bg-slate-700 transition-all"
+                                 type="checkbox"
+                                 checked={rememberMe}
+                                 onChange={e => setRememberMe(e.target.checked)}
+                              />
                               <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-slate-300 transition-colors">Keep me logged in</span>
                            </label>
                            <a className="text-sm font-semibold text-primary hover:text-blue-600 transition-colors" href="#">Forgot password?</a>
@@ -175,17 +160,6 @@ export const Login: React.FC = () => {
                         </button>
                      </form>
 
-                     {/* SSO Option */}
-                     <button className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:border-slate-600 transition-all duration-200 shadow-sm disabled:opacity-50" type="button" disabled>
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
-                           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
-                           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
-                           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
-                        </svg>
-                        Sign in with Google
-                     </button>
-
                      <div className="mt-10 flex items-center justify-center gap-6">
                         <a className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors" href="#">Privacy Policy</a>
                         <span className="text-xs text-slate-400 dark:text-slate-600">•</span>
@@ -203,7 +177,7 @@ export const Login: React.FC = () => {
                className="p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-slate-200/20 text-slate-800 dark:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/60 shadow-lg transition-all"
                title="Toggle Theme"
             >
-               {isDark ? <Sun className="w-5 h-5 drop-shadow-sm" /> : <Moon className="w-5 h-5 drop-shadow-sm" />}
+               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
          </div>
       </div>

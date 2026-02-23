@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useInvoices } from '../hooks/useInvoices';
 import { Invoice } from '../types';
-import { Plus, Wallet, X, Trash2, CheckCircle, AlertCircle, TrendingUp, TrendingDown, Print, Download, Filter } from 'lucide-react';
+import { Plus, Wallet, X, Trash2, CheckCircle, AlertCircle, TrendingUp, TrendingDown, Printer, Download, Filter } from 'lucide-react';
 import { TableSkeleton, InlineError } from './ui/Skeleton';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -97,25 +97,43 @@ export const Finance: React.FC = () => {
                </div>
             </div>
 
-            {/* Utilization Bar */}
-            <div className="bg-white dark:bg-[#1a2634] p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm md:col-span-2 flex flex-col justify-center">
+            {/* GST Summary */}
+            <div className="bg-white dark:bg-[#1a2634] p-5 rounded-xl border border-primary/20 dark:border-primary/20 shadow-sm relative overflow-hidden group">
+               <div className="flex justify-between items-start mb-4">
+                  <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                     <span className="material-symbols-outlined">receipt_long</span>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1">
+                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Tax Tracking
+                  </span>
+               </div>
+               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">GST Collected</p>
+               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                  {formatCurrency(invoices.filter(i => i.type === 'Income').reduce((acc, i) => acc + (i.taxAmount || 0), 0))}
+               </h3>
+               <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight">GST Paid:</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                     {formatCurrency(invoices.filter(i => i.type === 'Expense').reduce((acc, i) => acc + (i.taxAmount || 0), 0))}
+                  </span>
+               </div>
+               <div className="absolute -right-6 -bottom-6 text-primary/5 group-hover:scale-110 transition-transform duration-500">
+                  <span className="material-symbols-outlined text-[120px]">receipt_long</span>
+               </div>
+            </div>
+
+            {/* Expense per Income Ratio */}
+            <div className="bg-white dark:bg-[#1a2634] p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm lg:col-span-1 flex flex-col justify-center">
                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold text-slate-900 dark:text-white">Expense per Income Ratio</h4>
-                  <span className="text-sm font-medium text-slate-500">{utilizationRatio}%</span>
+                  <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Efficiency</h4>
+                  <span className="text-xs font-bold text-primary">{utilizationRatio}%</span>
                </div>
-               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-4 mb-4 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 w-full h-full"></div>
-                  <div className="relative bg-primary h-full rounded-full flex items-center justify-end px-2" style={{ width: `${utilizationRatio}%` }}></div>
+               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-3 overflow-hidden relative">
+                  <div className="relative bg-primary h-full rounded-full" style={{ width: `${utilizationRatio}%` }}></div>
                </div>
-               <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-                  <div>
-                     <span className="block text-xs uppercase tracking-wider font-semibold mb-0.5">Total Expenses</span>
-                     <span className="text-slate-900 dark:text-white font-medium">{formatCurrency(expensePaid)}</span>
-                  </div>
-                  <div className="text-right">
-                     <span className="block text-xs uppercase tracking-wider font-semibold mb-0.5">Total Income</span>
-                     <span className="text-slate-900 dark:text-white font-medium">{formatCurrency(incomePaid)}</span>
-                  </div>
+               <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">
+                  <span>Exp: {formatCurrency(expensePaid)}</span>
+                  <span>Inc: {formatCurrency(incomePaid)}</span>
                </div>
             </div>
          </div>
@@ -150,6 +168,7 @@ export const Finance: React.FC = () => {
                               <th className="px-6 py-3 font-semibold">Details</th>
                               <th className="px-6 py-3 font-semibold">Type</th>
                               <th className="px-6 py-3 font-semibold text-right">Amount</th>
+                              <th className="px-6 py-3 font-semibold text-right">Tax (GST)</th>
                               <th className="px-6 py-3 font-semibold text-right">Paid</th>
                               <th className="px-6 py-3 font-semibold text-center">Status</th>
                               <th className="px-6 py-3 font-semibold text-right">Actions</th>
@@ -168,6 +187,14 @@ export const Finance: React.FC = () => {
                                     </span>
                                  </td>
                                  <td className="px-6 py-4 text-right font-medium text-slate-900 dark:text-white">{formatCurrency(inv.amount || 0)}</td>
+                                 <td className="px-6 py-4 text-right text-slate-500">
+                                    {inv.taxAmount ? (
+                                       <div className="flex flex-col items-end">
+                                          <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(inv.taxAmount)}</span>
+                                          <span className="text-[10px] text-slate-400 font-mono">{(inv as any).gstNumber || inv.sellerGst || 'N/A'}</span>
+                                       </div>
+                                    ) : '—'}
+                                 </td>
                                  <td className="px-6 py-4 text-right font-medium text-slate-600 dark:text-slate-400">{formatCurrency(inv.paidAmount || 0)}</td>
                                  <td className="px-6 py-4 text-center">
                                     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-md ${inv.status === 'Paid' ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' : 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400'}`}>

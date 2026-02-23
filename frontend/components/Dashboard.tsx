@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDashboardStats, useRevenueChart, useRecentActivity } from '../hooks/useDashboard';
+import { useDashboardStats, useRevenueChart, useRecentActivity, useTopProducts } from '../hooks/useDashboard';
 import { CardSkeleton, InlineError } from './ui/Skeleton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card } from './ui/Card';
@@ -21,14 +21,15 @@ export const Dashboard: React.FC = () => {
    ];
 
    const revData = Array.isArray(chartData) && chartData.length > 0 ? chartData : fallbackChartData;
-   const activityList = Array.isArray(activities) ? activities : [];
+   const { data: topProducts, isLoading: productsLoading } = useTopProducts();
+   const topProductsList = Array.isArray(topProducts) ? topProducts : [];
 
    return (
       <div className="flex-1 flex flex-col h-full bg-[#f8fafc] dark:bg-[#020617] text-foreground font-display relative z-10 w-full overflow-hidden animation-fade-in custom-scrollbar overflow-y-auto p-6 md:p-10">
          <div className="mx-auto max-w-7xl w-full flex flex-col gap-10">
 
             {/* Glassmorphism Hero Section */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 md:p-12 text-white shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-8 md:p-12 text-white shadow-2xl shrink-0">
                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-primary/20 blur-[100px] rounded-full"></div>
                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-60 h-60 bg-blue-500/10 blur-[80px] rounded-full"></div>
 
@@ -38,7 +39,7 @@ export const Dashboard: React.FC = () => {
                         System Operational
                      </Badge>
                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
-                        Studio Mystri <span className="text-primary-light">Intelligence</span>
+                        Studio Mystri <span className="text-primary-light">BMS</span>
                      </h1>
                      <p className="text-slate-400 text-lg max-w-2xl">
                         Your architectural empire, visualized. Manage projects, monitor revenue, and lead your team with data-driven precision.
@@ -54,7 +55,7 @@ export const Dashboard: React.FC = () => {
             {statsLoading ? <CardSkeleton count={3} /> : statsError ? <InlineError message={(statsErr as Error)?.message || 'Failed to load'} onRetry={retryStats} /> : (
                <>
                   {/* Premium KPI Cards */}
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3 shrink-0">
                      <Card variant="glass" className="relative group overflow-hidden border-white/5 bg-slate-900/40">
                         <div className="flex items-center justify-between">
                            <div className="space-y-2">
@@ -103,7 +104,7 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Chart and Activity Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 shrink-0">
                      <Card className="lg:col-span-2 overflow-hidden border-slate-200/60 dark:border-white/5">
                         <div className="flex items-center justify-between mb-8">
                            <div className="space-y-1">
@@ -139,7 +140,7 @@ export const Dashboard: React.FC = () => {
                            <Clock className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
-                           {activityList.length > 0 ? activityList.map((act: any, idx: number) => (
+                           {activities && activities.length > 0 ? activities.map((act: any, idx: number) => (
                               <div key={idx} className="flex gap-4 group cursor-pointer">
                                  <div className="mt-1 shrink-0 w-2 h-2 rounded-full bg-primary" />
                                  <div className="space-y-1">
@@ -158,6 +159,35 @@ export const Dashboard: React.FC = () => {
                            View Full Log <ArrowUpRight className="ml-2 w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                         </Button>
                      </Card>
+                  </div>
+
+                  {/* Top Products / Services Restoration */}
+                  <div className="shrink-0 mb-10">
+                     <h3 className="text-2xl font-bold mb-6">Top Performing Assets</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {productsLoading ? [1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl" />) :
+                           topProductsList.slice(0, 4).map((p: any, i: number) => (
+                              <Card key={i} className="group hover:border-primary/30 transition-all cursor-pointer">
+                                 <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl">
+                                       {p.icon || '🏗️'}
+                                    </div>
+                                    <div className="flex-1">
+                                       <h4 className="font-bold text-sm truncate">{p.name}</h4>
+                                       <p className="text-xs text-muted-foreground">{p.sales} Sales</p>
+                                    </div>
+                                    <div className="text-right">
+                                       <p className="text-sm font-black text-primary">{formatCurrency(p.revenue)}</p>
+                                       <div className="flex items-center justify-end text-[10px] text-emerald-500 font-bold">
+                                          <ArrowUpRight className="w-3 h-3" />
+                                          {p.growth}%
+                                       </div>
+                                    </div>
+                                 </div>
+                              </Card>
+                           ))
+                        }
+                     </div>
                   </div>
                </>
             )}

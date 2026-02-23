@@ -6,7 +6,7 @@ import { useCreateOrder } from '../hooks/useOrders';
 import { useAuth } from '../context/AuthContext';
 import { Product, CartItem, Customer, ProductVariant } from '../types';
 import toast from 'react-hot-toast';
-import { Search, X, CreditCard, Banknote, Printer, Trash2, Scan, Plus, User, Calculator, Image as ImageIcon, Upload, Layers, Barcode, Edit2, Remove } from 'lucide-react';
+import { Search, X, CreditCard, Banknote, Printer, Trash2, Scan, Plus, User, Calculator, Image as ImageIcon, Upload, Layers, Barcode, Edit2, Minus } from 'lucide-react';
 import { InlineError } from './ui/Skeleton';
 
 const formatCurrency = (n: number, cur: 'INR' | 'USD' = 'INR') =>
@@ -23,7 +23,7 @@ export const POS: React.FC = () => {
 
     const products: Product[] = Array.isArray(productsData?.data || productsData) ? (productsData?.data || productsData) as Product[] : [];
     const customers: Customer[] = Array.isArray(customersData?.data || customersData) ? (customersData?.data || customersData) as Customer[] : [];
-    const companySettings = settingsData?.data || settingsData || { name: 'Studio Mystri', address: '', gstNumber: '', phone: '', email: '', logoUrl: '' };
+    const companySettings = (settingsData as any)?.data || settingsData || { name: 'Studio Mystri', address: '', gstNumber: '', gstin: '', phone: '', email: '', logoUrl: '' };
 
     const isAdmin = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
@@ -225,6 +225,13 @@ export const POS: React.FC = () => {
                                     placeholder="Search products, SKU..."
                                     autoFocus
                                 />
+                                <button
+                                    onClick={() => window.location.href = '/scanner'}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"
+                                    title="Open Universal Scanner"
+                                >
+                                    <Scan className="w-5 h-5" />
+                                </button>
                             </div>
                             <div className="flex items-center gap-2">
                                 {isAdmin && (
@@ -245,8 +252,8 @@ export const POS: React.FC = () => {
                                     key={cat}
                                     onClick={() => setActiveCategory(cat as string)}
                                     className={`flex-none px-4 py-1.5 rounded-full text-sm font-medium shadow-sm transition-colors border ${activeCategory === cat
-                                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent'
-                                            : 'bg-white dark:bg-[#1a2634] border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary'
+                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent'
+                                        : 'bg-white dark:bg-[#1a2634] border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary'
                                         }`}
                                 >
                                     {cat}
@@ -262,7 +269,7 @@ export const POS: React.FC = () => {
                                 const hasVariants = p.variants && p.variants.length > 0;
                                 const totalStock = hasVariants ? p.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) : (p.stock || 0);
                                 const isOut = totalStock! <= 0;
-                                const imgUrl = (p as any).image || (p.images && p.images[0]) || (p.media && p.media.length > 0 && p.media[0].url) || 'https://via.placeholder.com/300?text=No+Image';
+                                const imgUrl = (p as any).image || (p as any).images?.[0] || (p.media && p.media.length > 0 && p.media[0].url) || 'https://via.placeholder.com/300?text=No+Image';
 
                                 return (
                                     <div key={p.id}
@@ -390,7 +397,7 @@ export const POS: React.FC = () => {
                             </div>
                         ) : (
                             cart.map((item, idx) => {
-                                const imgUrl = (item as any).image || (item.images && item.images[0]) || (item.media && item.media[0]?.url) || 'https://via.placeholder.com/100?text=Item';
+                                const imgUrl = (item as any).image || (item as any).images?.[0] || (item.media && item.media[0]?.url) || 'https://via.placeholder.com/100?text=Item';
                                 return (
                                     <div key={`${item.id}-${idx}`} className="flex gap-3 group animate-in slide-in-from-right-4 duration-200 ease-out">
                                         <div className="w-14 h-14 rounded-lg bg-slate-100 dark:bg-slate-800 bg-cover bg-center shrink-0 border border-slate-200 dark:border-slate-700" style={{ backgroundImage: `url('${imgUrl}')` }}></div>

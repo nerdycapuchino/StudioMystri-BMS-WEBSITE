@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sales &amp; Lead Pipeline - ArchiFirm</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="flex min-h-screen w-full flex-row overflow-hidden">
+<!-- Sidebar -->
+<aside class="flex w-64 flex-col border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 shrink-0 h-screen sticky top-0">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<!-- Brand -->
+<div class="flex gap-3 items-center px-2">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 bg-slate-200" data-alt="ArchiFirm Logo Placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD2lHc4TrUbEEZXvbMK0UcFQpiYw54hCxBLHiTCrW8q6VV3Z4rSNDpg2VBtSk1-NhrahLa68NBCYjQRVF2ClEsCVzi1pr6Bv8yzy2BdlblGglyP-pHYCU8mRQYZ3DLjXuu2FxxYs1GaZHg-Dee_rsf4gIpmhh7P2u8k_QyUqxgIQ2Tqe-WV75XqyZnSeiDFLnbSwIMo8vyN23H6XF9HmK7fYQdEeQF9RGt6BLqIPKIzKWBzmI_uNqj8RE-bvKq7wMz4tj3AdCCA6iXj");'></div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-base font-bold leading-normal">ArchiFirm</h1>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-normal leading-normal">Architecture &amp; Design</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20" href="#">
+<span class="material-symbols-outlined text-[24px] fill-1">view_kanban</span>
+<span class="text-sm font-medium">Pipeline</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[24px]">group</span>
+<span class="text-sm font-medium">Clients</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[24px]">folder_open</span>
+<span class="text-sm font-medium">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[24px]">description</span>
+<span class="text-sm font-medium">Invoices</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<button class="flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-primary/90 transition-colors text-white text-sm font-bold shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span class="truncate">New Project</span>
+</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden bg-background-light dark:bg-background-dark relative">
+<!-- Header Section -->
+<header class="flex-none px-8 py-6 flex flex-col gap-6 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 z-10">
+<!-- Title and Primary Actions -->
+<div class="flex flex-wrap justify-between items-end gap-4">
+<div class="flex flex-col gap-1">
+<h2 class="text-slate-900 dark:text-white text-3xl font-black tracking-tight">Opportunities Pipeline</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Manage potential interior design contracts from lead to signed deal.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="h-10 pl-10 pr-4 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-primary focus:ring-primary w-64" placeholder="Search opportunities..." type="text"/>
+</div>
+<button class="flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-semibold shadow-sm">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+<span>Filter</span>
+</button>
+<button class="flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors text-sm font-bold shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>New Opportunity</span>
+</button>
+</div>
+</div>
+<!-- KPI Stats -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Pipeline Value</p>
+<span class="material-symbols-outlined text-green-600 text-[20px]">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-2xl font-bold">$4.2M</p>
+<span class="text-green-600 text-xs font-medium bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded">+12%</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Open Deals</p>
+<span class="material-symbols-outlined text-green-600 text-[20px]">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-2xl font-bold">23</p>
+<span class="text-green-600 text-xs font-medium bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded">+2%</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Win Rate</p>
+<span class="material-symbols-outlined text-red-500 text-[20px]">trending_down</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-2xl font-bold">68%</p>
+<span class="text-red-600 text-xs font-medium bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded">-5%</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+<div class="flex justify-between items-start">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Avg Deal Size</p>
+<span class="material-symbols-outlined text-green-600 text-[20px]">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-2xl font-bold">$185k</p>
+<span class="text-green-600 text-xs font-medium bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded">+8%</span>
+</div>
+</div>
+</div>
+<!-- Tabs/Filters -->
+<div class="flex gap-2">
+<button class="flex h-8 items-center gap-2 rounded-lg bg-slate-200 dark:bg-slate-700 px-3 text-slate-900 dark:text-white text-sm font-semibold transition-colors">
+<span class="material-symbols-outlined text-[18px]">grid_view</span>
+                        All Projects
+                    </button>
+<button class="flex h-8 items-center gap-2 rounded-lg bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 px-3 text-slate-600 dark:text-slate-400 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-[18px]">house</span>
+                        Residential
+                    </button>
+<button class="flex h-8 items-center gap-2 rounded-lg bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 px-3 text-slate-600 dark:text-slate-400 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-[18px]">domain</span>
+                        Commercial
+                    </button>
+<button class="flex h-8 items-center gap-2 rounded-lg bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 px-3 text-slate-600 dark:text-slate-400 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-[18px]">construction</span>
+                        Renovation
+                    </button>
+</div>
+</header>
+<!-- Kanban Board Area -->
+<div class="flex-1 overflow-x-auto overflow-y-hidden p-8">
+<div class="flex h-full gap-6 min-w-max pb-4">
+<!-- Column: Leads -->
+<div class="flex flex-col w-80 shrink-0">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">Leads</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">5</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+<!-- Card 1 -->
+<div class="group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">New Lead</span>
+<button class="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">drag_indicator</span>
+</button>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">Smith Residence</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Full interior renovation</p>
+<div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 bg-cover" data-alt="Avatar of Sarah J." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBey7lowqKpfxJ2i9qCrYeIZrrSfNW5rka1wye3v9nzUKtLcrNsMvoT8xtD9N8MpTrSHOmjL_ffd2gL5KzUwOBZQCEA6pQZ7S9VwzUQFDCIoWuagSQ4aWqDA9tram0jQC00FHoXv_0SpLWEXGmhOYB1yLww65vYX3dCJWejNc4SJNC2GEtrAVtUUFdR7TkFrRs4BSvuqL6zqkYdOGRqt8_NRh1CWlQb0A8J8Q97qvs86CNcgnbJAi7wN3aDlCV_gIrvY6vBR4ZWcNMN");'></div>
+<span class="text-xs text-slate-500 dark:text-slate-400">2d ago</span>
+</div>
+<span class="text-primary font-bold text-sm">$120k</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Referral</span>
+<button class="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">drag_indicator</span>
+</button>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">Modern Loft Project</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Kitchen &amp; Living redesign</p>
+<div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">JD</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">5h ago</span>
+</div>
+<span class="text-primary font-bold text-sm">$85k</span>
+</div>
+</div>
+</div>
+<!-- Add Button -->
+<button class="mt-2 flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-600 transition-colors text-sm font-medium">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Add Lead
+                        </button>
+</div>
+<!-- Column: Initial Meeting -->
+<div class="flex flex-col w-80 shrink-0">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">Initial Meeting</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+<!-- Card 1 -->
+<div class="group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">High Priority</span>
+<button class="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">drag_indicator</span>
+</button>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">Downtown Office</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Commercial space fit-out</p>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-slate-400 text-[16px]">calendar_today</span>
+<span class="text-xs text-slate-600 dark:text-slate-300 font-medium">Oct 24, 2:00 PM</span>
+</div>
+<div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 bg-cover" data-alt="Avatar of Mike R." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDToUvxeUdehfE1RSJ0mr4roQMN26X8q4pXvrFuFsIi0w8m7VBIo5-XbiEq9dzQq841eVV9ESR9KAK280EaquU01ZHEdjgRXXuK_gZrYKtSQC2A2viph9SHEZYZCzHPuKImmd0kU37XCU6GGI73k5M6M31Z7Cg0XW_MNF4cw2ItUBMMC_0NUF-BFJgIq0_I6sdb_ToPtvfF2AIdfL8ComG5CDGC-YLmnHY4dbWOmeNL1gL3a_bzzTnqq_vSCoN6FED6D8tV8IJUyfln");'></div>
+<span class="text-xs text-slate-500 dark:text-slate-400">5d ago</span>
+</div>
+<span class="text-primary font-bold text-sm">$450k</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Proposal -->
+<div class="flex flex-col w-80 shrink-0">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">Proposal</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">4</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+<!-- Card 1 -->
+<div class="group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Drafting</span>
+<button class="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">drag_indicator</span>
+</button>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">Villa Renovation</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Extensive landscape &amp; pool</p>
+<div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 bg-cover" data-alt="Avatar of Emily W." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA5g6PslPjdvqfyQ_YKFbnOE261Yid4JRepBy75y1x2SoiZRoTzcwp4hyEKl_oKUcQXN0S5kd6W05xX9tzeCgUrLLX_r8v5IZiFSikOziOWIBVti8rinzCNosqODe7RlpnJ9ZyX9oXEH2bvOdSSwILWa7zjjSlfhjZOGFhz58yT_AV3mHab1-T47uRKXye7c0igPEHsnJEFrvtm2hAuOlkde5mCf4CznGPqDSF6plpcVhblJ8kF-2DD1POfxTp2zpN4CIHnUybMbtQe");'></div>
+<span class="text-xs text-slate-500 dark:text-slate-400">1w ago</span>
+</div>
+<span class="text-primary font-bold text-sm">$850k</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Review</span>
+<button class="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">drag_indicator</span>
+</button>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">Boutique Hotel Lobby</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Concept design phase</p>
+<div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 bg-cover" data-alt="Avatar of John D." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDkop2Zg3tZJxF8tP2gH4HS-aVQmDDzf0u1GuJuNL7kMGrXGBIRJXmxvwjNKWRPcG2WYPsoKS2pFbi5qnNL1gZcK4yPfVrs7LHSTlgqTYitEF1Duw_eQeO8d6nZHx367I-NU6LmHsGx4k_45U0_jWZpj3MdHyHAXCvlZ1uMFgI-MJTS_oGs2mJFnshi3LpbBAR6nskBbFyCkG6nwWVfKfawLS_G17cZ7UCt-yhzJGIHeLayq3962TPXoqf6PXQ6xt5Zeni9hDJEg62s");'></div>
+<span class="text-xs text-slate-500 dark:text-slate-400">3d ago</span>
+</div>
+<span class="text-primary font-bold text-sm">$1.2M</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Negotiation -->
+<div class="flex flex-col w-80 shrink-0">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">Negotiation</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">2</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+<!-- Card 1 -->
+<div class="group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50 border-l-4 border-l-primary">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Urgent</span>
+<button class="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">drag_indicator</span>
+</button>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">Luxury Apt - Midtown</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Client: Elena Fisher</p>
+<div class="flex items-center gap-2 mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs text-yellow-800 dark:text-yellow-200">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                    Budget revision required
+                                </div>
+<div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 bg-cover" data-alt="Avatar of Alex M." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAB4m0_vrqIsvlzdduXm1L8ifsaFXm3RVkT7VSdWTFuosA4aaN1yd5zHkICjBzpkrxueSLzyucgyFhZxGy2tHtqs9-CR7Ci0kLixLW6FP0Uq-tsIfPINB56OsbRpgo59WYfRHoKmiURkyIWmyj8lBEWRjvqedU80IkJWLc2MwlH0RkKoIp2PUlrqWnKheSlXvSaINZGnBO6De0gF6P8i7WYsvah6MHkCZXZNwOiYVa3GIxRDpAAdnITkn97kzZRr1q4xmeGVFk7-MsB");'></div>
+<span class="text-xs text-slate-500 dark:text-slate-400">2w ago</span>
+</div>
+<span class="text-primary font-bold text-sm">$200k</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Won/Lost -->
+<div class="flex flex-col w-80 shrink-0 opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">Won / Lost</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">12</span>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+<!-- Card 1 -->
+<div class="group bg-green-50/50 dark:bg-green-900/10 p-4 rounded-xl shadow-sm border border-green-200 dark:border-green-900/50">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+                                        Won
+                                    </span>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">Seaside Resort</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Architectural Planning</p>
+<div class="flex items-center justify-between mt-4 pt-3 border-t border-green-100 dark:border-green-900/30">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 bg-cover" data-alt="Avatar of Kate L." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDAXtXuZH8bmsKmrzg2EDWdBHQc-mctprYCsByD6y1BhdYO22L7LFV1ZtZ0cm00oZABFAYIGxCZokHqTjD8DFSPhSZEsyeb9syhl4cJ0mkqCqIwU5F9Y2tu3-Q9qgd4fZfX1KK3-3vxO3sPawD5By1oDVySukY7HVq6n1V2QEGAPDdFASCi86oGd_S56O8T_E6bEMRFEy9z1D7meweZ1oBDC-yDTTkZKQszD5S2swWSStPw0qEGrcR0GlVAPDL6NsMxxVrHt7zVq3HR");'></div>
+<span class="text-xs text-slate-500 dark:text-slate-400">1mo ago</span>
+</div>
+<span class="text-green-700 dark:text-green-400 font-bold text-sm">$3.5M</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 grayscale opacity-60 hover:opacity-100 hover:grayscale-0 transition-all">
+<div class="flex justify-between items-start mb-2">
+<span class="bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">cancel</span>
+                                        Lost
+                                    </span>
+</div>
+<h4 class="font-bold text-slate-900 dark:text-white text-base mb-1">City Hall Annex</h4>
+<p class="text-slate-500 dark:text-slate-400 text-sm mb-3">Public Bid</p>
+<div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 bg-cover" data-alt="Avatar of Tom B." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDGiR9rj9VwokINtPdZzG-C4G5cOfr6SQ5Z5FbIpsdhcslNjCzU62FI7eTMexBFnY_xFOkNOAffPd7BtVo3llHqjf9Jdp9f0lhB7_ylvScj8YMDbb0fFdJlOfP_duPsWPJQxj7NlvHsM7ZivVdCiN-FDzfQS3tMbaa7mFGrK8GyIfKRKpmCZJ987t3P3T-6_mcmpsujA0DD5yVpqo-gHODgKslPV3W_IGEMvv64QduB693x5inuSFWC3wUQfNt9PXqAk9sx3jEWjcUE");'></div>
+<span class="text-xs text-slate-500 dark:text-slate-400">1mo ago</span>
+</div>
+<span class="text-slate-500 dark:text-slate-400 font-bold text-sm">$600k</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<style>
+        /* Custom scrollbar for better UX within columns */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #475569;
+        }
+    </style>
+</body></html>

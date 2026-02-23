@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Role-Based Access Permissions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for table container */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased selection:bg-primary/20 selection:text-primary">
+<div class="flex min-h-screen w-full flex-col lg:flex-row overflow-hidden">
+<!-- Side Navigation -->
+<aside class="w-full lg:w-[280px] bg-white dark:bg-[#18212f] border-r border-slate-200 dark:border-slate-800 flex-shrink-0 lg:h-screen lg:overflow-y-auto">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<!-- User Profile -->
+<div class="flex gap-3 items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 border-2 border-white shadow-sm" data-alt="Admin user profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDfYzNaGs5fwuu35gZ96lQ17aPqca3V_FXDetStRKwN3O96WY8cw23cC7alR0tpzg1QeZDml1qxnV1rtkSDmiMRSKqCZrVxoaX4j7mynT1dlCuwVBJzYOef9WfFlprUeLaChgYL3T_76IAGNOLvrSAdMmC7YeHC4uNXG2F5dPvpoozgflYCb3Be_7LZPzVYy4qNe3bp-J4ysBHxYqhiF7r9BTNShjMAZM7zvdCih5DGHC2LiqP-EUwJBEy3OFRVndH-tWey4Si9T2nm");'></div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-sm font-semibold">Alex Morgan</h1>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium">System Administrator</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary transition-colors">grid_view</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary transition-colors">folder_open</span>
+<span class="text-sm font-medium">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary transition-colors">payments</span>
+<span class="text-sm font-medium">Finance</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary transition-colors">inventory_2</span>
+<span class="text-sm font-medium">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary transition-colors">group</span>
+<span class="text-sm font-medium">Team</span>
+</a>
+<div class="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium" href="#">
+<span class="material-symbols-outlined text-[20px]">shield_person</span>
+<span class="text-sm">Permissions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary transition-colors">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl mt-6">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-xl mt-0.5">info</span>
+<div>
+<h4 class="text-xs font-semibold text-slate-900 dark:text-white mb-1">Need help?</h4>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Check our documentation for role configuration guides.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden bg-background-light dark:bg-background-dark relative">
+<!-- Header Section -->
+<header class="flex-shrink-0 bg-white dark:bg-[#18212f] border-b border-slate-200 dark:border-slate-800 z-20">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 px-6 py-5 max-w-[1400px] mx-auto w-full">
+<div>
+<h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Role-Based Access Control</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage granular permissions for Admin, Manager, Staff, and Artisan roles.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700 transition-all">
+                            Discard
+                        </button>
+<button class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 transition-all shadow-sm shadow-blue-200 dark:shadow-none flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                            Save Changes
+                        </button>
+</div>
+</div>
+<!-- Tabs & Filters -->
+<div class="px-6 pb-0 pt-2 border-t border-slate-100 dark:border-slate-800/50 max-w-[1400px] mx-auto w-full">
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
+<!-- Search -->
+<div class="relative w-full sm:w-72">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-slate-900 dark:text-slate-100 placeholder:text-slate-400 transition-all" placeholder="Search modules..." type="text"/>
+</div>
+<!-- Role Quick Filters (Visual only as per request) -->
+<div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+<button class="px-3 py-1.5 text-xs font-semibold bg-white dark:bg-slate-700 text-primary shadow-sm rounded-md transition-all">All Roles</button>
+<button class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Admin</button>
+<button class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Manager</button>
+<button class="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Staff</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-auto custom-scrollbar p-6">
+<div class="max-w-[1400px] mx-auto">
+<!-- Table Container -->
+<div class="bg-white dark:bg-[#18212f] border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<!-- Sticky Column Header -->
+<th class="sticky left-0 z-10 bg-slate-50/95 dark:bg-[#1e293b] backdrop-blur-sm p-4 min-w-[240px] border-r border-slate-200 dark:border-slate-700">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Module / Feature</span>
+</th>
+<!-- Role Headers -->
+<th class="p-4 min-w-[200px] text-center group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-r border-slate-100 dark:border-slate-800/50">
+<div class="flex flex-col items-center gap-1">
+<div class="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 flex items-center justify-center mb-1">
+<span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+</div>
+<span class="text-sm font-bold text-slate-800 dark:text-slate-100">Administrator</span>
+<span class="text-[10px] font-medium text-slate-400">Full Access</span>
+</div>
+</th>
+<th class="p-4 min-w-[200px] text-center group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-r border-slate-100 dark:border-slate-800/50">
+<div class="flex flex-col items-center gap-1">
+<div class="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 flex items-center justify-center mb-1">
+<span class="material-symbols-outlined text-[18px]">manage_accounts</span>
+</div>
+<span class="text-sm font-bold text-slate-800 dark:text-slate-100">Manager</span>
+<span class="text-[10px] font-medium text-slate-400">Team Lead</span>
+</div>
+</th>
+<th class="p-4 min-w-[200px] text-center group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-r border-slate-100 dark:border-slate-800/50">
+<div class="flex flex-col items-center gap-1">
+<div class="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 flex items-center justify-center mb-1">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+<span class="text-sm font-bold text-slate-800 dark:text-slate-100">Staff</span>
+<span class="text-[10px] font-medium text-slate-400">Employee</span>
+</div>
+</th>
+<th class="p-4 min-w-[200px] text-center group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
+<div class="flex flex-col items-center gap-1">
+<div class="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300 flex items-center justify-center mb-1">
+<span class="material-symbols-outlined text-[18px]">engineering</span>
+</div>
+<span class="text-sm font-bold text-slate-800 dark:text-slate-100">Artisan</span>
+<span class="text-[10px] font-medium text-slate-400">Contractor</span>
+</div>
+</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- SECTION: PROJECTS -->
+<tr class="bg-slate-50/50 dark:bg-slate-800/30">
+<td class="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 sticky left-0 z-10 bg-slate-50/50 dark:bg-[#18212f]" colspan="5">
+                                            Project Management
+                                        </td>
+</tr>
+<!-- Row 1: Projects Overview -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<td class="p-4 sticky left-0 bg-white dark:bg-[#18212f] group-hover:bg-slate-50 dark:group-hover:bg-[#1e293b] border-r border-slate-100 dark:border-slate-800 transition-colors z-10">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Project Overview</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">View list and details</span>
+</div>
+</td>
+<!-- Admin -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20 cursor-not-allowed opacity-50" disabled="" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-red-50 dark:bg-red-900/10 text-xs font-medium text-red-600 dark:text-red-400 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-red-500 focus:ring-red-500/20" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Manager -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/10 text-xs font-medium text-slate-400 hover:text-red-600 transition-colors cursor-pointer select-none">
+<input class="h-4 w-4 rounded border-slate-300 text-red-500 focus:ring-red-500/20" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Staff -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-400 cursor-pointer select-none">
+<input class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Artisan -->
+<td class="p-4">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+</tr>
+<!-- Row 2: Tasks & Milestones -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<td class="p-4 sticky left-0 bg-white dark:bg-[#18212f] group-hover:bg-slate-50 dark:group-hover:bg-[#1e293b] border-r border-slate-100 dark:border-slate-800 transition-colors z-10">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Tasks &amp; Milestones</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Manage daily deliverables</span>
+</div>
+</td>
+<!-- Admin -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50 text-center">
+<span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400">Full Access</span>
+</td>
+<!-- Manager -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50 text-center">
+<span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400">Full Access</span>
+</td>
+<!-- Staff -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Artisan -->
+<td class="p-4">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+</tr>
+<!-- SECTION: FINANCE -->
+<tr class="bg-slate-50/50 dark:bg-slate-800/30">
+<td class="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 sticky left-0 z-10 bg-slate-50/50 dark:bg-[#18212f]" colspan="5">
+                                            Financial Records
+                                        </td>
+</tr>
+<!-- Row 3: Invoicing -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<td class="p-4 sticky left-0 bg-white dark:bg-[#18212f] group-hover:bg-slate-50 dark:group-hover:bg-[#1e293b] border-r border-slate-100 dark:border-slate-800 transition-colors z-10">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Invoicing &amp; Estimates</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Generate client bills</span>
+</div>
+</td>
+<!-- Admin -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50 text-center">
+<span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400">Full Access</span>
+</td>
+<!-- Manager -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Staff -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Artisan -->
+<td class="p-4 text-center">
+<span class="inline-flex items-center rounded-full bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-800 dark:text-slate-400">No Access</span>
+</td>
+</tr>
+<!-- Row 4: Payroll -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<td class="p-4 sticky left-0 bg-white dark:bg-[#18212f] group-hover:bg-slate-50 dark:group-hover:bg-[#1e293b] border-r border-slate-100 dark:border-slate-800 transition-colors z-10">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Payroll &amp; Expenses</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Salary data and reimbursements</span>
+</div>
+</td>
+<!-- Admin -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50 text-center">
+<span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400">Full Access</span>
+</td>
+<!-- Manager -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50 text-center">
+<span class="inline-flex items-center rounded-full bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-800 dark:text-slate-400">No Access</span>
+</td>
+<!-- Staff -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50 text-center">
+<span class="inline-flex items-center rounded-full bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-800 dark:text-slate-400">No Access</span>
+</td>
+<!-- Artisan -->
+<td class="p-4 text-center">
+<span class="inline-flex items-center rounded-full bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-800 dark:text-slate-400">No Access</span>
+</td>
+</tr>
+<!-- SECTION: CLIENT PORTAL -->
+<tr class="bg-slate-50/50 dark:bg-slate-800/30">
+<td class="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 sticky left-0 z-10 bg-slate-50/50 dark:bg-[#18212f]" colspan="5">
+                                            Client Portal
+                                        </td>
+</tr>
+<!-- Row 5: Client Communication -->
+<tr class="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+<td class="p-4 sticky left-0 bg-white dark:bg-[#18212f] group-hover:bg-slate-50 dark:group-hover:bg-[#1e293b] border-r border-slate-100 dark:border-slate-800 transition-colors z-10">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Communication &amp; Chat</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">Direct messaging with clients</span>
+</div>
+</td>
+<!-- Admin -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-red-50 dark:bg-red-900/10 text-xs font-medium text-red-600 dark:text-red-400 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-red-500 focus:ring-red-500/20" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Manager -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Staff -->
+<td class="p-4 border-r border-slate-50 dark:border-slate-800/50">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+<!-- Artisan -->
+<td class="p-4">
+<div class="flex justify-center gap-2">
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+<input checked="" class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20" type="checkbox"/>
+                                                    R
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    W
+                                                </label>
+<label class="flex items-center gap-2 px-3 py-1.5 rounded-md opacity-50 cursor-not-allowed text-xs font-medium text-slate-300 dark:text-slate-600 select-none">
+<input class="h-4 w-4 rounded border-slate-200 bg-slate-50 text-slate-300 focus:ring-0" disabled="" type="checkbox"/>
+                                                    D
+                                                </label>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Legend -->
+<div class="mt-6 flex flex-wrap gap-4 items-center justify-between text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-[#18212f] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-4">
+<span class="font-medium text-slate-900 dark:text-white">Legend:</span>
+<div class="flex items-center gap-1.5">
+<span class="h-5 w-5 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-700 text-[10px] font-bold">R</span>
+<span>Read Only</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="h-5 w-5 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-700 text-[10px] font-bold">W</span>
+<span>Write / Edit</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="h-5 w-5 flex items-center justify-center rounded bg-red-50 dark:bg-red-900/20 text-red-600 text-[10px] font-bold">D</span>
+<span>Delete</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-xs">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<p>Changes take effect immediately upon saving.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -10,7 +10,7 @@ This report details the findings from a comprehensive Quality Assurance (QA) and
 
 **Critical Finding:** The frontend application was unable to build due to an export mismatch in `App.tsx`. This has been patched to allow further testing.
 
-**Overall Status:** The application structure is solid, using modern technologies (React, Vite, Express, Prisma, TypeScript). However, it lacks a robust testing strategy, has some security vulnerabilities regarding credentials, and requires some code cleanup.
+**Overall Status:** The application structure is solid, using modern technologies (React, Vite, Express, Prisma, TypeScript). However, it initially lacked a robust testing strategy and had consistent security vulnerabilities regarding input validation and credentials, which have now been addressed.
 
 ## 1. Critical Bugs (Blockers)
 
@@ -21,65 +21,67 @@ This report details the findings from a comprehensive Quality Assurance (QA) and
 
 ## 2. Security Vulnerabilities
 
-### 2.1 Hardcoded Developer Credentials
+### 2.1 Hardcoded Developer Credentials (FIXED)
 *   **File:** `frontend/components/Login.tsx`
-*   **Issue:** Developer credentials (`admin@studiomystri.com / Admin@1234`) are hardcoded and displayed in the UI.
+*   **Issue:** Developer credentials (`admin@studiomystri.com / Admin@1234`) were hardcoded and displayed in the UI.
 *   **Risk:** High. In a production environment, this exposes administrative access to anyone visiting the login page.
-*   **Recommendation:** Remove this block or wrap it in a `if (process.env.NODE_ENV === 'development')` check.
+*   **Status:** **Fixed**. The JSX block displaying these credentials has been removed.
 
-### 2.2 Lack of Input Validation for Query Parameters
-*   **File:** `backend/src/modules/*/controller.ts` (e.g., `admin.controller.ts`, `customer.controller.ts`)
-*   **Issue:** Controller methods pass `req.query` directly to services cast as `Record<string, string>`.
-*   **Risk:** Medium. If a malicious user sends nested objects (e.g., `?search[foo]=bar`), it could cause runtime errors in Prisma (500 Internal Server Error) or potentially bypass logic.
-*   **Recommendation:** Use a validation library like `zod` to validate `req.query` structure before passing it to services.
+### 2.2 Lack of Input Validation for Query Parameters (FIXED)
+*   **File:** Widespread across `backend/src/modules/*/controller.ts` (Admin, Customers, Orders, Invoices, etc.)
+*   **Issue:** Controller methods passed `req.query` directly to services cast as `Record<string, string>`.
+*   **Risk:** Medium. Malicious users could send nested objects (e.g., `?search[foo]=bar`), causing Prisma to throw 500 errors or potentially bypassing logic.
+*   **Status:** **Fixed**. A global `validateQuery` middleware using Zod (`backend/src/middleware/validateQuery.ts`) was implemented and applied to all list endpoints. Specific validation was also added to the Admin module.
 
 ### 2.3 Potential Token Enumeration / Timing Attacks
 *   **File:** `backend/src/modules/auth/auth.service.ts`
-*   **Issue:** The login function returns detailed error messages ("Invalid email or password", "Account is deactivated"). While standard, ensure consistent response times to prevent timing attacks.
-*   **Recommendation:** Use a constant time comparison and generic error messages where possible, though the current implementation is acceptable for most internal tools.
+*   **Issue:** The login function returns detailed error messages ("Invalid email or password", "Account is deactivated"). While standard for internal tools, ensure consistent response times.
+*   **Status:** Noted. Acceptable for current internal use case but recommended for future hardening.
 
 ## 3. Potential Bugs & Logic Issues
 
-### 3.1 Duplicated Health Check
+### 3.1 Duplicated Health Check (FIXED)
 *   **File:** `backend/src/routes.ts` and `backend/src/app.ts`
-*   **Issue:** Health check endpoint is defined in `app.ts` (root `/health`) and `routes.ts` (`/api/v1/health`).
-*   **Impact:** Low. Redundant code.
-*   **Recommendation:** Consolidate to a single location.
+*   **Issue:** Health check endpoint was defined in two places.
+*   **Status:** **Fixed**. Consolidated to `/api/v1/health`.
 
-### 3.2 Logout Limitation
+### 3.2 Logout Limitation (FIXED)
 *   **File:** `backend/src/modules/auth/auth.controller.ts`
-*   **Issue:** The `logout` endpoint requires a valid access token (`verifyToken`). If a user's access token is expired, they cannot hit the logout endpoint to clear their refresh token from the database.
-*   **Impact:** Low/Medium. User might be stuck in a "logged out but can't notify server" state.
-*   **Recommendation:** Allow logout with just the refresh token cookie, or ensure the frontend automatically refreshes the token before calling logout.
+*   **Issue:** The `logout` endpoint required a valid access token. Users with expired access tokens could not trigger a server-side logout to clear their refresh token.
+*   **Status:** **Fixed**. The controller now checks the refresh token cookie if the access token is missing/expired, ensuring reliable logout.
 
 ### 3.3 Default Environment Variables
 *   **File:** `backend/src/config/env.ts`
 *   **Issue:** `PORT` defaults to `'5000'`.
-*   **Impact:** Low. If the environment variable is missing in production, it might default to a dev port, potentially causing port conflicts or confusion.
+*   **Impact:** Low.
 *   **Recommendation:** Enforce explicit configuration in production.
 
 ## 4. Performance & Code Quality
 
 ### 4.1 Missing Automated Tests
 *   **Issue:** There are **zero** automated tests (Unit, Integration, or E2E) for both backend and frontend.
-*   **Impact:** Critical. High risk of regression when making changes.
+*   **Impact:** Critical. High risk of regression.
 *   **Recommendation:** Implement a testing strategy immediately (see `TEST_STRATEGY.md`).
 
-### 4.2 Inefficient Database Queries
-*   **File:** `backend/src/modules/customers/customer.service.ts` (and potentially others)
-*   **Issue:** `recalculateStats` fetches ALL orders for a customer to calculate total spent.
-*   **Impact:** High. As data grows, this will become very slow and memory-intensive.
-*   **Recommendation:** Use Prisma's `aggregate` function (`_sum`, `_count`) to perform calculations in the database.
+### 4.2 Inefficient Database Queries (FIXED)
+*   **File:** `backend/src/modules/customers/customer.service.ts`
+*   **Issue:** `recalculateStats` fetched ALL orders for a customer to calculate total spent.
+*   **Impact:** High memory usage.
+*   **Status:** **Fixed**. Refactored to use Prisma's `aggregate` (`_sum`, `_count`) for database-level calculation.
 
 ### 4.3 Frontend Large Chunks
 *   **Issue:** Frontend build produces chunks larger than 800kB.
 *   **Impact:** Medium. Slower initial load time.
-*   **Recommendation:** Implement code splitting using `React.lazy` and `Suspense` for route components.
+*   **Recommendation:** Implement code splitting using `React.lazy` and `Suspense`.
 
-## 5. Recommendations
+## 5. Audit Scope
+The following modules were audited for security and performance patterns:
+- **Auth & Admin:** Full review.
+- **Customers, Orders, Invoices, Products:** Reviewed Controllers & Services.
+- **Leads, Inventory, Projects, HR, Logistics, Tasks:** Scanned for common anti-patterns (query injection, unoptimized loops).
 
-1.  **Prioritize Testing:** Set up `vitest` for backend and frontend. Write tests for critical paths (Auth, Order creation).
-2.  **Security Hardening:** Remove exposed credentials. Implement rate limiting on sensitive endpoints beyond the global limiter.
-3.  **Refactor Queries:** Audit all `findMany` calls and loop-based calculations for performance. Use DB-level aggregation.
-4.  **CI/CD:** Set up a CI pipeline to run `typecheck` and (future) tests on every push.
+## 6. Recommendations
 
+1.  **Prioritize Testing:** Set up `vitest` as per `TEST_STRATEGY.md`.
+2.  **CI/CD:** Set up a CI pipeline to run `typecheck` and (future) tests on every push.
+3.  **Frontend Optimization:** Address the large chunk warning by lazy-loading route components.

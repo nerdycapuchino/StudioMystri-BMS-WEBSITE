@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Team Hub &amp; Communication - ArchiFirm ERP</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display h-screen overflow-hidden flex flex-col md:flex-row">
+<!-- Mobile Header -->
+<div class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">A</div>
+<span class="font-bold text-lg">ArchiFirm</span>
+</div>
+<button class="text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+<!-- Sidebar Navigation -->
+<aside class="hidden md:flex w-72 flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full shrink-0">
+<!-- Sidebar Header -->
+<div class="p-5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 relative" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDrpZ30lCa1nY95m2OWeDz5SgjkW5jzyfQi226uT80wMNBIM3ITflIsg4OcxEU3zpUqNrWXHKrjnrA9Jz3BaKX_5gqzGbjlCUUNY1ti1nyQaK77y_Qya2viOm8qMks6OTPnX094fE62mpLMCuMyrukg0-6JWGW5iDanPqZc2rafeXrBaC2-7stICd09RniPYCnILk_hlWtfS8TVTgBwr9adCRy05bk1MIwwdXocapyl9tx5SMTLolJHWhmRV9dqgK88wkZZfamEhWz2");'>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-sm font-semibold leading-tight">ArchiFirm ERP</h1>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-normal">Senior Architect</p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+</div>
+<!-- Search Sidebar -->
+<div class="px-4 pb-4">
+<div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+<input class="bg-transparent border-none text-sm w-full focus:ring-0 text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Jump to..." type="text"/>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto scrollbar-hide px-3 pb-4 space-y-6">
+<!-- Main Menu -->
+<div>
+<div class="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">dashboard</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">folder</span>
+<span class="text-sm font-medium">All Projects</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-primary">chat_bubble</span>
+<span class="text-sm font-medium">Messages</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">group</span>
+<span class="text-sm font-medium">Team</span>
+</a>
+</nav>
+</div>
+<!-- Channels -->
+<div>
+<div class="flex items-center justify-between px-3 mb-2">
+<div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Channels</div>
+<button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-[16px]">add</span></button>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group" href="#">
+<span class="text-slate-400 text-lg">#</span>
+<span class="text-sm">General</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group" href="#">
+<span class="text-slate-400 text-lg">#</span>
+<span class="text-sm">Announcements</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group" href="#">
+<span class="text-slate-400 text-lg">#</span>
+<span class="text-sm">Design Team</span>
+</a>
+</nav>
+</div>
+<!-- Active Projects -->
+<div>
+<div class="flex items-center justify-between px-3 mb-2">
+<div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Projects</div>
+<button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-[16px]">add</span></button>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg group border-l-4 border-primary" href="#">
+<div class="flex items-center gap-2 truncate">
+<span class="material-symbols-outlined text-slate-500 text-[18px]">lock</span>
+<span class="text-sm font-medium truncate">Villa X Renovation</span>
+</div>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">lock</span>
+<span class="text-sm truncate">City Center Office</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">lock</span>
+<span class="text-sm truncate">Riverside Apt</span>
+</a>
+</nav>
+</div>
+<!-- Direct Messages -->
+<div>
+<div class="flex items-center justify-between px-3 mb-2">
+<div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Direct Messages</div>
+<button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-[16px]">add</span></button>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group" href="#">
+<div class="relative">
+<img class="w-6 h-6 rounded-lg object-cover" data-alt="Female portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-C1Dl7IhmHR0_HIzOSq4VGsiBHqdws2K04L9pmD5ng4LyBYfRFbnvFY3e1PqiIPzPYqTleRUUeqscvycQhLvroOjfeMDRJNO9P5344kpsTO8QQ9e_ZRocqEk_MQvoTPjCM5dvK7gjGSK9jdAjP44UxVriKER5olWRoN4xj9WFo8r9Dz1IUCs0V6KleKUd9OdKWzqlVnAUVCzdGPuD9N28ynJHnicKj69hJLn5HDNW0rYprq4bki3HlKP9QiPq7jPycNYtHpxusWVv"/>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+</div>
+<span class="text-sm">Jane Doe</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group" href="#">
+<div class="relative">
+<img class="w-6 h-6 rounded-lg object-cover" data-alt="Male portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3VoHIAZCZYwGet0QhgapM2hRfGV44RPFcA20qqg0VKciaHoLk4M5hf61tHgJ9v2aXO9qax9nfha8nuN0M9R96F-GpKg7f3iWtueIgBYcnc0Z8fURXzI25VI6ypFvJzycMD8LVWc6415OZ9zh5isRmGqSROfNoQvtpDM9NVcbZxzxTOrOKdb2IOMLwb7PGP_VcelCiVxD4etQJFVAKjcx2X7PvkGn6x9egVn3gti7Rkbvt0DI-f2GweOFcU4I115VrnC5rgdLrxVJI"/>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-slate-300 border-2 border-white dark:border-slate-900 rounded-full"></span>
+</div>
+<span class="text-sm">John Smith</span>
+</a>
+</nav>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full relative">
+<!-- Toast Notification -->
+<div class="absolute top-4 right-4 z-50 animate-bounce-in">
+<div class="flex w-full max-w-sm overflow-hidden bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-100 dark:border-slate-700">
+<div class="w-2 bg-primary"></div>
+<div class="flex items-center px-4 py-3">
+<div class="flex items-center justify-center shrink-0 w-10 h-10 text-primary bg-primary/10 rounded-full">
+<span class="material-symbols-outlined">shopping_cart</span>
+</div>
+<div class="ml-3">
+<p class="text-sm font-semibold text-slate-900 dark:text-slate-100">New Purchase Order</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">PO #4219 received from Supplier A.</p>
+</div>
+<button class="ml-6 text-sm font-medium text-primary hover:text-primary/80">View</button>
+<button class="ml-2 text-slate-400 hover:text-slate-500">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Chat Header -->
+<header class="flex items-center justify-between px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">lock</span>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Villa X Renovation</h2>
+<span class="px-2 py-0.5 text-[10px] font-medium text-primary bg-primary/10 rounded-full uppercase tracking-wider">Project</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Focusing on structural changes and interior render finalization.</p>
+</div>
+<div class="flex items-center gap-4">
+<!-- Participants Avatar Group -->
+<div class="flex -space-x-2 mr-2">
+<img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900" data-alt="Team member 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBahQpqXSHlsuMtaaLRHAhI3Xdq-7_48-4lvrt5eeD1k2vRhCJHBKAjnB0WgQDNZElH-A71pys1R20iYZgM1-cYjNk1YzC4FbCmk8wH8cR3PFBr3p3goCK7HuQYoSL3zi3IGHSlMidr92zEgnRRJiaABeBuqAMinO1bfODJFQhxG_QuP82k7GJ_1Y247UaAQ5ki0itR-o8vz1esghRX-8LwEK8CBTlwNhIs66MBnw3Q_km9GLx_jF9tQhXODxSvUegBDC0fszkTLNYW"/>
+<img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900" data-alt="Team member 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDx5TPczrJ8U8hxXzTJgvCEbB_ipRXU8uiMpKJIWfZa9V9p_d5WCP12o3X8UkZ5j3EVeXVFLXajdiUgM0MiKwEpJOmsPWkSDtemHMevDxnR5XacyqV73fpm5DizCjzsQ8DAg07XsJNqz2NEvAuyGf5RVzlJYWOvj64gyhU1LzrWxOIqcRwAHlnEuEPq7FiGP3FvRhDJ96iJrXBppBlTAx0XrqVvdGiMifE7P1ppT75IYV9b560slipIAbVfrnlGGlGkyjwdHxOYd0j2"/>
+<img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900" data-alt="Team member 3" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9LaVJM-hEBwrQRnHU8dKTKPsqSp1nZIu6Udc61KzLjak3JH4Km09dh9fkpx9CM8UPtdraNfj9SfOfOcvbcHjgkbqXmgOXnf1W87-FshAlxgT6PMGGCQSYKrqTfoKF9w7DkBNwHz_QgUF1ctVxda_UvYG5lS33CX9UMGRwk2aleuXw09qW-3J0wrYjXerwie-Rz2_Skg7ZTD_DO_AFzFq5cM8_WYGFWKjDiIKLiBkjlgdqUW1v2GaBpbVDr7RUITvDtAlv13vCDRyw"/>
+<div class="flex items-center justify-center w-8 h-8 text-xs font-medium text-white bg-slate-400 border-2 border-white dark:border-slate-900 rounded-full hover:bg-slate-500">+4</div>
+</div>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+<button class="relative text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 block w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
+</button>
+<button class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Messages Stream -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8 bg-background-light dark:bg-background-dark">
+<!-- Date Divider -->
+<div class="relative flex items-center py-2">
+<div class="grow border-t border-slate-200 dark:border-slate-700"></div>
+<span class="mx-4 shrink-0 text-xs font-medium text-slate-400">Today, Oct 24</span>
+<div class="grow border-t border-slate-200 dark:border-slate-700"></div>
+</div>
+<!-- Message 1: Incoming -->
+<div class="flex gap-4 group">
+<img class="w-10 h-10 rounded-lg object-cover shrink-0 mt-1" data-alt="User Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmGqy77OjzEDDUSHJXKf6Mz0MpTmJe8qCffb_3ImODbCJqpJCu75p-wEy_b4ZpvFxolrB3F7W8k57L7_pi-6rsCxMdlEv7tz9bwVDnWOlOlI0uxsDtnY_3qXK2bVmsnWcGFSOA1j1TR3f1HIbZ2gGf-qX41Tdg7Nw_xPhOcmDQCLYQj-OxXh2_HMUIdyp2Kzfd-dPpVbesHmaEy13rlRdOcq3SgnJww1aqF8X1XBi1pzFD4Gy67ospIJmiK7PyxqXQJJ7C7ZNusB7a"/>
+<div class="flex flex-col max-w-3xl">
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-sm font-bold text-slate-900 dark:text-white">Jane Doe</span>
+<span class="text-xs text-slate-400">10:23 AM</span>
+</div>
+<div class="bg-white dark:bg-slate-800 p-4 rounded-r-xl rounded-bl-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm leading-relaxed">
+<p class="mb-3">Hi team, here are the updated electrical layouts for the second floor. Please review the socket placements in the master bedroom.</p>
+<!-- Attachment: PDF -->
+<div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer w-fit">
+<div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-slate-900 dark:text-white">VillaX_Electrical_v2.pdf</span>
+<span class="text-xs text-slate-500">2.4 MB • PDF Document</span>
+</div>
+<button class="ml-4 text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Message 2: Self -->
+<div class="flex gap-4 flex-row-reverse group">
+<img class="w-10 h-10 rounded-lg object-cover shrink-0 mt-1" data-alt="My Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcYpX3PxL-zRoySKCaXW3wO3H88B5QtDm38r9Sq4LiqHw1TPyR27pMGzGDUr6iKJlJsU9wGqOEHo4qBrvpI6z6EwP5H1NgPdKXV0_yUpb1N2zYEvnGC0chhc2DJX6269eLgx8nwzCl76UkhExTps8Qw3IY0CR9eiOwqZLL5ZaAXaMSKopxNJionUHUOTTlYl7mQa45dEfzY6ArqN9NlBcOF2RB9LmB7Xh4ccuc2Bs7ktP2E4wHGEU1NGskDwIoBISL2wmMY1qqj8Y5"/>
+<div class="flex flex-col items-end max-w-3xl">
+<div class="flex items-baseline gap-2 mb-1 flex-row-reverse">
+<span class="text-sm font-bold text-slate-900 dark:text-white">You</span>
+<span class="text-xs text-slate-400">10:45 AM</span>
+</div>
+<div class="bg-primary/10 dark:bg-primary/20 p-4 rounded-l-xl rounded-br-xl text-slate-800 dark:text-slate-100 text-sm leading-relaxed">
+<p>Thanks Jane. I've also just finished the render for the living room with the new furniture selection. Let me know if the lighting looks correct.</p>
+</div>
+<!-- Attachment: Images Grid -->
+<div class="mt-2 grid grid-cols-2 gap-2">
+<div class="relative group cursor-pointer overflow-hidden rounded-lg">
+<img class="w-64 h-48 object-cover hover:scale-105 transition-transform duration-300" data-alt="Modern living room interior render" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX0tCwtGcrdI7ew0K0mBYgunoQ1Hm25vfoLT86dewOLvxIBckZ0Tv9NFWQ9Zn6FIaNeSvQsuHTZdxFJ9_1TfyaVeWPeUUpvnbyNMDbQaL3HPZSdd6JrRHijc9PP8b4iPSq99dM_mEj0WOrfTl1Qz_IQRQZJ_EOD-WEaE75YUia2vPPz3z-JMszS7jZ5g5G4DsrFmmRhI3blm_AH64n5Flbe3Qj6_hne7hrWtC4Q7SJZGqfFSZan511nsegahEV35AR99ZwkvGdIrIX"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-white drop-shadow-lg">visibility</span>
+</div>
+</div>
+<div class="relative group cursor-pointer overflow-hidden rounded-lg">
+<img class="w-64 h-48 object-cover hover:scale-105 transition-transform duration-300" data-alt="Alternative angle of living room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpu37EF1ajaMIsJSQ_3StjaqXCnuCcpjPLeypAsI_-vyGjf3kmQCphVPNSXf7MLhNUJsivK0lkjm454hzMw2bLBfHzQreodiRN9WmTulTul-lGI33upvTcT0qwiytehosdq6dB9NClnahSKewwQPJMcG2wW0dRnt65niDo3rGBok614T9XNnwxrZ3RU7zZ4lDeIvs1urf1SEruzOEUDEY-VSgwE3k4o6uCE_o2-AAe87NagUMjoeq1N9rIhi1cXDKsAyBxDb_ZHSYH"/>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-white drop-shadow-lg">visibility</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Message 3: Incoming -->
+<div class="flex gap-4 group">
+<img class="w-10 h-10 rounded-lg object-cover shrink-0 mt-1" data-alt="John Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACRxWbLUoUJBC53nl7XucwbDDwGi1KUkR111OEr9gMatM6FWtu6pZ55eHMlVnGCT1Fejm1uex-9qh9WAWAGLkRv9fco3VtYzK-L3H9fxqg6XFj8aYMHf_lHgrDFVE5CiVmacDdOw-Wi-yzNNrqzM-CYBdy920EuGibHC8sFPtcYi0tCiR7L-3rIJx2pqxOZuK9-oA7GbIX_BFxGnbH-hCH3KvDFZBeX0f5d4qlvErnVs15LwOXZRjCnQKAxhMeJt42ouCnucPLAkzi"/>
+<div class="flex flex-col max-w-3xl">
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-sm font-bold text-slate-900 dark:text-white">John Smith</span>
+<span class="text-xs text-slate-400">11:02 AM</span>
+</div>
+<div class="bg-white dark:bg-slate-800 p-4 rounded-r-xl rounded-bl-xl shadow-sm border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm leading-relaxed">
+<p>The lighting is perfect! However, the client is asking if we can swap the sofa color to a lighter beige. Is that a quick fix?</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
+<div class="max-w-5xl mx-auto">
+<div class="relative flex flex-col bg-background-light dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+<!-- Formatting Toolbar -->
+<div class="flex items-center gap-1 p-2 border-b border-slate-200 dark:border-slate-700/50">
+<button class="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<button class="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><span class="material-symbols-outlined text-[18px]">strikethrough_s</span></button>
+<div class="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+<button class="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><span class="material-symbols-outlined text-[18px]">link</span></button>
+<button class="p-1.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><span class="material-symbols-outlined text-[18px]">list</span></button>
+</div>
+<!-- Textarea -->
+<textarea class="w-full bg-transparent border-none focus:ring-0 p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 resize-none min-h-[60px]" placeholder="Message #Villa X Renovation..."></textarea>
+<!-- Bottom Actions -->
+<div class="flex items-center justify-between p-2">
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Attach file">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Emoji">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Mention">
+<span class="material-symbols-outlined">alternate_email</span>
+</button>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
+<span>Send</span>
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+<div class="mt-2 text-xs text-center text-slate-400">
+<strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line
+                </div>
+</div>
+</div>
+</main>
+</body></html>
