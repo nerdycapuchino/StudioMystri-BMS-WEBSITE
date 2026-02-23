@@ -8,7 +8,8 @@ import toast from 'react-hot-toast';
 
 export const Finance: React.FC = () => {
    const { data: invData, isLoading, isError, error, refetch } = useInvoices();
-   const invoices: any[] = Array.isArray(invData?.data || invData) ? (invData?.data || invData) as any[] : [];
+   // FORCE ARRAYS
+   const invoices: any[] = Array.isArray(invData) ? invData as any[] : [];
    const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
    const [payId, setPayId] = useState<string | null>(null);
    const [payAmt, setPayAmt] = useState<string>('');

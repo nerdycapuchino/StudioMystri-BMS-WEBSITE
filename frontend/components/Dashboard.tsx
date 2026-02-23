@@ -22,7 +22,12 @@ export const Dashboard: React.FC<{ changeModule: (m: AppModule) => void }> = ({ 
       { day: 'Mon', rev: 0 }, { day: 'Tue', rev: 0 }, { day: 'Wed', rev: 0 },
       { day: 'Thu', rev: 0 }, { day: 'Fri', rev: 0 }, { day: 'Sat', rev: 0 }
    ];
-   const revData = chartData || fallbackChartData;
+
+   // FORCE ARRAYS
+   // If chartData is null or undefined or not an array, use the fallback.
+   const revData = Array.isArray(chartData) && chartData.length > 0 ? chartData : fallbackChartData;
+
+   // If notifications/activities are null, use empty array.
    const notifList = Array.isArray(notifications) ? notifications : [];
    const activityList = Array.isArray(activities) ? activities : [];
 

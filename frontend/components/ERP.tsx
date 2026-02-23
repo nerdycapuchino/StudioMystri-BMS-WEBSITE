@@ -17,9 +17,10 @@ export const ERP: React.FC = () => {
   const updateItem = useUpdateInventoryItem();
   const createPO = useCreatePurchaseOrder();
 
-  const inventory: InventoryItem[] = Array.isArray(invData?.data || invData) ? (invData?.data || invData) as InventoryItem[] : [];
-  const invoices: any[] = Array.isArray(invoiceData?.data || invoiceData) ? (invoiceData?.data || invoiceData) as any[] : [];
-  const employees: any[] = Array.isArray(empData?.data || empData) ? (empData?.data || empData) as any[] : [];
+  // FORCE ARRAYS
+  const inventory: InventoryItem[] = Array.isArray(invData) ? invData as InventoryItem[] : [];
+  const invoices: any[] = Array.isArray(invoiceData) ? invoiceData as any[] : [];
+  const employees: any[] = Array.isArray(empData) ? empData as any[] : [];
 
   const formatCurrency = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 
