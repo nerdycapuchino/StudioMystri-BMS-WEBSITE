@@ -256,8 +256,9 @@ export interface Employee {
   phone: string;
   salary: number;
   joinDate: string;
-  status: 'Active' | 'Leave' | 'Terminated';
-  attendance: 'Present' | 'Absent' | 'Half-Day';
+  department: string;
+  status: 'Active' | 'Leave' | 'Terminated' | 'Inactive';
+  attendance: 'Present' | 'Absent' | 'Half-Day' | 'Late' | 'Leave';
   role?: string;
   leavePolicy?: number;
   leavesRemaining?: number;

@@ -1,5 +1,5 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
+    darkMode: "class",
     content: [
         './index.html',
         './index.tsx',
@@ -14,7 +14,51 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                /* ── Accent ── */
+                // Dark Luxury Theme Colors
+                primary: {
+                    DEFAULT: '#38e07b',
+                    hover: '#2bc968'
+                },
+                bronze: {
+                    DEFAULT: '#cd7f32',
+                    accent: '#C5A059',
+                    dark: '#8C7335'
+                },
+                background: {
+                    light: '#f6f8f7',
+                    dark: '#122017'
+                },
+                surface: {
+                    dark: '#1a261e',
+                    darker: '#0d1410',
+                    darkLighter: '#223026'
+                },
+                border: {
+                    dark: '#2a3830'
+                },
+                card: {
+                    light: '#FFFFFF',
+                    dark: '#27272A'
+                },
+                text: {
+                    dark: '#111827',
+                    light: '#F9FAFB',
+                    muted: '#9eb7a8',
+                    secondary: '#9eb7a8'
+                },
+                input: {
+                    borderLight: '#E5E7EB',
+                    borderDark: '#3F3F46'
+                },
+                // Legacy Pastel Theme Colors (Retained for graceful migration)
+                brand: {
+                    50: '#f0f9ff',
+                    100: '#e0e7ff',
+                    200: '#c7d2fe',
+                    500: '#667eea',
+                    600: '#5a67d8',
+                    700: '#4c51bf',
+                },
                 "primary": "#667eea",
                 "primary-50": "#eef2ff",
                 "primary-100": "#e0e7ff",
@@ -60,9 +104,10 @@ module.exports = {
                 "bronze-dark": "#4c51bf",
             },
             fontFamily: {
-                "display": ["Public Sans", "sans-serif"],
-                "mono": ["Space Mono", "monospace"],
-                "barcode": ["'Libre Barcode 39 Text'", "cursive"],
+                sans: ['Inter', 'sans-serif'],
+                display: ['Public Sans', 'sans-serif'],
+                playfair: ['Playfair Display', 'serif'],
+                mono: ['Space Mono', 'monospace'],
             },
             borderRadius: {
                 "DEFAULT": "1rem",
@@ -70,10 +115,12 @@ module.exports = {
                 "xl": "2rem",
                 "2xl": "2.5rem",
                 "full": "9999px",
+                'glass': '0.75rem',
             },
             boxShadow: {
-                "glow": "0 0 15px rgba(102, 126, 234, 0.15)",
-                "glow-hover": "0 0 25px rgba(102, 126, 234, 0.3)",
+                glow: "0 0 15px rgba(56, 224, 123, 0.2)",
+                "glow-hover": "0 0 25px rgba(56, 224, 123, 0.3)",
+                glass: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 "pastel": "0 25px 50px -12px rgba(0, 0, 0, 0.05)",
                 "card": "0 10px 40px -10px rgba(100, 116, 139, 0.12)",
             },

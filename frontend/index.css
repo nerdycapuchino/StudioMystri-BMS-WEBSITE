@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&family=Public+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,61 +8,97 @@
 @layer base {
   :root {
     /* Backgrounds */
-    --bg-primary: #f8fafc;
-    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --bg-primary: #122017;
+    --bg-gradient: linear-gradient(135deg, #122017 0%, #0d1410 100%);
 
     /* Surfaces */
-    --surface-card: rgba(255, 255, 255, 0.8);
-    --surface-elevated: #f8fafc;
-    --surface-hover: #f1f5f9;
+    --surface-card: rgba(26, 38, 30, 0.8);
+    --surface-elevated: #1a261e;
+    --surface-hover: #223026;
 
     /* Text */
-    --text-primary: #1a202c;
-    --text-secondary: #4a5568;
-    --text-muted: #a0aec0;
+    --text-primary: #F9FAFB;
+    --text-secondary: #9eb7a8;
+    --text-muted: #9eb7a8;
 
     /* Borders */
-    --border-glass: rgba(148, 163, 184, 0.5);
-    --border-solid: #e2e8f0;
-    --border-hover: #cbd5e0;
+    --border-glass: rgba(42, 56, 48, 0.5);
+    --border-solid: #2a3830;
+    --border-hover: #38e07b;
 
     /* Accent */
-    --accent-primary: #667eea;
-    --accent-secondary: #764ba2;
+    --accent-primary: #38e07b;
+    --accent-secondary: #cd7f32;
 
     /* Status */
-    --success: #48bb78;
-    --warning: #ed8936;
-    --error: #f56565;
+    --success: #38e07b;
+    --warning: #eab308;
+    --error: #ef4444;
 
     /* Shadows */
-    --shadow-light: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+    --shadow-light: 0 0 15px rgba(56, 224, 123, 0.1);
   }
 
   body {
-    font-family: 'Public Sans', sans-serif;
-    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f0f4ff 100%);
+    font-family: 'Public Sans', 'Inter', sans-serif;
+    background-color: #f6f8f7;
+    /* Default light, dark mode toggled by .dark class on HTML */
     min-height: 100vh;
   }
 
-  /* Scrollbar — light pastel */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+  html.dark body {
+    background-color: #122017;
   }
+
+  /* Dark Luxury Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
   ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2a3830;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #38e07b;
+  }
+
+  /* Retain light mode fallback for scrollbar just in case */
+  html:not(.dark) ::-webkit-scrollbar-track {
     background: #f1f5f9;
   }
-  ::-webkit-scrollbar-thumb {
+
+  html:not(.dark) ::-webkit-scrollbar-thumb {
     background: #cbd5e0;
-    border-radius: 3px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #667eea;
+
+  html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+}
+
+@layer utilities {
+  .industrial-grid-bg {
+    background-size: 40px 40px;
+    background-image:
+      linear-gradient(to right, rgba(158, 183, 168, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(158, 183, 168, 0.05) 1px, transparent 1px);
+  }
+
+  .mask-linear-fade {
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
 }
 
 @layer components {
+
   /* Glass panel */
   .glass-panel {
     background: rgba(255, 255, 255, 0.7);
@@ -80,61 +119,80 @@
 
   /* Primary button */
   .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: 600;
+    background: #38e07b;
+    color: #122017;
+    font-weight: 700;
     padding: 0.625rem 1.5rem;
     border-radius: 0.75rem;
-    box-shadow: 0 4px 14px -2px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0 15px rgba(56, 224, 123, 0.15);
     transition: all 0.2s;
   }
+
   .btn-primary:hover {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-    box-shadow: 0 6px 20px -2px rgba(102, 126, 234, 0.5);
+    background: #2bc968;
+    box-shadow: 0 0 25px rgba(56, 224, 123, 0.3);
     transform: translateY(-1px);
   }
 
   /* Secondary button */
   .btn-secondary {
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid #e2e8f0;
-    color: #1a202c;
+    background: #1a261e;
+    border: 1px solid #2a3830;
+    color: #F9FAFB;
     font-weight: 500;
     padding: 0.625rem 1.5rem;
     border-radius: 0.75rem;
     backdrop-filter: blur(4px);
     transition: all 0.2s;
   }
+
   .btn-secondary:hover {
-    background: white;
-    border-color: #cbd5e0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: #223026;
+    border-color: #38e07b;
+    color: white;
   }
 
   /* No-scrollbar utility */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
   /* Custom scrollbar for inner containers */
-  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 2px; }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 2px;
+  }
 }
 
 /* Print Styles for A4 Invoice */
 @media print {
-  @page { size: A4; margin: 0; }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
   body * {
     visibility: hidden;
   }
-  #invoice-print-area, #invoice-print-area * {
+
+  #invoice-print-area,
+  #invoice-print-area * {
     visibility: visible;
   }
+
   #invoice-print-area {
     position: fixed;
     left: 0;
@@ -148,6 +206,15 @@
     z-index: 9999;
     overflow: visible;
   }
-  ::-webkit-scrollbar { display: none; }
-  button, .no-print, header, aside { display: none !important; }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  button,
+  .no-print,
+  header,
+  aside {
+    display: none !important;
+  }
 }

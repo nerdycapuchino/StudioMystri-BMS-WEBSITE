@@ -1,0 +1,19 @@
+1. Update the Frontend:
+
+bash
+cd /var/www/studiomystri/frontend
+git stash
+git pull origin main
+npm run build
+
+
+
+
+####### 2. Update the Backend: ####### 
+
+bash
+cd /var/www/studiomystri/backend
+git stash
+git pull origin main
+npm run build
+pm2 restart all

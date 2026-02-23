@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDashboardStats, useRevenueChart, useRecentActivity } from '../hooks/useDashboard';
-import { useNotifications, useMarkNotificationRead } from '../hooks/useNotifications';
 import { CardSkeleton, ChartSkeleton, InlineError } from './ui/Skeleton';
-import { AppModule } from '../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowUpRight, ArrowDownLeft, Wallet, AlertTriangle, Clock, ShoppingCart, UserPlus, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export const Dashboard: React.FC<{ changeModule: (m: AppModule) => void }> = ({ changeModule }) => {
+export const Dashboard: React.FC = () => {
    const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErr, refetch: retryStats } = useDashboardStats();
    const { data: chartData, isLoading: chartLoading } = useRevenueChart('7d');
    const { data: activities } = useRecentActivity();
-   const { data: notifications } = useNotifications();
-   const markRead = useMarkNotificationRead();
-   const [showNotifications, setShowNotifications] = useState(false);
 
    const formatCurrency = (amount: number) =>
-      new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(amount);
+      new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
 
    // Fallback chart data if API hasn't returned yet
    const fallbackChartData = [
@@ -23,136 +18,132 @@ export const Dashboard: React.FC<{ changeModule: (m: AppModule) => void }> = ({ 
       { day: 'Thu', rev: 0 }, { day: 'Fri', rev: 0 }, { day: 'Sat', rev: 0 }
    ];
 
-   // FORCE ARRAYS
-   // If chartData is null or undefined or not an array, use the fallback.
    const revData = Array.isArray(chartData) && chartData.length > 0 ? chartData : fallbackChartData;
-
-   // If notifications/activities are null, use empty array.
-   const notifList = Array.isArray(notifications) ? notifications : [];
    const activityList = Array.isArray(activities) ? activities : [];
 
    return (
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50">
-         {/* Header */}
-         <header className="flex items-center justify-between px-6 md:px-8 py-6 border-b border-slate-200/60 bg-gradient-to-br from-slate-50 to-blue-50 shrink-0">
+      <div className="w-full animation-fade-in relative z-10">
+         {/* Header Area */}
+         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
-               <h2 className="text-white text-xl md:text-2xl font-bold tracking-tight">Enterprise Overview</h2>
-               <p className="text-slate-500 text-xs mt-1">Real-time business intelligence.</p>
+               <h1 className="font-playfair text-3xl text-text-primary tracking-wide mb-1">Command Center</h1>
+               <p className="text-text-muted text-sm font-sans flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                  Live Dashboard Analytics
+               </p>
             </div>
-
-            <div className="flex items-center gap-4 relative">
-               <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 rounded-lg bg-white/80 backdrop-blur-sm border border-slate-200/60 text-slate-500 hover:text-white transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">notifications</span>
-                  {notifList.some((n: any) => !n.read) && <span className="absolute top-2 right-2.5 size-2 bg-primary rounded-full animate-pulse shadow-glow"></span>}
+            <div className="flex items-center gap-3">
+               <button className="bg-surface-elevated border border-border-solid hover:border-border-hover text-text-primary px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                  <span className="material-symbols-outlined text-lg">download</span>
+                  Export PDF
                </button>
-
-               {showNotifications && (
-                  <div className="absolute top-12 right-0 w-72 md:w-80 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 z-50 overflow-hidden">
-                     <div className="p-3 border-b border-slate-200/60 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-800 text-xs">Notifications</h3>
-                        <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white"><span className="material-symbols-outlined text-[16px]">close</span></button>
-                     </div>
-                     <div className="max-h-64 overflow-y-auto">
-                        {notifList.length === 0 ? <div className="p-4 text-center text-slate-500 text-xs">No new alerts</div> :
-                           notifList.map((n: any) => (
-                              <div key={n.id} onClick={() => markRead.mutate(n.id)} className={`p-3 border-b border-slate-200/60 hover:bg-slate-50 cursor-pointer ${n.read ? 'opacity-50' : ''}`}>
-                                 <p className="text-white text-xs font-bold">{n.title}</p>
-                                 <p className="text-slate-500 text-[10px]">{n.message}</p>
-                              </div>
-                           ))
-                        }
-                     </div>
-                  </div>
-               )}
+               <Link to="/pos" className="bg-primary hover:bg-primary-hover text-surface-darker px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-glow">
+                  <span className="material-symbols-outlined text-lg">add</span>
+                  New Sale
+               </Link>
             </div>
-         </header>
+         </div>
 
-         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-            {statsLoading ? <CardSkeleton count={3} /> : statsError ? <InlineError message={(statsErr as Error)?.message || 'Failed to load'} onRetry={retryStats} /> : (
-               <>
-                  {/* Financial High-Level Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-                     <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6 relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-4">
-                           <div>
-                              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Daily Revenue</p>
-                              <h3 className="text-2xl md:text-3xl font-black text-slate-800">{formatCurrency(stats?.salesToday || 0)}</h3>
-                           </div>
-                           <div className="bg-primary/10 p-2 rounded-lg text-primary"><Wallet className="w-5 h-5" /></div>
-                        </div>
-                        <div className="h-1 w-full bg-slate-50 rounded-full overflow-hidden"><div className="h-full bg-primary w-[65%]"></div></div>
+         {statsLoading ? <CardSkeleton count={3} /> : statsError ? <InlineError message={(statsErr as Error)?.message || 'Failed to load'} onRetry={retryStats} /> : (
+            <>
+               {/* KPI Grid */}
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  {/* Daily Revenue */}
+                  <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden group hover:border-border-hover transition-colors">
+                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span className="material-symbols-outlined text-6xl text-primary">account_balance_wallet</span>
                      </div>
-
-                     <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6 relative overflow-hidden">
-                        <div className="flex justify-between items-start mb-4">
-                           <div>
-                              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Projects Active</p>
-                              <h3 className="text-2xl md:text-3xl font-black text-slate-800">{stats?.activeProjects || 0}</h3>
-                           </div>
-                           <div className="bg-blue-500/10 p-2 rounded-lg text-blue-500"><ArrowUpRight className="w-5 h-5" /></div>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-2">Currently in execution phase</p>
+                     <h3 className="text-text-muted text-xs font-bold uppercase tracking-widest mb-2">Daily Revenue</h3>
+                     <div className="flex items-end gap-3 mb-4">
+                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
+                           {formatCurrency(stats?.salesToday || 0)}
+                        </span>
+                        <span className="text-success text-xs font-bold bg-success/10 px-2 py-1 rounded flex items-center mb-1">
+                           <span className="material-symbols-outlined text-[14px]">trending_up</span> 12%
+                        </span>
                      </div>
-
-                     <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6 relative overflow-hidden">
-                        <div className="flex justify-between items-start mb-4">
-                           <div>
-                              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Pipeline Leads</p>
-                              <h3 className="text-2xl md:text-3xl font-black text-slate-800">{stats?.pipelineLeads || 0}</h3>
-                           </div>
-                           <div className="bg-amber-500/10 p-2 rounded-lg text-amber-500"><ArrowDownLeft className="w-5 h-5" /></div>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-2">Potential new business</p>
+                     <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-primary h-1.5 rounded-full" style={{ width: '68%' }}></div>
                      </div>
                   </div>
 
-                  {/* Action Center Row */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                     <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6">
-                        <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-500" /> Needs Attention</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-red-500/15 transition-colors" onClick={() => changeModule(AppModule.WAREHOUSE)}>
-                              <div>
-                                 <p className="text-red-400 text-xs font-bold uppercase">Low Stock</p>
-                                 <p className="text-2xl font-black text-slate-800">{stats?.lowStockCount || 0}</p>
-                              </div>
-                              <AlertTriangle className="w-6 h-6 text-red-500 opacity-50" />
-                           </div>
-                           <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-amber-500/15 transition-colors" onClick={() => changeModule(AppModule.FINANCE)}>
-                              <div>
-                                 <p className="text-amber-400 text-xs font-bold uppercase">Pending Inv.</p>
-                                 <p className="text-2xl font-black text-slate-800">{stats?.pendingInvoices || 0}</p>
-                                 <p className="text-[10px] text-amber-300/70">{formatCurrency(stats?.pendingInvoiceAmount || 0)}</p>
-                              </div>
-                              <Clock className="w-6 h-6 text-amber-500 opacity-50" />
-                           </div>
-                        </div>
+                  {/* Active Projects */}
+                  <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden group hover:border-border-hover transition-colors">
+                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span className="material-symbols-outlined text-6xl text-bronze-DEFAULT">architecture</span>
                      </div>
-
-                     <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6">
-                        <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2"><ArrowUpRight className="w-4 h-4 text-primary" /> Quick Actions</h3>
-                        <div className="grid grid-cols-3 gap-3">
-                           <button onClick={() => changeModule(AppModule.POS)} className="flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-primary/20 hover:text-primary border border-slate-200/60 hover:border-primary/30 p-4 rounded-xl transition-all group">
-                              <ShoppingCart className="w-6 h-6 text-slate-500 group-hover:text-primary transition-colors" />
-                              <span className="text-xs font-bold">New Sale</span>
-                           </button>
-                           <button onClick={() => changeModule(AppModule.CRM)} className="flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-blue-500/20 hover:text-blue-500 border border-slate-200/60 hover:border-blue-500/30 p-4 rounded-xl transition-all group">
-                              <UserPlus className="w-6 h-6 text-slate-500 group-hover:text-blue-500 transition-colors" />
-                              <span className="text-xs font-bold">Add Lead</span>
-                           </button>
-                           <button onClick={() => changeModule(AppModule.INVOICE_GEN)} className="flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-purple-500/20 hover:text-purple-500 border border-slate-200/60 hover:border-purple-500/30 p-4 rounded-xl transition-all group">
-                              <FileText className="w-6 h-6 text-slate-500 group-hover:text-purple-500 transition-colors" />
-                              <span className="text-xs font-bold">Invoicing</span>
-                           </button>
-                        </div>
+                     <h3 className="text-text-muted text-xs font-bold uppercase tracking-widest mb-2">Active Projects</h3>
+                     <div className="flex items-end gap-3 mb-4">
+                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
+                           {stats?.activeProjects || 0}
+                        </span>
+                        <span className="text-primary text-xs font-bold tracking-wide mb-1">
+                           In Production
+                        </span>
+                     </div>
+                     <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-bronze-DEFAULT h-1.5 rounded-full" style={{ width: '45%' }}></div>
                      </div>
                   </div>
 
-                  {/* Charts and Activity */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[400px]">
-                     <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6 flex flex-col h-80 md:h-96">
-                        <h3 className="text-white font-bold text-sm mb-6">Revenue Trend (Weekly)</h3>
-                        <div className="flex-1 min-h-0">
+                  {/* Pending Quotes / Pipeline Leads */}
+                  <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden group hover:border-border-hover transition-colors">
+                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span className="material-symbols-outlined text-6xl text-text-muted">receipt_long</span>
+                     </div>
+                     <h3 className="text-text-muted text-xs font-bold uppercase tracking-widest mb-2">Pending Pipeline Leads</h3>
+                     <div className="flex items-end gap-3 mb-4">
+                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
+                           {stats?.pipelineLeads || 0}
+                        </span>
+                        <span className="text-text-muted text-xs mb-1">
+                           Awaiting Approval
+                        </span>
+                     </div>
+                     <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-text-muted h-1.5 rounded-full" style={{ width: '30%' }}></div>
+                     </div>
+                  </div>
+
+                  {/* Inventory Alerts */}
+                  <div className="bg-surface-elevated border border-error/30 rounded-2xl p-6 relative overflow-hidden group hover:border-error transition-colors">
+                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span className="material-symbols-outlined text-6xl text-error">inventory_2</span>
+                     </div>
+                     <h3 className="text-error text-xs font-bold uppercase tracking-widest mb-2">Low Stock Alerts</h3>
+                     <div className="flex items-end gap-3 mb-4">
+                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
+                           {stats?.lowStockCount || 0}
+                        </span>
+                        <span className="text-error text-xs font-bold bg-error/10 px-2 py-1 rounded flex items-center mb-1">
+                           Critical Items
+                        </span>
+                     </div>
+                     <Link to="/inventory" className="text-xs text-error hover:text-white transition-colors underline underline-offset-4 decoration-error/50">
+                        Review Inventory
+                     </Link>
+                  </div>
+               </div>
+
+               {/* Main Content Area */}
+               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  {/* Charts Section */}
+                  <div className="xl:col-span-2 space-y-6">
+                     <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden h-[400px] flex flex-col">
+                        <div className="industrial-grid-bg absolute inset-0 opacity-50"></div>
+                        <div className="relative z-10 flex justify-between items-center mb-8">
+                           <div>
+                              <h3 className="text-text-primary font-bold text-lg">Revenue Trends</h3>
+                              <p className="text-text-muted text-sm">Last 7 Days Performance</p>
+                           </div>
+                           <div className="flex gap-2 bg-surface-dark rounded-lg p-1 border border-border-solid">
+                              <button className="px-3 py-1 text-xs font-medium bg-surface-elevated text-text-primary rounded shadow-sm border border-border-solid">7D</button>
+                              <button className="px-3 py-1 text-xs font-medium text-text-muted hover:text-text-primary">30D</button>
+                              <button className="px-3 py-1 text-xs font-medium text-text-muted hover:text-text-primary">YTD</button>
+                           </div>
+                        </div>
+
+                        <div className="flex-1 w-full min-h-0 relative z-10 mask-linear-fade">
                            {chartLoading ? <ChartSkeleton /> : (
                               <ResponsiveContainer width="100%" height="100%">
                                  <AreaChart data={revData}>
@@ -162,12 +153,12 @@ export const Dashboard: React.FC<{ changeModule: (m: AppModule) => void }> = ({ 
                                           <stop offset="95%" stopColor="#38e07b" stopOpacity={0} />
                                        </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#52525b', fontSize: 12 }} dy={10} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2a3830" vertical={false} />
+                                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#9eb7a8', fontSize: 12 }} dy={10} />
                                     <YAxis hide />
                                     <Tooltip
-                                       contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '8px', color: '#fff' }}
-                                       itemStyle={{ color: '#fff' }}
+                                       contentStyle={{ backgroundColor: '#1a261e', border: '1px solid #2a3830', borderRadius: '8px', color: '#F9FAFB' }}
+                                       itemStyle={{ color: '#38e07b', fontWeight: 'bold' }}
                                     />
                                     <Area type="monotone" dataKey="rev" stroke="#38e07b" strokeWidth={2} fill="url(#colorRev)" />
                                  </AreaChart>
@@ -175,29 +166,36 @@ export const Dashboard: React.FC<{ changeModule: (m: AppModule) => void }> = ({ 
                            )}
                         </div>
                      </div>
+                  </div>
 
-                     <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6 flex flex-col overflow-hidden h-80 md:h-96">
-                        <h3 className="text-white font-bold text-sm mb-6">Recent System Activity</h3>
-                        <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+                  {/* Right Sidebar Area */}
+                  <div className="space-y-6">
+                     {/* Activity Log */}
+                     <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 h-[400px] flex flex-col">
+                        <h3 className="text-text-primary font-bold text-lg mb-6 flex items-center gap-2">
+                           <span className="material-symbols-outlined text-primary">history</span>
+                           System Logs
+                        </h3>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
                            {activityList.slice(0, 6).map((act: any, i: number) => (
-                              <div key={act.id || i} className="flex gap-3 relative">
+                              <div key={act.id || i} className="flex gap-4 group">
                                  <div className="flex flex-col items-center">
-                                    <div className={`size-2 rounded-full ${act.type === 'alert' ? 'bg-red-500' : 'bg-primary'}`}></div>
-                                    {i !== activityList.length - 1 && <div className="w-px h-full bg-slate-50 mt-1"></div>}
+                                    <div className={`w-2.5 h-2.5 rounded-full ${act.type === 'alert' ? 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-primary shadow-[0_0_8px_rgba(56,224,123,0.3)]'} ring-4 ring-surface-dark z-10`}></div>
+                                    {i !== activityList.length - 1 && <div className="w-px h-full bg-border-solid -mb-6 mt-1 group-hover:bg-border-hover transition-colors"></div>}
                                  </div>
-                                 <div>
-                                    <p className="text-xs text-slate-600 font-medium leading-tight">{act.message}</p>
-                                    <p className="text-[10px] text-slate-400 mt-1 font-mono">{act.timestamp}</p>
+                                 <div className="pb-1">
+                                    <p className="text-sm text-text-primary">{act.message}</p>
+                                    <p className="text-xs text-text-muted mt-1 font-mono">{act.timestamp || 'Just now'}</p>
                                  </div>
                               </div>
                            ))}
-                           {activityList.length === 0 && <p className="text-slate-400 text-xs italic">No recent activity logged.</p>}
+                           {activityList.length === 0 && <p className="text-text-muted text-sm italic">No recent activity logged.</p>}
                         </div>
                      </div>
                   </div>
-               </>
-            )}
-         </div>
+               </div>
+            </>
+         )}
       </div>
    );
 };
