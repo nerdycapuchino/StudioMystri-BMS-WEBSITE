@@ -48,8 +48,14 @@ export const TeamHub: React.FC = () => {
 
    // Real-time Socket bindings
    useEffect(() => {
-      const socket = getSocket();
-      if (!socket.connected) socket.connect();
+      let socket: ReturnType<typeof getSocket>;
+      try {
+         socket = getSocket();
+         if (!socket) return;
+         if (!socket.connected) socket.connect();
+      } catch {
+         return; // Socket not ready — graceful degradation
+      }
 
       socket.emit('channel:join', selectedChannel.id);
 
@@ -97,7 +103,7 @@ export const TeamHub: React.FC = () => {
          socket.off('message:deleted', onMessageDeleted);
          socket.off('typing:update', onTypingUpdate);
          socket.off('presence:update', onPresenceUpdate);
-         socket.emit('channel:leave', selectedChannel.id);
+         try { socket.emit('channel:leave', selectedChannel.id); } catch { /* ignore */ }
       };
    }, [selectedChannel.id, qc]);
 
@@ -124,22 +130,26 @@ export const TeamHub: React.FC = () => {
    const handleSendMessage = (e: React.FormEvent) => {
       e.preventDefault();
       if (!newMessage.trim() || !currentUser) return;
-      const socket = getSocket();
-      socket.emit('message:send', { channel: selectedChannel.id, content: newMessage });
+      try {
+         const socket = getSocket();
+         socket.emit('message:send', { channel: selectedChannel.id, content: newMessage });
+      } catch { /* socket not ready */ }
       setNewMessage('');
    };
 
    const handleDeleteMessage = (messageId: string) => {
-      getSocket().emit('message:delete', messageId);
+      try { getSocket().emit('message:delete', messageId); } catch { /* ignore */ }
    };
 
    const handleKeyDown = () => {
-      const socket = getSocket();
-      socket.emit('typing:start', selectedChannel.id);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = setTimeout(() => {
-         socket.emit('typing:stop', selectedChannel.id);
-      }, 2000);
+      try {
+         const socket = getSocket();
+         socket.emit('typing:start', selectedChannel.id);
+         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+         typingTimeoutRef.current = setTimeout(() => {
+            try { socket.emit('typing:stop', selectedChannel.id); } catch { /* ignore */ }
+         }, 2000);
+      } catch { /* socket not ready */ }
    };
 
    const handleCreateChannel = () => {

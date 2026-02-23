@@ -14,7 +14,13 @@ export const useAppSocketEvents = (isAuthenticated: boolean) => {
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        const socket = getSocket();
+        let socket: ReturnType<typeof getSocket>;
+        try {
+            socket = getSocket();
+        } catch {
+            return; // Socket not available — skip listeners
+        }
+        if (!socket) return;
 
         // ── Orders / POS ──
 
