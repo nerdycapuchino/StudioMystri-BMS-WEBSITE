@@ -11,3 +11,8 @@ export const sendMessage = (data: { content: string; channel: string }) =>
 
 export const deleteMessage = (id: string) =>
     api.delete(`/team/messages/${id}`).then(() => undefined);
+
+export const uploadFile = (formData: FormData) =>
+    api.post('/team/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(r => r.data);

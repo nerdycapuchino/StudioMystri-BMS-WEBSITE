@@ -132,6 +132,18 @@ export const create = async (input: CreateOrderInput) => {
             });
         }
 
+        // 7. Create Finance Transaction (Automated)
+        await tx.transaction.create({
+            data: {
+                type: 'INCOME',
+                category: 'Sales',
+                amount: order.total,
+                description: `Sale: Order ${order.orderNumber}`,
+                reference: order.orderNumber,
+                date: new Date(),
+            }
+        });
+
         return order;
     });
 };

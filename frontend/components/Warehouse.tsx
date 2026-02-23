@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useInventory, useCreateInventoryItem, useUpdateInventoryItem, useDeleteInventoryItem } from '../hooks/useInventory';
-import { InventoryItem } from '../types';
+import { useInventory, useCreateInventoryItem, useUpdateInventoryItem, useDeleteInventoryItem, useSuppliers } from '../hooks/useInventory';
+import { useShipments } from '../hooks/useLogistics';
+import { InventoryItem, Supplier } from '../types';
 import toast from 'react-hot-toast';
 
 export const Warehouse: React.FC = () => {
@@ -8,8 +9,12 @@ export const Warehouse: React.FC = () => {
     const createItem = useCreateInventoryItem();
     const updateItem = useUpdateInventoryItem();
     const deleteItem = useDeleteInventoryItem();
+    const { data: suppliersData } = useSuppliers();
+    const { data: shipmentsData } = useShipments();
 
     const inventory: InventoryItem[] = Array.isArray(invData?.data || invData) ? (invData?.data || invData) as InventoryItem[] : [];
+    const suppliersList: Supplier[] = Array.isArray(suppliersData?.data || suppliersData) ? (suppliersData?.data || suppliersData) as Supplier[] : [];
+    const shipmentsList: any[] = Array.isArray(shipmentsData?.data || shipmentsData) ? (shipmentsData?.data || shipmentsData) as any[] : [];
 
     const formatCurrency = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
@@ -328,18 +333,79 @@ export const Warehouse: React.FC = () => {
                 )}
 
                 {activeTab === 'logistics' && (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center flex flex-col items-center justify-center h-64">
-                        <span className="material-symbols-outlined text-4xl text-slate-300 mb-3">local_shipping</span>
-                        <h3 className="text-lg font-semibold text-slate-800">Logistics & Shipments</h3>
-                        <p className="text-slate-500 text-sm mt-1 max-w-sm">Detailed shipping and tracking view will be integrated here based on the logistics API segment.</p>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <table className="w-full text-left border-collapse min-w-[800px]">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                                    <th className="py-4 px-6">Tracking #</th>
+                                    <th className="py-4 px-6">Carrier</th>
+                                    <th className="py-4 px-6">Status</th>
+                                    <th className="py-4 px-6">Origin</th>
+                                    <th className="py-4 px-6">Destination</th>
+                                    <th className="py-4 px-6">Est. Delivery</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-sm">
+                                {shipmentsList.length === 0 ? (
+                                    <tr><td colSpan={6} className="py-8 text-center text-slate-500">No shipments found.</td></tr>
+                                ) : (
+                                    shipmentsList.map(s => (
+                                        <tr key={s.id}>
+                                            <td className="py-4 px-6 font-mono text-xs">{s.trackingNumber || 'PENDING'}</td>
+                                            <td className="py-4 px-6">{s.carrier || 'N/A'}</td>
+                                            <td className="py-4 px-6">
+                                                <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${s.status === 'DELIVERED' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {s.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-6 text-slate-600">{s.origin}</td>
+                                            <td className="py-4 px-6 text-slate-600">{s.destination}</td>
+                                            <td className="py-4 px-6">{s.estimatedDelivery ? new Date(s.estimatedDelivery).toLocaleDateString() : 'TBD'}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 )}
 
                 {activeTab === 'suppliers' && (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center flex flex-col items-center justify-center h-64">
-                        <span className="material-symbols-outlined text-4xl text-slate-300 mb-3">storefront</span>
-                        <h3 className="text-lg font-semibold text-slate-800">Supplier Directory</h3>
-                        <p className="text-slate-500 text-sm mt-1 max-w-sm">Manage vendor relationships, purchase orders, and supplier performance metrics.</p>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                            {suppliersList.length === 0 ? (
+                                <div className="col-span-full py-20 text-center text-slate-400">No suppliers registered.</div>
+                            ) : (
+                                suppliersList.map(s => (
+                                    <div key={s.id} className="p-5 border border-slate-100 rounded-xl hover:shadow-md transition-shadow bg-slate-50/30">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                {s.name.charAt(0)}
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: {s.id.substring(0, 8)}</span>
+                                        </div>
+                                        <h4 className="font-bold text-slate-900 border-b border-slate-200 pb-2 mb-3">{s.name}</h4>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-xs text-slate-600">
+                                                <span className="material-symbols-outlined text-[16px]">person</span>
+                                                {s.contactPerson || 'No Contact'}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-slate-600">
+                                                <span className="material-symbols-outlined text-[16px]">call</span>
+                                                {s.phone || 'N/A'}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-slate-600">
+                                                <span className="material-symbols-outlined text-[16px]">mail</span>
+                                                {s.email || 'N/A'}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-slate-600">
+                                                <span className="material-symbols-outlined text-[16px]">location_on</span>
+                                                <span className="truncate">{s.address || 'No Address'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

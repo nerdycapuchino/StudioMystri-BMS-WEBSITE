@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCompanySettings } from '../hooks/useAdmin';
-import { Mail, Lock, Eye, EyeOff, Architecture, Moon, Sun } from 'lucide-react'; // Fallback icons if material symbols fail
+import { Mail, Lock, Eye, EyeOff, HardHat, Moon, Sun } from 'lucide-react'; // Fallback icons if material symbols fail
 
 export const Login: React.FC = () => {
    const { login } = useAuth();
@@ -36,7 +36,7 @@ export const Login: React.FC = () => {
    };
 
    // Fallback settings if API fails
-   const settings = companySettings?.data || companySettings || { name: 'Studio Mystri', logoUrl: '' };
+   const settings = (companySettings as any)?.data || companySettings || { name: 'Studio Mystri', logoUrl: '' };
 
    return (
       <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-x-hidden transition-colors duration-300">
@@ -79,7 +79,7 @@ export const Login: React.FC = () => {
                               <img src={settings.logoUrl} alt="Logo" className="h-10 w-auto object-contain rounded" />
                            ) : (
                               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-lg shadow-primary/30">
-                                 <span className="material-symbols-outlined text-[24px]">architecture</span>
+                                 <HardHat className="w-6 h-6" />
                               </div>
                            )}
                            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{settings.name || 'Blueprint ERP'}</h1>
@@ -174,22 +174,6 @@ export const Login: React.FC = () => {
                            ) : 'Sign In to Workspace'}
                         </button>
                      </form>
-
-                     <div className="text-center mt-6">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-800/50 py-2 px-4 rounded-md inline-block">
-                           Dev: admin@studiomystri.com / Admin@1234
-                        </p>
-                     </div>
-
-                     {/* Divider */}
-                     <div className="relative mt-8 mb-6">
-                        <div aria-hidden="true" className="absolute inset-0 flex items-center">
-                           <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
-                        </div>
-                        <div className="relative flex justify-center">
-                           <span className="bg-background-light dark:bg-background-dark px-2 text-xs font-medium text-slate-500 dark:text-slate-500 uppercase tracking-wide">Or connect with</span>
-                        </div>
-                     </div>
 
                      {/* SSO Option */}
                      <button className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:border-slate-600 transition-all duration-200 shadow-sm disabled:opacity-50" type="button" disabled>

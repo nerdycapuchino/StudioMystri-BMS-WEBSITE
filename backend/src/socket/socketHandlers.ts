@@ -3,6 +3,7 @@ import prisma from '../config/db';
 import { logActivity } from '../utils/activityLogger';
 
 const onlineUsers = new Map<string, { socketId: string; name: string }>();
+const activeCalls = new Map<string, { channel: string; participants: string[] }>();
 
 export const registerSocketHandlers = (io: SocketIOServer) => {
     io.on('connection', (socket: Socket) => {
@@ -80,6 +81,47 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
                 io.to(`channel:${msg.channel}`).emit('message:deleted', { messageId, channel: msg.channel });
             } catch (err) {
                 socket.emit('error', { message: 'Failed to delete message' });
+            }
+        });
+
+        // ── VIDEO CALLS (WebRTC Signalling) ──
+
+        socket.on('call:start', (payload: { channel: string }) => {
+            if (!activeCalls.has(payload.channel)) {
+                activeCalls.set(payload.channel, { channel: payload.channel, participants: [userId] });
+            }
+            socket.to(`channel:${payload.channel}`).emit('call:started', { channel: payload.channel, startedBy: userId });
+        });
+
+        socket.on('call:join', (payload: { channel: string }) => {
+            const call = activeCalls.get(payload.channel);
+            if (call) {
+                if (!call.participants.includes(userId)) {
+                    call.participants.push(userId);
+                }
+                socket.to(`channel:${payload.channel}`).emit('call:user-joined', { userId, channel: payload.channel });
+            }
+        });
+
+        socket.on('webrtc:signal', (payload: { targetId: string; signal: any; channel: string }) => {
+            // Forward signal to specific user
+            io.to(`user:${payload.targetId}`).emit('webrtc:signal', {
+                senderId: userId,
+                signal: payload.signal,
+                channel: payload.channel
+            });
+        });
+
+        socket.on('call:end', (payload: { channel: string }) => {
+            const call = activeCalls.get(payload.channel);
+            if (call) {
+                call.participants = call.participants.filter(p => p !== userId);
+                if (call.participants.length === 0) {
+                    activeCalls.delete(payload.channel);
+                    io.to(`channel:${payload.channel}`).emit('call:ended', { channel: payload.channel });
+                } else {
+                    socket.to(`channel:${payload.channel}`).emit('call:user-left', { userId, channel: payload.channel });
+                }
             }
         });
 

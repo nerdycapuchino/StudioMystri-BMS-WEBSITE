@@ -119,6 +119,16 @@ export interface InventoryItem {
   bom?: { itemName: string; qty: number }[];
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gstin?: string;
+}
+
 export interface Task {
   id: string;
   title: string;

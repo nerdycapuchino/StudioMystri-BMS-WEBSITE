@@ -69,6 +69,55 @@ export const remove = async (id: string) => {
     return prisma.lead.delete({ where: { id } });
 };
 
+export const convertToProject = async (id: string) => {
+    return prisma.$transaction(async (tx) => {
+        const lead = await tx.lead.findUnique({ where: { id } });
+        if (!lead) throw createError(404, 'Lead not found');
+
+        // 1. Ensure Customer exists
+        let customer = await tx.customer.findFirst({
+            where: {
+                OR: [
+                    { email: lead.email || undefined },
+                    { phone: lead.phone || undefined }
+                ]
+            }
+        });
+
+        if (!customer) {
+            customer = await tx.customer.create({
+                data: {
+                    name: lead.companyName,
+                    email: lead.email,
+                    phone: lead.phone,
+                    gstin: lead.gstin,
+                }
+            });
+        }
+
+        // 2. Create Project
+        const project = await tx.project.create({
+            data: {
+                name: `${lead.companyName} - New Project`,
+                description: lead.requirements || lead.brief,
+                budget: lead.value || 0,
+                customerId: customer.id,
+                stage: 'CONCEPT',
+                currentStage: 'CONCEPT',
+                stages: ['CONCEPT', 'DESIGN', 'PROCUREMENT', 'EXECUTION', 'HANDOVER'],
+            }
+        });
+
+        // 3. Update Lead
+        await tx.lead.update({
+            where: { id },
+            data: { stage: 'WON' }
+        });
+
+        return project;
+    });
+};
+
 export const getPipeline = async () => {
     const stages = await prisma.lead.groupBy({
         by: ['stage'],

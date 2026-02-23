@@ -23,8 +23,22 @@ export const createPurchaseOrder = async (input: CreatePOInput) => {
 
         await tx.inventoryItem.update({ where: { id: input.itemId }, data: { quantity: { increment: input.quantity }, cost: input.unitCost, supplierId: input.supplierId } });
 
+        const reference = `PO-${Date.now()}`;
+
+        // Create Finance Transaction (Automated)
+        await tx.transaction.create({
+            data: {
+                type: 'EXPENSE',
+                category: 'Inventory',
+                amount: input.quantity * input.unitCost,
+                description: `Purchase Order for ${item.name}`,
+                reference: reference,
+                date: new Date(),
+            }
+        });
+
         return tx.inventoryTransaction.create({
-            data: { type: 'IN', quantity: input.quantity, reason: `Purchase Order`, reference: `PO-${Date.now()}`, itemId: input.itemId },
+            data: { type: 'IN', quantity: input.quantity, reason: `Purchase Order`, reference, itemId: input.itemId },
             include: { item: { select: { id: true, name: true } } },
         });
     });

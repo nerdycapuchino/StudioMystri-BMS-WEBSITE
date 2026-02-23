@@ -11,4 +11,5 @@ leadsRouter.get('/:id', ctrl.getById);
 leadsRouter.post('/', validate(createLeadSchema), ctrl.create);
 leadsRouter.put('/:id', validate(updateLeadSchema), ctrl.update);
 leadsRouter.put('/:id/stage', validate(updateStageSchema), ctrl.updateStage);
+leadsRouter.post('/:id/convert', ctrl.convertToProject);
 leadsRouter.delete('/:id', ctrl.remove);

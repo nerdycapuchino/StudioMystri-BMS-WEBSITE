@@ -73,14 +73,7 @@ const apiLimiter = rateLimit({
 
 app.use('/api/v1', apiLimiter);
 
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-    });
-});
+// Health endpoint is now standardized at /api/v1/health via apiRouter
 
 app.use('/api/v1', apiRouter);
 

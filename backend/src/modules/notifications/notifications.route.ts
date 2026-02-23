@@ -23,6 +23,14 @@ notificationsRouter.get('/', async (req: Request, res: Response, next: NextFunct
     } catch (e) { next(e); }
 });
 
+// GET /api/v1/notifications/unread-count — legacy alias
+notificationsRouter.get('/unread-count', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const unread = await prisma.notification.count({ where: { userId: req.user!.id, isRead: false } });
+        success(res, { unread });
+    } catch (e) { next(e); }
+});
+
 // GET /api/v1/notifications/count — unread count
 notificationsRouter.get('/count', async (req: Request, res: Response, next: NextFunction) => {
     try {

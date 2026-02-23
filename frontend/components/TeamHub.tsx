@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useChannels, useMessages } from '../hooks/useTeam';
+import { uploadFile } from '../services/team.service';
 import { useEmployees } from '../hooks/useHR';
 import { ChatMessage, Channel } from '../types';
 // Import lucide-react icons that match the Material Symbols used in the template
@@ -27,6 +28,9 @@ export const TeamHub: React.FC = () => {
    const [isInCall, setIsInCall] = useState(false);
    const localVideoRef = useRef<HTMLVideoElement>(null);
    const streamRef = useRef<MediaStream | null>(null);
+   const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+   const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
+   const [activeCallInChannel, setActiveCallInChannel] = useState<{ channel: string; startedBy: string } | null>(null);
 
    // Socket specific state
    const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -42,6 +46,9 @@ export const TeamHub: React.FC = () => {
 
    // Mobile Sidebar State
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+   const [attachments, setAttachments] = useState<string[]>([]);
+   const [isUploading, setIsUploading] = useState(false);
+   const fileInputRef = useRef<HTMLInputElement>(null);
 
    useEffect(() => {
       if (teamChannels && teamChannels.length > 0 && !teamChannels.find(c => c.id === selectedChannel.id)) {
@@ -93,6 +100,43 @@ export const TeamHub: React.FC = () => {
          setOnlineUserIds(userIds);
       };
 
+      const onCallStarted = (payload: any) => {
+         if (payload.channel === selectedChannel.id) {
+            setActiveCallInChannel(payload);
+         }
+      };
+
+      const onCallEnded = (payload: any) => {
+         if (payload.channel === selectedChannel.id) {
+            setActiveCallInChannel(null);
+            endCall();
+         }
+      };
+
+      const onUserJoinedCall = ({ userId: joinedUserId }: any) => {
+         if (!isInCall) return;
+         // Initiate connection to new user
+         createPeerConnection(joinedUserId, true);
+      };
+
+      const onWebRTCSignal = async ({ senderId, signal }: any) => {
+         let pc = peersRef.current.get(senderId);
+         if (!pc) {
+            pc = createPeerConnection(senderId, false);
+         }
+
+         if (signal.sdp) {
+            await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+            if (signal.sdp.type === 'offer') {
+               const answer = await pc.createAnswer();
+               await pc.setLocalDescription(answer);
+               socket.emit('webrtc:signal', { targetId: senderId, signal: { sdp: pc.localDescription }, channel: selectedChannel.id });
+            }
+         } else if (signal.ice) {
+            await pc.addIceCandidate(new RTCIceCandidate(signal.ice));
+         }
+      };
+
       // Request initial presence ping
       socket.emit('presence:ping');
 
@@ -100,12 +144,20 @@ export const TeamHub: React.FC = () => {
       socket.on('message:deleted', onMessageDeleted);
       socket.on('typing:update', onTypingUpdate);
       socket.on('presence:update', onPresenceUpdate);
+      socket.on('call:started', onCallStarted);
+      socket.on('call:ended', onCallEnded);
+      socket.on('call:user-joined', onUserJoinedCall);
+      socket.on('webrtc:signal', onWebRTCSignal);
 
       return () => {
          socket.off('message:new', onNewMessage);
          socket.off('message:deleted', onMessageDeleted);
          socket.off('typing:update', onTypingUpdate);
          socket.off('presence:update', onPresenceUpdate);
+         socket.off('call:started', onCallStarted);
+         socket.off('call:ended', onCallEnded);
+         socket.off('call:user-joined', onUserJoinedCall);
+         socket.off('webrtc:signal', onWebRTCSignal);
          try { socket.emit('channel:leave', selectedChannel.id); } catch { /* ignore */ }
       };
    }, [selectedChannel.id, qc]);
@@ -115,15 +167,60 @@ export const TeamHub: React.FC = () => {
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
    }, [selectedChannel.id, teamMessages.length]);
 
+   const createPeerConnection = (targetUserId: string, isInitiator: boolean) => {
+      const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      peersRef.current.set(targetUserId, pc);
+
+      if (streamRef.current) {
+         streamRef.current.getTracks().forEach(track => pc.addTrack(track, streamRef.current!));
+      }
+
+      pc.onicecandidate = (event) => {
+         if (event.candidate) {
+            getSocket().emit('webrtc:signal', { targetId: targetUserId, signal: { ice: event.candidate }, channel: selectedChannel.id });
+         }
+      };
+
+      pc.ontrack = (event) => {
+         setRemoteStreams(prev => {
+            const next = new Map(prev);
+            next.set(targetUserId, event.streams[0]);
+            return next;
+         });
+      };
+
+      if (isInitiator) {
+         pc.createOffer().then(async offer => {
+            await pc.setLocalDescription(offer);
+            getSocket().emit('webrtc:signal', { targetId: targetUserId, signal: { sdp: pc.localDescription }, channel: selectedChannel.id });
+         });
+      }
+
+      return pc;
+   };
+
    const startCall = async () => {
       try {
          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
          streamRef.current = stream;
          setIsInCall(true);
+         getSocket().emit('call:start', { channel: selectedChannel.id });
          setTimeout(() => { if (localVideoRef.current) localVideoRef.current.srcObject = stream; }, 100);
       } catch (err) {
          console.error(err);
          alert("Camera Access Denied. Please check browser permissions.");
+      }
+   };
+
+   const joinCall = async () => {
+      try {
+         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+         streamRef.current = stream;
+         setIsInCall(true);
+         getSocket().emit('call:join', { channel: selectedChannel.id });
+         setTimeout(() => { if (localVideoRef.current) localVideoRef.current.srcObject = stream; }, 100);
+      } catch (err) {
+         console.error(err);
       }
    };
 
@@ -132,17 +229,47 @@ export const TeamHub: React.FC = () => {
          streamRef.current.getTracks().forEach(t => t.stop());
          streamRef.current = null;
       }
+      peersRef.current.forEach(pc => pc.close());
+      peersRef.current.clear();
+      setRemoteStreams(new Map());
       setIsInCall(false);
+      try { getSocket().emit('call:end', { channel: selectedChannel.id }); } catch { /* ignore */ }
    };
 
    const handleSendMessage = (e?: React.FormEvent) => {
       if (e) e.preventDefault();
-      if (!newMessage.trim() || !currentUser) return;
+      if ((!newMessage.trim() && attachments.length === 0) || !currentUser) return;
       try {
          const socket = getSocket();
-         socket.emit('message:send', { channel: selectedChannel.id, content: newMessage });
+         socket.emit('message:send', {
+            channel: selectedChannel.id,
+            content: newMessage,
+            attachments: attachments
+         });
       } catch { /* socket not ready */ }
       setNewMessage('');
+      setAttachments([]);
+   };
+
+   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+         const data = await uploadFile(formData);
+         if (data.success) {
+            setAttachments(prev => [...prev, data.data.url]);
+         }
+      } catch (err) {
+         console.error("Upload failed", err);
+      } finally {
+         setIsUploading(false);
+         if (fileInputRef.current) fileInputRef.current.value = '';
+      }
    };
 
    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -354,6 +481,13 @@ export const TeamHub: React.FC = () => {
                      <Video className="w-5 h-5" />
                   </button>
 
+                  {activeCallInChannel && !isInCall && (
+                     <button onClick={joinCall} className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold animate-pulse">
+                        <Video className="w-4 h-4" />
+                        Join Call
+                     </button>
+                  )}
+
                   <button className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block">
                      <Bell className="w-5 h-5" />
                      <span className="absolute top-1.5 right-1.5 block w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
@@ -444,12 +578,36 @@ export const TeamHub: React.FC = () => {
                         className="w-full bg-transparent border-none focus:ring-0 p-3 pt-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 resize-none min-h-[60px] outline-none"
                         placeholder={`Message ${selectedChannel.type === 'dm' ? '@' : '#'}${selectedChannel.name}...`}
                      />
+                     {attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700/50">
+                           {attachments.map((url, i) => (
+                              <div key={i} className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md text-xs group">
+                                 <Paperclip className="w-3 h-3 text-slate-400" />
+                                 <span className="truncate max-w-[150px]">{url.split('/').pop()}</span>
+                                 <button onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))} className="text-slate-400 hover:text-red-500">
+                                    <X className="w-3 h-3" />
+                                 </button>
+                              </div>
+                           ))}
+                        </div>
+                     )}
                      {/* Bottom Actions */}
                      <div className="flex items-center justify-between p-2 border-t border-slate-100 dark:border-slate-700/50">
                         <div className="flex items-center gap-1">
-                           <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Attach file">
-                              <Paperclip className="w-4 h-4" />
+                           <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                              title="Attach file"
+                              disabled={isUploading}
+                           >
+                              {isUploading ? <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Paperclip className="w-4 h-4" />}
                            </button>
+                           <input
+                              type="file"
+                              ref={fileInputRef}
+                              className="hidden"
+                              onChange={handleFileUpload}
+                           />
                            <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block" title="Emoji">
                               <Smile className="w-4 h-4" />
                            </button>
@@ -486,8 +644,29 @@ export const TeamHub: React.FC = () => {
                      <X className="w-6 h-6" />
                   </button>
                </header>
-               <main className="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
-                  <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover scale-x-[-1]" />
+               <main className="flex-1 relative flex items-center justify-center overflow-hidden bg-black p-4">
+                  <div className={`grid gap-4 w-full h-full ${remoteStreams.size === 0 ? 'grid-cols-1' : remoteStreams.size === 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 lg:grid-cols-3'}`}>
+                     {/* Local Video */}
+                     <div className="relative rounded-2xl overflow-hidden bg-slate-800 border border-white/10 aspect-video">
+                        <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover scale-x-[-1]" />
+                        <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/50 backdrop-blur-md rounded-lg text-white text-xs font-bold">You</div>
+                     </div>
+
+                     {/* Remote Videos */}
+                     {Array.from(remoteStreams.entries()).map(([peerId, stream]) => (
+                        <div key={peerId} className="relative rounded-2xl overflow-hidden bg-slate-800 border border-white/10 aspect-video">
+                           <video
+                              autoPlay
+                              playsInline
+                              className="h-full w-full object-cover"
+                              ref={el => { if (el) el.srcObject = stream; }}
+                           />
+                           <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/50 backdrop-blur-md rounded-lg text-white text-xs font-bold">
+                              {employees.find(e => e.id === peerId)?.name || 'Participant'}
+                           </div>
+                        </div>
+                     ))}
+                  </div>
 
                   <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-6 bg-slate-900/80 backdrop-blur-md px-6 md:px-8 py-4 rounded-2xl border border-white/10 shadow-2xl">
                      <button className="size-12 rounded-full bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors"><Mic className="w-5 h-5" /></button>

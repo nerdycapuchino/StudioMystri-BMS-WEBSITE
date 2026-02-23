@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { useLeads, useCreateLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
+import { useLeads, useCreateLead, useUpdateLead, useDeleteLead, useConvertLeadToProject } from '../hooks/useLeads';
 import { Lead } from '../types';
-import { Plus, Search, Filter, TrendingUp, TrendingDown, Grid, Home, Building2, Wrench, MoreHorizontal, Calendar, Trash2, Edit2, X, AlertCircle, Save, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Filter, TrendingUp, TrendingDown, Grid, Home, Building2, Wrench, MoreHorizontal, Calendar, Trash2, Edit2, X, AlertCircle, Save, CheckCircle, XCircle, Rocket } from 'lucide-react';
 import { TableSkeleton, InlineError } from './ui/Skeleton';
 
 export const CRM: React.FC = () => {
@@ -9,6 +9,7 @@ export const CRM: React.FC = () => {
     const createLead = useCreateLead();
     const updateLeadMut = useUpdateLead();
     const deleteLeadMut = useDeleteLead();
+    const convertLeadMut = useConvertLeadToProject();
     const leads: Lead[] = Array.isArray(leadsData?.data || leadsData) ? (leadsData?.data || leadsData) : [];
 
     const formatCurrency = (amount: number) => {
@@ -70,6 +71,16 @@ export const CRM: React.FC = () => {
         }
     };
 
+    const handleConvert = () => {
+        if (!selectedLead) return;
+        if (!confirm(`Are you sure you want to convert "${selectedLead.companyName || selectedLead.pocName}" to a project?`)) return;
+        convertLeadMut.mutate(selectedLead.id, {
+            onSuccess: () => {
+                setSelectedLead(null);
+            }
+        });
+    };
+
     const startEdit = () => {
         setEditForm(JSON.parse(JSON.stringify(selectedLead))); // Deep copy
         setIsEditing(true);
@@ -83,7 +94,7 @@ export const CRM: React.FC = () => {
         e.preventDefault();
     };
 
-    const handleDrop = (e: React.DragEvent, status: Lead['status']) => {
+    const handleDrop = (e: React.DragEvent, status: any) => {
         const id = e.dataTransfer.getData('leadId');
         if (id) {
             updateLeadMut.mutate({ id, data: { status } });
@@ -398,6 +409,11 @@ export const CRM: React.FC = () => {
                                     <button onClick={handleUpdate} className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg font-bold flex items-center gap-2 text-sm shadow-sm transition-colors"><Save className="w-4 h-4" /> Save</button>
                                 ) : (
                                     <button onClick={startEdit} className="px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 font-bold flex items-center gap-2 text-sm transition-colors"><Edit2 className="w-4 h-4" /> Edit</button>
+                                )}
+                                {!isEditing && selectedLead.status !== 'Won' && (
+                                    <button onClick={handleConvert} disabled={convertLeadMut.isPending} className="px-3 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-800/50 font-bold flex items-center gap-2 text-sm transition-colors border border-emerald-200 dark:border-emerald-800">
+                                        <Rocket className="w-4 h-4" /> {convertLeadMut.isPending ? 'Converting...' : 'Convert to Project'}
+                                    </button>
                                 )}
                                 <button onClick={() => { setSelectedLead(null); setIsEditing(false); }} className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 transition-colors"><X className="w-5 h-5" /></button>
                             </div>

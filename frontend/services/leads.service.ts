@@ -25,3 +25,6 @@ export const updateLeadStage = ({ id, stage }: { id: string; stage: string }) =>
 
 export const deleteLead = (id: string) =>
     api.delete(`/leads/${id}`).then(() => undefined);
+
+export const convertToProject = (id: string) =>
+    api.post(`/leads/${id}/convert`).then(r => ('data' in r.data ? r.data.data : r.data));

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { getLeads, getLeadsPipeline, createLead, updateLead, updateLeadStage, deleteLead } from '../services/leads.service';
+import { getLeads, getLeadsPipeline, createLead, updateLead, updateLeadStage, deleteLead, convertToProject } from '../services/leads.service';
 import type { LeadParams } from '../services/leads.service';
 
 export const useLeads = (params?: LeadParams) =>
@@ -42,5 +42,20 @@ export const useDeleteLead = () => {
     return useMutation({
         mutationFn: deleteLead,
         onSuccess: () => { qc.invalidateQueries({ queryKey: ['leads'] }); toast.success('Lead deleted'); },
+    });
+};
+
+export const useConvertLeadToProject = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: convertToProject,
+        onSuccess: (project: any) => {
+            qc.invalidateQueries({ queryKey: ['leads'] });
+            qc.invalidateQueries({ queryKey: ['projects'] });
+            toast.success('Converted to Project!');
+            return project;
+        },
+        onError: (e: Error & { response?: { data?: { message?: string } } }) =>
+            toast.error(e.response?.data?.message || 'Failed to convert lead'),
     });
 };

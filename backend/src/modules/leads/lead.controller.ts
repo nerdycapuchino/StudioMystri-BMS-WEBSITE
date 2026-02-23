@@ -47,3 +47,11 @@ export const remove = async (req: Request, res: Response, next: NextFunction) =>
 export const pipeline = async (_req: Request, res: Response, next: NextFunction) => {
     try { success(res, await leadService.getPipeline(), 'Pipeline retrieved'); } catch (e) { next(e); }
 };
+
+export const convertToProject = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const project = await leadService.convertToProject(req.params.id);
+        logActivity(prisma, req.user?.id, 'LEADS', 'CONVERT_TO_PROJECT', req.params.id, { projectId: project.id }, req.ip);
+        success(res, project, 'Lead converted to project', 201);
+    } catch (e) { next(e); }
+};
