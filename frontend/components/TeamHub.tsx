@@ -166,13 +166,13 @@ export const TeamHub: React.FC = () => {
    const dmChannels = teamChannels.filter(c => c.type === 'dm');
 
    return (
-      <div className="flex h-full w-full overflow-hidden bg-background-dark text-white flex-col md:flex-row">
+      <div className="flex h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800 flex-col md:flex-row">
          {/* Channels Sidebar */}
-         <aside className="w-full md:w-72 bg-surface-darker border-r border-white/5 flex flex-col h-auto md:h-full shrink-0 overflow-hidden">
-            <div className="p-6 font-black tracking-tighter text-xl border-b border-white/5 hidden md:flex items-center justify-between uppercase">
+         <aside className="w-full md:w-72 bg-slate-50/80 border-r border-slate-200/60 flex flex-col h-auto md:h-full shrink-0 overflow-hidden">
+            <div className="p-6 font-black tracking-tighter text-xl border-b border-slate-200/60 hidden md:flex items-center justify-between uppercase">
                <span>Team Hub</span>
                <div className="flex gap-2">
-                  <button onClick={() => setShowChannelModal(true)} className="p-1 hover:bg-white/10 rounded-lg text-primary transition-colors">
+                  <button onClick={() => setShowChannelModal(true)} className="p-1 hover:bg-slate-100 rounded-lg text-primary transition-colors">
                      <Plus className="w-5 h-5" />
                   </button>
                </div>
@@ -181,7 +181,7 @@ export const TeamHub: React.FC = () => {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
                {/* Public Channels */}
                <div>
-                  <div className="flex items-center justify-between text-[10px] font-black text-zinc-600 uppercase tracking-widest px-2 mb-2">
+                  <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">
                      <span>Channels</span>
                   </div>
                   <div className="space-y-0.5">
@@ -189,7 +189,7 @@ export const TeamHub: React.FC = () => {
                         <button
                            key={ch.id}
                            onClick={() => setSelectedChannel(ch)}
-                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-slate-500 hover:text-white hover:bg-slate-50'}`}
                         >
                            <Hash className="w-4 h-4 opacity-50" /> {ch.name}
                         </button>
@@ -199,7 +199,7 @@ export const TeamHub: React.FC = () => {
 
                {/* Private Channels */}
                <div>
-                  <div className="flex items-center justify-between text-[10px] font-black text-zinc-600 uppercase tracking-widest px-2 mb-2">
+                  <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">
                      <span>Private</span>
                   </div>
                   <div className="space-y-0.5">
@@ -207,7 +207,7 @@ export const TeamHub: React.FC = () => {
                         <button
                            key={ch.id}
                            onClick={() => setSelectedChannel(ch)}
-                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-slate-500 hover:text-white hover:bg-slate-50'}`}
                         >
                            <Lock className="w-4 h-4 opacity-50" /> {ch.name}
                         </button>
@@ -217,7 +217,7 @@ export const TeamHub: React.FC = () => {
 
                {/* Direct Messages */}
                <div>
-                  <div className="flex items-center justify-between text-[10px] font-black text-zinc-600 uppercase tracking-widest px-2 mb-2">
+                  <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">
                      <span>Direct Messages</span>
                      <button onClick={() => setShowDMModal(true)} className="hover:text-primary transition-colors">
                         <Plus className="w-3.5 h-3.5" />
@@ -228,9 +228,9 @@ export const TeamHub: React.FC = () => {
                         <button
                            key={ch.id}
                            onClick={() => setSelectedChannel(ch)}
-                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-slate-500 hover:text-white hover:bg-slate-50'}`}
                         >
-                           <div className={`size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(ch.id.replace('dm-', '').replace(currentUser?.id || '', '').replace('-', '')) ? 'bg-green-500' : 'bg-transparent border border-white/20 shadow-none'}`}></div>
+                           <div className={`size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(ch.id.replace('dm-', '').replace(currentUser?.id || '', '').replace('-', '')) ? 'bg-green-500' : 'bg-transparent border border-slate-300 shadow-none'}`}></div>
                            {ch.name}
                         </button>
                      ))}
@@ -240,8 +240,8 @@ export const TeamHub: React.FC = () => {
          </aside>
 
          {/* Chat Area */}
-         <div className="flex-1 border-r border-white/5 bg-surface-dark flex flex-col shrink-0 min-h-0">
-            <div className="h-16 flex items-center px-6 border-b border-white/5 bg-surface-dark/50 backdrop-blur-sm shrink-0 justify-between">
+         <div className="flex-1 border-r border-slate-200/60 bg-white/80 backdrop-blur-sm flex flex-col shrink-0 min-h-0">
+            <div className="h-16 flex items-center px-6 border-b border-slate-200/60 bg-white/80 backdrop-blur-sm/50 backdrop-blur-sm shrink-0 justify-between">
                <div className="flex items-center gap-3">
                   {selectedChannel.type === 'public' ? <Hash className="w-5 h-5 text-primary" /> : selectedChannel.type === 'private' ? <Lock className="w-5 h-5 text-amber-500" /> : <User className="w-5 h-5 text-indigo-400" />}
                   <h2 className="font-black text-lg uppercase tracking-tight">
@@ -251,12 +251,12 @@ export const TeamHub: React.FC = () => {
                <div className="flex gap-2">
                   <button
                      onClick={() => alert("Simulating Export Chat History...\n\n(In production, this would download a transcript of the conversation.)")}
-                     className="text-zinc-400 hover:text-primary p-2 bg-white/5 hover:bg-primary/10 rounded-full transition-all"
+                     className="text-slate-500 hover:text-primary p-2 bg-slate-50 hover:bg-primary/10 rounded-full transition-all"
                      title="Export Chat"
                   >
                      <Download className="w-5 h-5" />
                   </button>
-                  <button onClick={startCall} className="text-zinc-400 hover:text-primary p-2 bg-white/5 hover:bg-primary/10 rounded-full transition-all">
+                  <button onClick={startCall} className="text-slate-500 hover:text-primary p-2 bg-slate-50 hover:bg-primary/10 rounded-full transition-all">
                      <Video className="w-5 h-5" />
                   </button>
                </div>
@@ -266,18 +266,18 @@ export const TeamHub: React.FC = () => {
                <div ref={messagesEndRef} />
                {[...currentMessages].reverse().map(msg => (
                   <div key={msg.id} className={`flex gap-4 ${msg.sender === (currentUser?.name || '') ? 'flex-row-reverse' : ''}`}>
-                     <div className={`size-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 border border-white/5 shadow-inner ${msg.sender === (currentUser?.name || '') ? 'bg-primary text-background-dark' : 'bg-zinc-800 text-zinc-300'}`}>
+                     <div className={`size-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 border border-slate-200/60 shadow-inner ${msg.sender === (currentUser?.name || '') ? 'bg-primary text-background-dark' : 'bg-slate-100 text-slate-600'}`}>
                         {msg.avatar}
                      </div>
                      <div className={`max-w-[70%] ${msg.sender === (currentUser?.name || '') ? 'items-end' : 'items-start'} flex flex-col gap-1.5`}>
                         <div className="flex items-center gap-2 px-1">
-                           <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{msg.sender}</p>
-                           <p className="text-[10px] text-zinc-600 font-medium">{msg.timestamp}</p>
+                           <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{msg.sender}</p>
+                           <p className="text-[10px] text-slate-400 font-medium">{msg.timestamp}</p>
                         </div>
-                        <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-lg relative group ${msg.sender === (currentUser?.name || '') ? 'bg-primary/10 text-primary border border-primary/20 rounded-tr-none' : 'bg-surface-darker rounded-tl-none text-zinc-300 border border-white/5'}`}>
+                        <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-lg relative group ${msg.sender === (currentUser?.name || '') ? 'bg-primary/10 text-primary border border-primary/20 rounded-tr-none' : 'bg-slate-50/80 rounded-tl-none text-slate-600 border border-slate-200/60'}`}>
                            {msg.content}
                            {msg.sender === (currentUser?.name || '') && (
-                              <button type="button" onClick={() => handleDeleteMessage(msg.id)} className="absolute opacity-0 group-hover:opacity-100 -left-10 top-1/2 -translate-y-1/2 p-2 hover:text-red-500 text-zinc-500 transition-all">
+                              <button type="button" onClick={() => handleDeleteMessage(msg.id)} className="absolute opacity-0 group-hover:opacity-100 -left-10 top-1/2 -translate-y-1/2 p-2 hover:text-red-500 text-slate-500 transition-all">
                                  <Trash2 className="w-4 h-4" />
                               </button>
                            )}
@@ -295,14 +295,14 @@ export const TeamHub: React.FC = () => {
 
             <div className="px-6 pb-2">
                {typingUsers.length > 0 && (
-                  <p className="text-xs text-zinc-400 font-medium">
+                  <p className="text-xs text-slate-500 font-medium">
                      {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                   </p>
                )}
             </div>
-            <form onSubmit={handleSendMessage} className="p-6 pt-2 bg-surface-dark shrink-0">
-               <div className="bg-background-dark rounded-full p-1.5 border border-white/10 flex items-center focus-within:ring-2 focus-within:ring-primary/30 transition-all shadow-2xl">
-                  <button type="button" className="p-2.5 text-zinc-400 hover:text-white transition-colors">
+            <form onSubmit={handleSendMessage} className="p-6 pt-2 bg-white/80 backdrop-blur-sm shrink-0">
+               <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-full p-1.5 border border-slate-200 flex items-center focus-within:ring-2 focus-within:ring-primary/30 transition-all shadow-xl shadow-slate-200/50">
+                  <button type="button" className="p-2.5 text-slate-500 hover:text-white transition-colors">
                      <Paperclip className="w-5 h-5" />
                   </button>
                   <input
@@ -320,26 +320,26 @@ export const TeamHub: React.FC = () => {
          </div>
 
          {/* Direct Message (Desktop Only Info/Activity) */}
-         <aside className="hidden xl:flex w-72 bg-surface-darker border-l border-white/5 p-6 flex-col">
+         <aside className="hidden xl:flex w-72 bg-slate-50/80 border-l border-slate-200/60 p-6 flex-col">
             <div className="text-center mb-8">
-               <div className="size-20 bg-white/5 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-black text-zinc-500 border border-white/10">
+               <div className="size-20 bg-slate-50 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-black text-slate-500 border border-slate-200">
                   {selectedChannel.name.charAt(0)}
                </div>
-               <h3 className="text-lg font-black text-white">{selectedChannel.name}</h3>
-               <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold mt-1">
+               <h3 className="text-lg font-black text-slate-800">{selectedChannel.name}</h3>
+               <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">
                   {selectedChannel.type === 'dm' ? 'Personal Thread' : `${selectedChannel.type} Channel`}
                </p>
             </div>
 
             <div className="flex-1 space-y-6">
                <div>
-                  <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-4">Channel Details</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Channel Details</p>
                   <div className="space-y-3">
-                     <div className="flex items-center gap-3 text-sm text-zinc-400">
+                     <div className="flex items-center gap-3 text-sm text-slate-500">
                         <Clock className="w-4 h-4" />
                         Created 2 weeks ago
                      </div>
-                     <div className="flex items-center gap-3 text-sm text-zinc-400">
+                     <div className="flex items-center gap-3 text-sm text-slate-500">
                         <Shield className="w-4 h-4" />
                         Encrypted conversation
                      </div>
@@ -351,21 +351,21 @@ export const TeamHub: React.FC = () => {
          {/* Video Call (Toggleable Overlay) */}
          {isInCall && (
             <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
-               <header className="p-6 flex justify-between items-center bg-black/50 backdrop-blur-md">
+               <header className="p-6 flex justify-between items-center bg-slate-900/20 backdrop-blur-md">
                   <div className="flex items-center gap-3">
                      <div className="size-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
-                     <span className="font-black text-xs uppercase tracking-widest text-white">Live Meeting • {selectedChannel.name}</span>
+                     <span className="font-black text-xs uppercase tracking-widest text-slate-800">Live Meeting • {selectedChannel.name}</span>
                   </div>
-                  <button onClick={endCall} className="p-2 hover:bg-white/10 rounded-full text-zinc-400">
+                  <button onClick={endCall} className="p-2 hover:bg-slate-100 rounded-full text-slate-500">
                      <X className="w-6 h-6" />
                   </button>
                </header>
                <main className="flex-1 relative flex items-center justify-center overflow-hidden">
                   <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover scale-x-[-1]" />
-                  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-8 bg-zinc-900/80 backdrop-blur-2xl px-12 py-6 rounded-full border border-white/10 shadow-2xl">
-                     <button className="size-14 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"><Mic className="w-6 h-6" /></button>
-                     <button className="size-14 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center"><Video className="w-6 h-6" /></button>
-                     <div className="w-px h-8 bg-white/10 mx-2"></div>
+                  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-8 bg-slate-50/80 backdrop-blur-2xl px-12 py-6 rounded-full border border-slate-200 shadow-xl shadow-slate-200/50">
+                     <button className="size-14 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center"><Mic className="w-6 h-6" /></button>
+                     <button className="size-14 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center"><Video className="w-6 h-6" /></button>
+                     <div className="w-px h-8 bg-slate-100 mx-2"></div>
                      <button onClick={endCall} className="px-10 h-14 bg-red-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-700 transition-colors">End Call</button>
                   </div>
                </main>
@@ -375,34 +375,34 @@ export const TeamHub: React.FC = () => {
          {/* New Channel Modal */}
          {showChannelModal && (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-               <div className="bg-surface-dark border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl space-y-8">
+               <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-[2.5rem] p-10 w-full max-w-lg shadow-xl shadow-slate-200/50 space-y-8">
                   <div className="flex justify-between items-center">
-                     <h3 className="text-2xl font-black text-white tracking-tight uppercase">New Channel</h3>
-                     <button onClick={() => setShowChannelModal(false)} className="text-zinc-500 hover:text-white transition-colors">
+                     <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">New Channel</h3>
+                     <button onClick={() => setShowChannelModal(false)} className="text-slate-500 hover:text-white transition-colors">
                         <X className="w-6 h-6" />
                      </button>
                   </div>
                   <div className="space-y-6">
-                     <div className="flex bg-background-dark p-1 rounded-2xl border border-white/5">
+                     <div className="flex bg-gradient-to-br from-slate-50 to-blue-50 p-1 rounded-2xl border border-slate-200/60">
                         <button
                            onClick={() => setNewChannelType('public')}
-                           className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${newChannelType === 'public' ? 'bg-primary text-black' : 'text-zinc-500'}`}
+                           className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${newChannelType === 'public' ? 'bg-primary text-black' : 'text-slate-500'}`}
                         >
                            Public
                         </button>
                         <button
                            onClick={() => setNewChannelType('private')}
-                           className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${newChannelType === 'private' ? 'bg-amber-500 text-black' : 'text-zinc-500'}`}
+                           className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${newChannelType === 'private' ? 'bg-amber-500 text-black' : 'text-slate-500'}`}
                         >
                            Private
                         </button>
                      </div>
                      <div className="space-y-1">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-4">Channel Name</label>
+                        <label className="text-[10px] font-black text-slate-500 uppercase ml-4">Channel Name</label>
                         <input
                            value={newChannelName}
                            onChange={e => setNewChannelName(e.target.value)}
-                           className="w-full bg-background-dark border border-white/10 rounded-full px-8 py-4 text-white focus:ring-2 focus:ring-primary/50 outline-none placeholder:text-zinc-800"
+                           className="w-full bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-full px-8 py-4 text-slate-800 focus:ring-2 focus:ring-primary/50 outline-none placeholder:text-zinc-800"
                            placeholder="e.g. design-sync"
                         />
                      </div>
@@ -421,32 +421,32 @@ export const TeamHub: React.FC = () => {
          {/* New DM Modal */}
          {showDMModal && (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-               <div className="bg-surface-dark border border-white/10 rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl space-y-8 max-h-[80vh] flex flex-col">
+               <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-[2.5rem] p-10 w-full max-w-lg shadow-xl shadow-slate-200/50 space-y-8 max-h-[80vh] flex flex-col">
                   <div className="flex justify-between items-center shrink-0">
-                     <h3 className="text-2xl font-black text-white tracking-tight uppercase">Direct Message</h3>
-                     <button onClick={() => setShowDMModal(false)} className="text-zinc-500 hover:text-white">
+                     <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Direct Message</h3>
+                     <button onClick={() => setShowDMModal(false)} className="text-slate-500 hover:text-white">
                         <X className="w-6 h-6" />
                      </button>
                   </div>
-                  <div className="bg-background-dark rounded-2xl p-4 border border-white/5 flex items-center gap-3 shrink-0">
-                     <Search className="w-4 h-4 text-zinc-600" />
-                     <input className="bg-transparent border-none text-sm w-full focus:ring-0 text-white" placeholder="Search team members..." />
+                  <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4 border border-slate-200/60 flex items-center gap-3 shrink-0">
+                     <Search className="w-4 h-4 text-slate-400" />
+                     <input className="bg-transparent border-none text-sm w-full focus:ring-0 text-slate-800" placeholder="Search team members..." />
                   </div>
                   <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
                      {employees.filter(e => e.id !== currentUser?.id).map(emp => (
                         <button
                            key={emp.id}
                            onClick={() => handleStartDM(emp)}
-                           className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/5 transition-all text-left"
+                           className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 transition-all text-left"
                         >
-                           <div className="size-12 rounded-full bg-zinc-800 flex items-center justify-center font-black text-zinc-500 border border-white/10">
+                           <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-500 border border-slate-200">
                               {emp.name.charAt(0)}
                            </div>
                            <div>
-                              <p className="font-bold text-white">{emp.name}</p>
-                              <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{emp.email}</p>
+                              <p className="font-bold text-slate-800">{emp.name}</p>
+                              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{emp.email}</p>
                            </div>
-                           <div className={`ml-auto size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(emp.id) ? 'bg-green-500' : 'bg-transparent border border-white/20 shadow-none'}`}></div>
+                           <div className={`ml-auto size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(emp.id) ? 'bg-green-500' : 'bg-transparent border border-slate-300 shadow-none'}`}></div>
                         </button>
                      ))}
                   </div>

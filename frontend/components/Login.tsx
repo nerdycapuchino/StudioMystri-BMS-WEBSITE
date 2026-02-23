@@ -28,57 +28,57 @@ export const Login: React.FC = () => {
    const settings = companySettings || { name: 'Studio Mystri', logoUrl: '', loginBackgroundUrl: '' };
 
    return (
-      <div className="min-h-screen w-full flex items-center justify-center p-6 bg-background-dark relative overflow-hidden">
-         {/* Dynamic Background Ambience */}
+      <div className="min-h-screen w-full flex items-center justify-center p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+         {/* Soft gradient background */}
          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-background-dark via-surface-dark to-black opacity-90"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 via-purple-50/30 to-pink-50/20"></div>
             <img
                src={settings.loginBackgroundUrl || "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop"}
-               className="w-full h-full object-cover opacity-30"
+               className="w-full h-full object-cover opacity-10"
                alt="Background"
             />
          </div>
 
-         <div className="relative z-10 w-full max-w-[400px] bg-surface-dark/95 backdrop-blur-xl border border-white/10 rounded-[2rem] p-10 shadow-2xl">
+         <div className="relative z-10 w-full max-w-[400px] bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-[2rem] p-10 shadow-2xl shadow-slate-200/50">
             <div className="text-center mb-8">
                {/* Dynamic Logo Placeholder */}
-               <div className="mx-auto mb-6 w-[100px] h-[100px] bg-white rounded-2xl border border-white/10 flex items-center justify-center overflow-hidden p-2">
+               <div className="mx-auto mb-6 w-[100px] h-[100px] bg-gradient-to-br from-primary-50 to-white rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden p-2 shadow-lg shadow-primary/10">
                   {settings.logoUrl ? (
                      <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
-                     <div className="font-black text-4xl text-black">M</div>
+                     <div className="font-black text-4xl bg-gradient-to-br from-primary to-secondary bg-clip-text text-transparent">M</div>
                   )}
                </div>
-               <h1 className="text-2xl font-black text-white tracking-tighter uppercase">{settings.name}</h1>
-               <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Enterprise Login</p>
+               <h1 className="text-2xl font-black text-slate-800 tracking-tighter uppercase">{settings.name}</h1>
+               <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Enterprise Login</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-zinc-400 uppercase ml-3">Email ID</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase ml-3">Email ID</label>
                   <input
                      type="email"
                      value={email}
                      onChange={e => setEmail(e.target.value)}
                      placeholder="Enter your email"
-                     className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3.5 text-white text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none"
+                     className="w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 text-slate-800 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all outline-none placeholder-slate-400"
                      required
                   />
                </div>
                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-zinc-400 uppercase ml-3">Password</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase ml-3">Password</label>
                   <input
                      type="password"
                      value={password}
                      onChange={e => setPassword(e.target.value)}
                      placeholder="Enter your password"
-                     className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3.5 text-white text-sm focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none"
+                     className="w-full bg-white border border-slate-200 rounded-xl px-5 py-3.5 text-slate-800 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all outline-none placeholder-slate-400"
                      required
                   />
                </div>
 
                {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold px-4 py-3 rounded-xl">
+                  <div className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold px-4 py-3 rounded-xl">
                      {error}
                   </div>
                )}
@@ -89,23 +89,23 @@ export const Login: React.FC = () => {
                      id="remember"
                      checked={rememberMe}
                      onChange={e => setRememberMe(e.target.checked)}
-                     className="rounded bg-black/40 border-white/10 text-primary focus:ring-0 cursor-pointer"
+                     className="rounded bg-white border-slate-300 text-primary focus:ring-primary/30 cursor-pointer"
                   />
-                  <label htmlFor="remember" className="text-xs text-zinc-400 font-medium cursor-pointer select-none">Remember Me</label>
+                  <label htmlFor="remember" className="text-xs text-slate-500 font-medium cursor-pointer select-none">Remember Me</label>
                </div>
 
                <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary text-black font-black text-sm uppercase tracking-widest py-4 rounded-xl shadow-glow hover:scale-[1.02] active:scale-95 transition-all mt-2"
+                  className="w-full btn-primary font-black text-sm uppercase tracking-widest py-4 rounded-xl mt-2"
                >
                   {loading ? 'Logging in...' : 'Login'}
                </button>
             </form>
 
             {/* Dev hint */}
-            <div className="mt-6 p-3 bg-white/5 border border-white/5 rounded-xl">
-               <p className="text-[10px] text-zinc-600 text-center font-mono">
+            <div className="mt-6 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+               <p className="text-[10px] text-slate-500 text-center font-mono">
                   Dev: admin@studiomystri.com / Admin@1234
                </p>
             </div>

@@ -151,7 +151,7 @@ export const InvoiceGenerator: React.FC = () => {
                     <button onClick={() => setShowPreview(!showPreview)} className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-2">
                         <Eye className="w-4 h-4" /> {showPreview ? 'Edit' : 'Preview'}
                     </button>
-                    <button onClick={handleSave} disabled={createInvoice.isPending} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50">
+                    <button onClick={handleSave} disabled={createInvoice.isPending} className="px-4 py-2 bg-indigo-600 text-slate-800 rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-lg shadow-indigo-200 disabled:opacity-50">
                         {createInvoice.isPending ? 'Saving...' : 'Save Invoice'}
                     </button>
                 </div>
@@ -331,7 +331,7 @@ export const InvoiceGenerator: React.FC = () => {
             {/* Product Search Modal */}
             {showProductSearch && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+                    <div className="bg-white rounded-xl shadow-xl shadow-slate-200/50 w-full max-w-md p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-lg">Select Product</h3>
                             <button onClick={() => setShowProductSearch(false)}><X className="w-5 h-5 text-slate-400" /></button>

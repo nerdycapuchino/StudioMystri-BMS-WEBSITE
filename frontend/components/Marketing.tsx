@@ -46,8 +46,8 @@ export const Marketing: React.FC = () => {
   if (isLoading) {
     return (
       <div className="h-full flex flex-col p-6 space-y-6">
-        <div className="h-10 bg-zinc-800/50 rounded-xl animate-pulse w-48" />
-        <div className="flex-1 bg-zinc-800/50 rounded-xl animate-pulse" />
+        <div className="h-10 bg-slate-100 rounded-xl animate-pulse w-48" />
+        <div className="flex-1 bg-slate-100 rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -57,7 +57,7 @@ export const Marketing: React.FC = () => {
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 font-bold mb-2">Failed to load campaigns</p>
-          <p className="text-zinc-500 text-sm">{(error as any)?.message || 'Unknown error'}</p>
+          <p className="text-slate-500 text-sm">{(error as any)?.message || 'Unknown error'}</p>
         </div>
       </div>
     );
@@ -72,7 +72,7 @@ export const Marketing: React.FC = () => {
         </div>
         <button
           onClick={() => setIsAiModalOpen(true)}
-          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200"
+          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-slate-800 rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200"
         >
           <Sparkles className="w-4 h-4" /> Content Generator
         </button>
@@ -133,14 +133,14 @@ export const Marketing: React.FC = () => {
 
       {isAiModalOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm rounded-xl">
-          <div className="bg-white w-[500px] rounded-xl shadow-2xl p-6">
+          <div className="bg-white w-[500px] rounded-xl shadow-xl shadow-slate-200/50 p-6">
             <div className="flex justify-between mb-4">
               <h3 className="font-bold flex gap-2 items-center"><Sparkles className="w-4 h-4 text-purple-600" /> Quick Template Gen</h3>
               <button onClick={() => setIsAiModalOpen(false)}><X className="w-4 h-4" /></button>
             </div>
             <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Product / Topic" className="w-full border p-2 rounded mb-2" />
             <input value={audience} onChange={e => setAudience(e.target.value)} placeholder="Target Audience" className="w-full border p-2 rounded mb-4" />
-            <button onClick={handleGenerate} className="w-full bg-indigo-600 text-white py-2 rounded">
+            <button onClick={handleGenerate} className="w-full bg-indigo-600 text-slate-800 py-2 rounded">
               {isGenerating ? 'Generating...' : 'Generate Template'}
             </button>
             {generatedContent && <div className="mt-4 p-2 bg-slate-50 text-sm border rounded whitespace-pre-wrap">{generatedContent}</div>}

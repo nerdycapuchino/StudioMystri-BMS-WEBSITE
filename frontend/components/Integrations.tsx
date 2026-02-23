@@ -33,14 +33,14 @@ export const Integrations: React.FC = () => {
    const connectedCount = INTEGRATIONS.filter(i => i.status === 'Connected').length;
 
    return (
-      <div className="h-full flex flex-col relative bg-background-light dark:bg-background-dark text-white p-6 md:p-10">
+      <div className="h-full flex flex-col relative bg-background-light dark:bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800 p-6 md:p-10">
          <div className="flex justify-between items-center mb-8">
             <div>
-               <h2 className="text-3xl font-bold text-white tracking-tight">System Integrations</h2>
-               <p className="text-zinc-400 text-sm mt-1">{connectedCount} of {INTEGRATIONS.length} services connected</p>
+               <h2 className="text-3xl font-bold text-slate-800 tracking-tight">System Integrations</h2>
+               <p className="text-slate-500 text-sm mt-1">{connectedCount} of {INTEGRATIONS.length} services connected</p>
             </div>
             <button onClick={handleSync} disabled={isSyncing}
-               className="px-5 py-2.5 bg-surface-dark border border-white/10 text-white rounded-full text-sm font-bold hover:bg-white/5 flex items-center gap-2 disabled:opacity-50 transition-all active:scale-95 shadow-lg">
+               className="px-5 py-2.5 bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-800 rounded-full text-sm font-bold hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50 transition-all active:scale-95 shadow-lg">
                {isSyncing ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <RefreshCw className="w-4 h-4 text-primary" />}
                {isSyncing ? 'Checking...' : 'Health Check'}
             </button>
@@ -48,21 +48,21 @@ export const Integrations: React.FC = () => {
 
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {INTEGRATIONS.map((integ, i) => (
-               <div key={i} className="bg-surface-dark p-6 rounded-2xl shadow-xl border border-white/5 hover:border-primary/30 transition-all group relative overflow-hidden">
+               <div key={i} className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-slate-200/60 hover:border-primary/30 transition-all group relative overflow-hidden">
                   <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full blur-[50px] transition-opacity opacity-20 group-hover:opacity-40 pointer-events-none ${integ.status === 'Connected' ? 'bg-primary' : 'bg-red-500'}`}></div>
                   <div className="flex justify-between items-start mb-6 relative z-10">
-                     <div className="h-12 w-12 bg-surface-highlight rounded-xl flex items-center justify-center border border-white/5 shadow-inner">
+                     <div className="h-12 w-12 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200/60 shadow-inner">
                         {integ.icon}
                      </div>
-                     <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 border ${integ.status === 'Connected' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20'
+                     <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide flex items-center gap-1.5 border ${integ.status === 'Connected' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-zinc-500/10 text-slate-500 border-zinc-500/20'
                         }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${integ.status === 'Connected' ? 'bg-green-500 animate-pulse' : 'bg-zinc-500'}`}></span>
                         {integ.status}
                      </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-1 relative z-10">{integ.name}</h3>
-                  <p className="text-xs text-zinc-500 mb-2 relative z-10">{integ.description}</p>
-                  <p className="text-[10px] text-zinc-600 mb-6 font-mono relative z-10">{integ.category}</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-1 relative z-10">{integ.name}</h3>
+                  <p className="text-xs text-slate-500 mb-2 relative z-10">{integ.description}</p>
+                  <p className="text-[10px] text-slate-400 mb-6 font-mono relative z-10">{integ.category}</p>
                   <div className="flex gap-3 items-center relative z-10">
                      <button className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all border ${integ.status === 'Connected'
                            ? 'bg-green-500/10 text-green-400 border-green-500/20 cursor-default'
@@ -70,7 +70,7 @@ export const Integrations: React.FC = () => {
                         }`}>
                         {integ.status === 'Connected' ? '● Active' : 'Configure'}
                      </button>
-                     <button onClick={() => setActiveConfig(integ.name)} className="px-3 py-2.5 text-zinc-400 bg-surface-highlight border border-white/5 rounded-xl hover:text-white hover:bg-white/10 transition-colors">
+                     <button onClick={() => setActiveConfig(integ.name)} className="px-3 py-2.5 text-slate-500 bg-slate-100 border border-slate-200/60 rounded-xl hover:text-white hover:bg-slate-100 transition-colors">
                         <Settings className="w-4 h-4" />
                      </button>
                   </div>
@@ -79,14 +79,14 @@ export const Integrations: React.FC = () => {
          </div>
 
          {activeConfig && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-               <div className="bg-surface-dark border border-white/10 rounded-2xl shadow-2xl p-8 w-96 text-center">
-                  <div className="mx-auto w-16 h-16 bg-surface-highlight rounded-full flex items-center justify-center mb-4 border border-white/5">
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-md">
+               <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 p-8 w-96 text-center">
+                  <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 border border-slate-200/60">
                      <Settings className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="font-bold text-xl text-white mb-2">Configure {activeConfig}</h3>
-                  <p className="text-sm text-zinc-400 mb-6 leading-relaxed">Configuration for this integration is managed via environment variables on the VPS.</p>
-                  <button onClick={() => setActiveConfig(null)} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors">Close</button>
+                  <h3 className="font-bold text-xl text-slate-800 mb-2">Configure {activeConfig}</h3>
+                  <p className="text-sm text-slate-500 mb-6 leading-relaxed">Configuration for this integration is managed via environment variables on the VPS.</p>
+                  <button onClick={() => setActiveConfig(null)} className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold rounded-xl transition-colors">Close</button>
                </div>
             </div>
          )}

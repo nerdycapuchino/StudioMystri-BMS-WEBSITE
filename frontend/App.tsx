@@ -27,6 +27,7 @@ import { Menu, MenuSquare, LogOut, LayoutDashboard, Store, Users, Briefcase, Box
 import { getSocket } from './services/socket';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useAppSocketEvents } from './hooks/useAppSocketEvents';
 
 const MainLayout: React.FC = () => {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
@@ -37,6 +38,9 @@ const MainLayout: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { data: unreadCount } = useUnreadCount();
   const qc = useQueryClient();
+
+  // Global real-time sync for orders, inventory, ERP, and settings
+  useAppSocketEvents(isAuthenticated);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -139,27 +143,27 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background-dark text-zinc-100 overflow-hidden font-display">
+    <div className="flex h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800 overflow-hidden font-display">
       {/* Sidebar Rail / Expandable Drawer */}
       <aside
         className={`
-          flex flex-col h-full bg-surface-darker border-r border-white/5 transition-all duration-300 ease-in-out z-[100]
+          flex flex-col h-full bg-white/80 backdrop-blur-xl border-r border-slate-200/60 transition-all duration-300 ease-in-out z-[100] shadow-lg shadow-slate-200/50
           ${isMobile
             ? (sidebarExpanded ? 'w-72 fixed inset-y-0 left-0 translate-x-0' : 'w-0 fixed inset-y-0 left-0 -translate-x-full')
             : (sidebarExpanded ? 'w-64' : 'w-20')}
         `}
       >
         {/* Sidebar Header */}
-        <div className="p-4 flex items-center h-20 border-b border-white/5 justify-between md:justify-center overflow-hidden shrink-0">
+        <div className="p-4 flex items-center h-20 border-b border-slate-200/60 justify-between md:justify-center overflow-hidden shrink-0">
           <div className={`flex items-center gap-3 transition-all duration-300 ${sidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 hidden'}`}>
-            <div className="size-8 rounded-lg overflow-hidden border border-white/10 shrink-0">
-              <img src="https://via.placeholder.com/100/38e07b/000000?text=L" alt="Logo" className="w-full h-full object-cover" />
+            <div className="size-8 rounded-lg overflow-hidden border border-slate-200 shrink-0 shadow-sm">
+              <img src="https://via.placeholder.com/100/667eea/ffffff?text=L" alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <span className="font-black text-lg tracking-tighter whitespace-nowrap">MYSTRI</span>
+            <span className="font-black text-lg tracking-tighter whitespace-nowrap text-slate-800">MYSTRI</span>
           </div>
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2.5 hover:bg-white/5 rounded-full text-primary transition-transform active:scale-90 ${!sidebarExpanded && !isMobile ? 'translate-x-0' : ''}`}
+            className={`p-2.5 hover:bg-slate-100 rounded-full text-primary transition-transform active:scale-90 ${!sidebarExpanded && !isMobile ? 'translate-x-0' : ''}`}
           >
             {sidebarExpanded ? <MenuSquare className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -175,8 +179,8 @@ const MainLayout: React.FC = () => {
                 if (isMobile) setSidebarExpanded(false);
               }}
               className={`
-                  w-full flex items-center gap-4 px-6 py-3.5 transition-all hover:bg-white/5 group relative
-                  ${activeModule === item.id ? 'text-primary' : 'text-zinc-500 hover:text-white'}
+                  w-full flex items-center gap-4 px-6 py-3.5 transition-all hover:bg-primary-50 group relative
+                  ${activeModule === item.id ? 'text-primary bg-primary-50' : 'text-slate-500 hover:text-slate-800'}
                 `}
               title={!sidebarExpanded ? item.label : ''}
             >
@@ -195,40 +199,40 @@ const MainLayout: React.FC = () => {
         </nav>
 
         {/* Global Controls & User Profile */}
-        <div className="p-4 border-t border-white/5 space-y-4 shrink-0 bg-[#090e0b]">
+        <div className="p-4 border-t border-slate-200/60 space-y-4 shrink-0 bg-slate-50/80">
           {/* Notification Badge */}
           {sidebarExpanded && (
             <button
               onClick={() => setActiveModule(AppModule.DASHBOARD)}
-              className="w-full flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5 hover:border-primary/20 transition-colors animate-fade-in"
+              className="w-full flex items-center gap-3 p-2 rounded-xl bg-white/80 border border-slate-200 hover:border-primary/30 transition-colors animate-fade-in shadow-sm"
             >
               <div className="relative">
-                <Bell className="w-4 h-4 text-zinc-400" />
+                <Bell className="w-4 h-4 text-slate-500" />
                 {typeof unreadCount === 'number' && unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 size-3.5 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
                 )}
               </div>
-              <span className="text-xs font-bold text-zinc-300">Notifications</span>
+              <span className="text-xs font-bold text-slate-600">Notifications</span>
             </button>
           )}
 
           {/* Currency Toggles */}
           {sidebarExpanded && (
-            <div className="bg-black/40 p-1 rounded-xl flex gap-1 animate-fade-in">
-              <button onClick={() => setCurrency('INR')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'INR' ? 'bg-primary text-black' : 'text-zinc-600 hover:text-zinc-400'}`}>₹</button>
-              <button onClick={() => setCurrency('USD')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'USD' ? 'bg-primary text-black' : 'text-zinc-600 hover:text-zinc-400'}`}>$</button>
+            <div className="bg-slate-100 p-1 rounded-xl flex gap-1 animate-fade-in">
+              <button onClick={() => setCurrency('INR')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'INR' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>₹</button>
+              <button onClick={() => setCurrency('USD')} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${currency === 'USD' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>$</button>
             </div>
           )}
 
           {/* User Profile */}
           {sidebarExpanded && (
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5 overflow-hidden animate-fade-in">
-              <div className="size-8 rounded-full bg-surface-highlight border border-white/10 flex items-center justify-center text-primary font-bold shadow-inner text-xs shrink-0">
+            <div className="flex items-center gap-3 p-2 rounded-xl bg-white/80 border border-slate-200 overflow-hidden animate-fade-in shadow-sm">
+              <div className="size-8 rounded-full bg-gradient-to-br from-primary to-secondary border border-white flex items-center justify-center text-white font-bold shadow-inner text-xs shrink-0">
                 {user.name.substring(0, 2).toUpperCase()}
               </div>
               <div className="overflow-hidden">
-                <p className="text-xs font-bold text-white truncate">{user.name}</p>
-                <p className="text-[10px] text-zinc-500 truncate">{user.role || 'Staff'}</p>
+                <p className="text-xs font-bold text-slate-800 truncate">{user.name}</p>
+                <p className="text-[10px] text-slate-500 truncate">{user.role || 'Staff'}</p>
               </div>
             </div>
           )}
@@ -236,7 +240,7 @@ const MainLayout: React.FC = () => {
           {/* Log Out Button */}
           <button
             onClick={logout}
-            className={`w-full flex items-center gap-4 p-2 text-red-400 hover:bg-red-400/10 rounded-xl transition-colors group ${!sidebarExpanded ? 'justify-center' : ''}`}
+            className={`w-full flex items-center gap-4 p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors group ${!sidebarExpanded ? 'justify-center' : ''}`}
             title="Sign Out"
           >
             <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -246,24 +250,24 @@ const MainLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-[#0b100d]">
+      <main className="flex-1 h-full overflow-hidden flex flex-col relative bg-gradient-to-br from-slate-50/50 to-blue-50/50">
         {/* Mobile Header Bar */}
         {isMobile && (
-          <header className="h-16 flex items-center px-4 border-b border-white/5 bg-surface-dark shrink-0 z-50 justify-between">
+          <header className="h-16 flex items-center px-4 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl shrink-0 z-50 justify-between shadow-sm">
             <div className="flex items-center gap-3">
               <button onClick={() => setSidebarExpanded(true)} className="p-2 text-primary">
                 <Menu className="w-6 h-6" />
               </button>
-              <span className="font-black tracking-tighter text-lg uppercase">{activeModule}</span>
+              <span className="font-black tracking-tighter text-lg uppercase text-slate-800">{activeModule}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Bell className="w-5 h-5 text-zinc-400" />
+                <Bell className="w-5 h-5 text-slate-500" />
                 {typeof unreadCount === 'number' && unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 size-3.5 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
                 )}
               </div>
-              <div className="size-8 bg-surface-highlight rounded-full flex items-center justify-center text-xs font-bold text-primary border border-white/10">
+              <div className="size-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-xs font-bold text-white border border-white shadow-sm">
                 {user.name.substring(0, 2).toUpperCase()}
               </div>
             </div>
@@ -273,7 +277,7 @@ const MainLayout: React.FC = () => {
         {/* Backdrop for Mobile Sidebar */}
         {isMobile && sidebarExpanded && (
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[90]"
+            className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-[90]"
             onClick={() => setSidebarExpanded(false)}
           />
         )}

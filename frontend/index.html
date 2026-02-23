@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,21 +20,53 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
       tailwind.config = {
-        darkMode: "class",
         theme: {
           extend: {
             colors: {
-              "primary": "#38e07b",
-              "background-light": "#f6f8f7",
-              "background-dark": "#122017",
-              "surface-dark": "#1a261e",
-              "surface-darker": "#111714",
-              "surface-highlight": "#23332c",
-              "bronze": "#cd7f32",
-              "bronze-light": "#e6be8a",
-              "bronze-dark": "#a05a2c",
-              "text-muted": "#9eb7a8",
-              "border-dark": "#29382f"
+              /* ── Accent ── */
+              "primary":        "#667eea",
+              "primary-50":     "#eef2ff",
+              "primary-100":    "#e0e7ff",
+              "primary-200":    "#c7d2fe",
+              "primary-500":    "#667eea",
+              "primary-600":    "#5a67d8",
+              "primary-700":    "#4c51bf",
+              "secondary":      "#764ba2",
+              "secondary-500":  "#764ba2",
+              "secondary-600":  "#6b46c1",
+
+              /* ── Backgrounds ── */
+              "background-light":"#f8fafc",
+              "background-dark": "#f8fafc",   /* alias so old classes don't break */
+
+              /* ── Surfaces ── */
+              "surface-dark":     "#ffffff",   /* alias */
+              "surface-darker":   "#f8fafc",
+              "surface-highlight":"#f1f5f9",
+              "surface-card":     "rgba(255, 255, 255, 0.8)",
+              "surface-elevated": "#f8fafc",
+              "surface-hover":    "#f1f5f9",
+
+              /* ── Text ── */
+              "text-primary":   "#1a202c",
+              "text-secondary": "#4a5568",
+              "text-muted":     "#a0aec0",
+
+              /* ── Borders ── */
+              "border-dark":    "#e2e8f0",
+              "border-glass":   "rgba(148, 163, 184, 0.5)",
+              "border-solid":   "#e2e8f0",
+              "border-hover":   "#cbd5e0",
+
+              /* ── Status ── */
+              "success":  "#48bb78",
+              "warning":  "#ed8936",
+              "error":    "#f56565",
+
+              /* ── Legacy compat ── */
+              "bronze":       "#667eea",
+              "bronze-light": "#c7d2fe",
+              "bronze-dark":  "#4c51bf",
             },
             fontFamily: {
               "display": ["Public Sans", "sans-serif"],
@@ -49,8 +81,10 @@
               "full": "9999px"
             },
             boxShadow: {
-                "glow": "0 0 15px rgba(56, 224, 123, 0.15)",
-                "glow-hover": "0 0 25px rgba(56, 224, 123, 0.3)"
+                "glow": "0 0 15px rgba(102, 126, 234, 0.15)",
+                "glow-hover": "0 0 25px rgba(102, 126, 234, 0.3)",
+                "pastel": "0 25px 50px -12px rgba(0, 0, 0, 0.05)",
+                "card": "0 10px 40px -10px rgba(100, 116, 139, 0.12)"
             }
           }
         }
@@ -59,21 +93,23 @@
     <style>
       body {
         font-family: 'Public Sans', sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f0f4ff 100%);
+        min-height: 100vh;
       }
-      /* Custom Scrollbar */
+      /* Custom Scrollbar — light pastel */
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
       }
       ::-webkit-scrollbar-track {
-        background: #122017;
+        background: #f1f5f9;
       }
       ::-webkit-scrollbar-thumb {
-        background: #29382f;
+        background: #cbd5e0;
         border-radius: 3px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #38e07b;
+        background: #667eea;
       }
       .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -82,12 +118,60 @@
           -ms-overflow-style: none;
           scrollbar-width: none;
       }
+
+      /* Glass panel — light version */
       .glass-panel {
-          background: rgba(30, 30, 30, 0.65);
+          background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border-left: 1px solid rgba(255, 255, 255, 0.08);
+          border-left: 1px solid rgba(148, 163, 184, 0.3);
       }
+
+      /* Glass card utility */
+      .glass-card {
+          background: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(148, 163, 184, 0.3);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-radius: 1.5rem;
+          box-shadow: 0 10px 40px -10px rgba(100, 116, 139, 0.12);
+      }
+
+      /* Button utilities */
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        padding: 0.625rem 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 14px -2px rgba(102, 126, 234, 0.4);
+        transition: all 0.2s;
+      }
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        box-shadow: 0 6px 20px -2px rgba(102, 126, 234, 0.5);
+        transform: translateY(-1px);
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid #e2e8f0;
+        color: #1a202c;
+        font-weight: 500;
+        padding: 0.625rem 1.5rem;
+        border-radius: 0.75rem;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s;
+      }
+      .btn-secondary:hover {
+        background: white;
+        border-color: #cbd5e0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Custom scrollbar for inner containers */
+      .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 2px; }
 
       /* Print Styles for A4 Invoice */
       @media print {
@@ -119,7 +203,7 @@
     <!-- HTML5-QRCode Library for Real Scanning -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   </head>
-  <body class="bg-background-dark text-white antialiased overflow-hidden">
+  <body class="bg-background-light text-slate-800 antialiased overflow-hidden">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

@@ -56,8 +56,8 @@ export const Admin: React.FC = () => {
   if (isLoading) {
     return (
       <div className="h-full flex flex-col p-6 space-y-6">
-        <div className="h-10 bg-zinc-800/50 rounded-xl animate-pulse w-48" />
-        <div className="flex-1 bg-zinc-800/50 rounded-xl animate-pulse" />
+        <div className="h-10 bg-slate-100 rounded-xl animate-pulse w-48" />
+        <div className="flex-1 bg-slate-100 rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export const Admin: React.FC = () => {
         <div>
           <div className="flex justify-between items-center mb-4">
             <p className="text-sm text-slate-500">{users.length} registered users</p>
-            <button onClick={() => setShowAddUser(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+            <button onClick={() => setShowAddUser(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-slate-800 rounded-lg text-sm font-medium hover:bg-indigo-700">
               <Plus className="w-4 h-4" /> Add User
             </button>
           </div>
@@ -180,7 +180,7 @@ export const Admin: React.FC = () => {
                 <Edit2 className="w-4 h-4 inline" /> Edit
               </button>
             ) : (
-              <button onClick={handleSaveSettings} disabled={updateSettings.isPending} className="flex items-center gap-1 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+              <button onClick={handleSaveSettings} disabled={updateSettings.isPending} className="flex items-center gap-1 px-4 py-2 bg-indigo-600 text-slate-800 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
                 <Save className="w-4 h-4" /> {updateSettings.isPending ? 'Saving...' : 'Save'}
               </button>
             )}
@@ -211,7 +211,7 @@ export const Admin: React.FC = () => {
       {/* Add User Modal */}
       {showAddUser && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <div className="bg-white rounded-xl shadow-xl shadow-slate-200/50 w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg">Add User</h3>
               <button onClick={() => setShowAddUser(false)}><X className="w-5 h-5 text-slate-400" /></button>
@@ -227,7 +227,7 @@ export const Admin: React.FC = () => {
               </select>
               <input type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="Initial Password" className="w-full border border-slate-200 p-2.5 rounded-lg text-sm" />
             </div>
-            <button onClick={handleAddUser} disabled={createUser.isPending} className="w-full mt-4 bg-indigo-600 text-white py-2.5 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50">
+            <button onClick={handleAddUser} disabled={createUser.isPending} className="w-full mt-4 bg-indigo-600 text-slate-800 py-2.5 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50">
               {createUser.isPending ? 'Adding...' : 'Add User'}
             </button>
           </div>

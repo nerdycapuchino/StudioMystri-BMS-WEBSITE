@@ -83,8 +83,8 @@ export const ActivityLog: React.FC = () => {
    if (isLoading) {
       return (
          <div className="h-full flex flex-col p-6 space-y-6">
-            <div className="h-10 bg-zinc-800/50 rounded-xl animate-pulse w-48" />
-            <div className="flex-1 bg-zinc-800/50 rounded-xl animate-pulse" />
+            <div className="h-10 bg-slate-100 rounded-xl animate-pulse w-48" />
+            <div className="flex-1 bg-slate-100 rounded-xl animate-pulse" />
          </div>
       );
    }
@@ -94,7 +94,7 @@ export const ActivityLog: React.FC = () => {
          <div className="h-full flex items-center justify-center">
             <div className="text-center">
                <p className="text-red-500 font-bold mb-2">Failed to load activity logs</p>
-               <p className="text-zinc-500 text-sm">{(error as any)?.message || 'Unknown error'}</p>
+               <p className="text-slate-500 text-sm">{(error as any)?.message || 'Unknown error'}</p>
             </div>
          </div>
       );

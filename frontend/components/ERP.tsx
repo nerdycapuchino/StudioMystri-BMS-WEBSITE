@@ -77,11 +77,11 @@ export const ERP: React.FC = () => {
   if (isLoading) {
     return (
       <div className="h-full flex flex-col p-6 space-y-6">
-        <div className="h-10 bg-zinc-800/50 rounded-xl animate-pulse w-48" />
+        <div className="h-10 bg-slate-100 rounded-xl animate-pulse w-48" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-zinc-800/50 rounded-xl animate-pulse" />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />)}
         </div>
-        <div className="flex-1 bg-zinc-800/50 rounded-xl animate-pulse" />
+        <div className="flex-1 bg-slate-100 rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -216,7 +216,7 @@ export const ERP: React.FC = () => {
       {/* Edit Inventory Modal */}
       {editingItem && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+          <div className="bg-white rounded-xl shadow-xl shadow-slate-200/50 w-full max-w-sm p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg">Manage Warehouse Item</h3>
               <button onClick={() => setEditingItem(null)}><X className="w-5 h-5 text-slate-400" /></button>
@@ -233,7 +233,7 @@ export const ERP: React.FC = () => {
               <label className="text-xs text-slate-500 block mb-1">Warehouse Location / Bin</label>
               <input type="text" value={newLocation} onChange={e => setNewLocation(e.target.value)} className="w-full border p-2 rounded" placeholder="e.g., Aisle 4, Bin 12" />
             </div>
-            <button onClick={handleSave} disabled={updateItem.isPending} className="w-full bg-indigo-600 text-white py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50">
+            <button onClick={handleSave} disabled={updateItem.isPending} className="w-full bg-indigo-600 text-slate-800 py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50">
               {updateItem.isPending ? 'Updating...' : 'Update Inventory'}
             </button>
           </div>
