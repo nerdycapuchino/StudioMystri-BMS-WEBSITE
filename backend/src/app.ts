@@ -63,14 +63,6 @@ app.use('/uploads', express.static(env.UPLOAD_DIR));
 
 // ─── API Routes ─────────────────────────────────────────
 
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: process.env.NODE_ENV === 'development' ? 1000 : 20, // Development friendly
-    message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 500,
@@ -79,7 +71,6 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-app.use('/api/v1/auth', authLimiter);
 app.use('/api/v1', apiLimiter);
 
 app.get('/health', (req, res) => {
