@@ -4,6 +4,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
+import * as Sentry from '@sentry/react';
+
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: 1.0,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,7 +38,9 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <Sentry.ErrorBoundary fallback={<div style={{ padding: '20px', color: 'red' }}>An unhandled error occurred. Please refresh the page.</div>}>
+        <App />
+      </Sentry.ErrorBoundary>
       <Toaster
         position="top-right"
         toastOptions={{

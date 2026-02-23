@@ -3,7 +3,7 @@ module.exports = {
         {
             name: 'studiomystri-api',
             cwd: '/var/www/studiomystri/backend',
-            script: 'dist/app.js',
+            script: 'dist/server.js',
             instances: 1, // TODO Phase 9 — add @socket.io/pm2 adapter for multi-instance
             exec_mode: 'cluster',
             watch: false,

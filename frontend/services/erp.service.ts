@@ -3,7 +3,11 @@ import api from './api';
 export interface ERPParams {
     page?: number;
     limit?: number;
+    supplierId?: string;
 }
+
+export const getERPSuppliers = () =>
+    api.get('/erp/suppliers').then(r => r.data.data || r.data);
 
 export const getPurchaseOrders = (params?: ERPParams) =>
     api.get('/erp/purchase-orders', { params }).then(r => r.data);

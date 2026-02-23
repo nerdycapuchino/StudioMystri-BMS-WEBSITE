@@ -11,6 +11,8 @@ import rateLimit from 'express-rate-limit';
 import { socketAuthMiddleware } from './socket/socketAuth';
 import { registerSocketHandlers } from './socket/socketHandlers';
 
+import * as Sentry from '@sentry/node';
+
 const app = express();
 const httpServer = createServer(app);
 
@@ -92,6 +94,8 @@ app.get('/health', (req, res) => {
 app.use('/api/v1', apiRouter);
 
 // ─── Global Error Handler ───────────────────────────────
+Sentry.setupExpressErrorHandler(app);
+
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal Server Error';

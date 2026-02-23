@@ -3,17 +3,19 @@ import React, { useMemo } from 'react';
 import { useInventory, useUpdateInventoryItem } from '../hooks/useInventory';
 import { useInvoices } from '../hooks/useInvoices';
 import { useEmployees } from '../hooks/useHR';
+import { useERPStats, useCreatePurchaseOrder } from '../hooks/useERP';
 import { AlertTriangle, Package, DollarSign, Users, Filter, X, MapPin } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { InventoryItem } from '../types';
 import toast from 'react-hot-toast';
-import api from '../services/api';
 
 export const ERP: React.FC = () => {
   const { data: invData, isLoading: invLoading } = useInventory();
   const { data: invoiceData, isLoading: invoiceLoading } = useInvoices();
   const { data: empData } = useEmployees();
+  const { data: erpStats } = useERPStats();
   const updateItem = useUpdateInventoryItem();
+  const createPO = useCreatePurchaseOrder();
 
   const inventory: InventoryItem[] = Array.isArray(invData?.data || invData) ? (invData?.data || invData) as InventoryItem[] : [];
   const invoices: any[] = Array.isArray(invoiceData?.data || invoiceData) ? (invoiceData?.data || invoiceData) as any[] : [];
@@ -40,30 +42,34 @@ export const ERP: React.FC = () => {
   };
 
   const handleOrder = (item: InventoryItem) => {
-    toast.success(`Order placed for ${item.name} with ${item.supplier || 'default supplier'}.`);
+    createPO.mutate({
+      itemId: item.id,
+      quantity: item.reorderLevel * 2,
+      unitCost: item.cost,
+      supplierId: (item as any).supplierId || undefined,
+    }, {
+      onSuccess: () => toast.success(`Purchase order placed for ${item.name}`),
+    });
   };
 
   // Real Data Processing for Charts
   const chartData = useMemo(() => {
     const monthlyData: { [key: string]: { name: string; revenue: number; expenses: number } } = {};
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
     months.forEach(m => monthlyData[m] = { name: m, revenue: 0, expenses: 0 });
-
     invoices.forEach(inv => {
       const d = new Date(inv.date);
       const monthName = isNaN(d.getTime()) ? 'Nov' : months[d.getMonth()];
-
       if (monthlyData[monthName]) {
         if (inv.type === 'Income') monthlyData[monthName].revenue += inv.amount;
         else if (inv.type === 'Expense') monthlyData[monthName].expenses += inv.amount;
       }
     });
-
     return Object.values(monthlyData);
   }, [invoices]);
 
   const totalRevenue = invoices.filter(i => i.type === 'Income').reduce((sum, i) => sum + i.amount, 0);
+  const lowStockCount = erpStats?.lowStockCount ?? inventory.filter(i => i.quantity <= i.reorderLevel).length;
   const activeOrders = invoices.filter(i => i.status === 'Pending' || i.status === 'Partial').length;
 
   const isLoading = invLoading || invoiceLoading;
@@ -88,7 +94,7 @@ export const ERP: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         {[
           { title: 'Total Revenue', value: formatCurrency(totalRevenue), trend: '+12%', icon: DollarSign, color: 'indigo' },
-          { title: 'Low Stock Items', value: inventory.filter(i => i.quantity <= i.reorderLevel).length, trend: 'Action Req', icon: AlertTriangle, color: 'orange' },
+          { title: 'Low Stock Items', value: lowStockCount, trend: 'Action Req', icon: AlertTriangle, color: 'orange' },
           { title: 'Active Orders', value: activeOrders, trend: '+5%', icon: Package, color: 'blue' },
           { title: 'Staff Present', value: `${employees.filter(e => e.attendance === 'Present').length}/${employees.length}`, trend: '92%', icon: Users, color: 'green' },
         ].map((stat, i) => (
@@ -149,8 +155,8 @@ export const ERP: React.FC = () => {
                   <h4 className="text-sm font-medium text-slate-800 truncate">{item.name}</h4>
                   <p className="text-xs text-slate-500">Below level ({item.reorderLevel})</p>
                 </div>
-                <button onClick={() => handleOrder(item)} className="text-xs bg-white text-orange-600 px-2 py-1 rounded border border-orange-200 font-medium hover:bg-orange-100">
-                  Order
+                <button onClick={() => handleOrder(item)} disabled={createPO.isPending} className="text-xs bg-white text-orange-600 px-2 py-1 rounded border border-orange-200 font-medium hover:bg-orange-100 disabled:opacity-50">
+                  {createPO.isPending ? '...' : 'Order'}
                 </button>
               </div>
             ))}
@@ -215,33 +221,18 @@ export const ERP: React.FC = () => {
               <h3 className="font-bold text-lg">Manage Warehouse Item</h3>
               <button onClick={() => setEditingItem(null)}><X className="w-5 h-5 text-slate-400" /></button>
             </div>
-
             <div className="mb-4">
               <label className="text-xs text-slate-500 block mb-1">Item Name</label>
               <p className="font-bold">{editingItem.name}</p>
             </div>
-
             <div className="mb-4">
               <label className="text-xs text-slate-500 block mb-1">Quantity</label>
-              <input
-                type="number"
-                value={newQty}
-                onChange={e => setNewQty(parseInt(e.target.value) || 0)}
-                className="w-full border p-2 rounded"
-              />
+              <input type="number" value={newQty} onChange={e => setNewQty(parseInt(e.target.value) || 0)} className="w-full border p-2 rounded" />
             </div>
-
             <div className="mb-4">
               <label className="text-xs text-slate-500 block mb-1">Warehouse Location / Bin</label>
-              <input
-                type="text"
-                value={newLocation}
-                onChange={e => setNewLocation(e.target.value)}
-                className="w-full border p-2 rounded"
-                placeholder="e.g., Aisle 4, Bin 12"
-              />
+              <input type="text" value={newLocation} onChange={e => setNewLocation(e.target.value)} className="w-full border p-2 rounded" placeholder="e.g., Aisle 4, Bin 12" />
             </div>
-
             <button onClick={handleSave} disabled={updateItem.isPending} className="w-full bg-indigo-600 text-white py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50">
               {updateItem.isPending ? 'Updating...' : 'Update Inventory'}
             </button>
