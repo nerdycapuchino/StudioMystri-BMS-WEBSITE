@@ -39,6 +39,10 @@ export const Sidebar: React.FC = () => {
                         <span className="material-symbols-outlined text-xl">group</span>
                         <span className="text-sm">Client Directory</span>
                     </NavLink>
+                    <NavLink to="/crm" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">handshake</span>
+                        <span className="text-sm">CRM</span>
+                    </NavLink>
 
                     {/* Operations */}
                     <div className="pt-4 pb-2 px-3">
@@ -47,6 +51,10 @@ export const Sidebar: React.FC = () => {
                     <NavLink to="/projects" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
                         <span className="material-symbols-outlined text-xl">architecture</span>
                         <span className="text-sm">Project Portfolio</span>
+                    </NavLink>
+                    <NavLink to="/tasks" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">task_alt</span>
+                        <span className="text-sm">Task Manager</span>
                     </NavLink>
                     <NavLink to="/inventory" className={({ isActive }) => `flex items-center justify-between px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
                         <div className="flex items-center gap-3">
@@ -57,7 +65,15 @@ export const Sidebar: React.FC = () => {
                     </NavLink>
                     <NavLink to="/finance" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
                         <span className="material-symbols-outlined text-xl">account_balance</span>
-                        <span className="text-sm">Finance & ERP</span>
+                        <span className="text-sm">Finance</span>
+                    </NavLink>
+                    <NavLink to="/erp" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">factory</span>
+                        <span className="text-sm">ERP</span>
+                    </NavLink>
+                    <NavLink to="/logistics" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">local_shipping</span>
+                        <span className="text-sm">Logistics</span>
                     </NavLink>
                     <NavLink to="/hr" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
                         <span className="material-symbols-outlined text-xl">badge</span>
@@ -74,6 +90,27 @@ export const Sidebar: React.FC = () => {
                             <span className="text-sm">Team Hub</span>
                         </div>
                         <span className="bg-primary/20 text-primary border border-primary/30 text-[10px] font-bold px-2 py-0.5 rounded-full">5</span>
+                    </NavLink>
+                    <NavLink to="/marketing" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">campaign</span>
+                        <span className="text-sm">Marketing</span>
+                    </NavLink>
+                    <NavLink to="/activity-log" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">history</span>
+                        <span className="text-sm">Activity Log</span>
+                    </NavLink>
+
+                    {/* Admin */}
+                    <div className="pt-4 pb-2 px-3">
+                        <span className="text-xs font-bold text-text-muted uppercase tracking-wider">System</span>
+                    </div>
+                    <NavLink to="/admin" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">settings</span>
+                        <span className="text-sm">Settings</span>
+                    </NavLink>
+                    <NavLink to="/integrations" className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group ${isActive ? 'bg-primary text-surface-darker font-medium' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}>
+                        <span className="material-symbols-outlined text-xl">extension</span>
+                        <span className="text-sm">Integrations</span>
                     </NavLink>
                 </nav>
             </div>

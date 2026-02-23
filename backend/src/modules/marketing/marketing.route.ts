@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import * as ctrl from './marketing.controller';
 import { validate } from '../../middleware/validate';
+import { validateQuery } from '../../middleware/validateQuery';
 import { createCampaignSchema, updateCampaignSchema, updateCampaignStatusSchema } from './marketing.schema';
 
 export const marketingRouter = Router();
 marketingRouter.get('/stats', ctrl.stats);
-marketingRouter.get('/campaigns', ctrl.list);
+marketingRouter.get('/campaigns', validateQuery, ctrl.list);
 marketingRouter.get('/campaigns/:id', ctrl.getById);
 marketingRouter.post('/campaigns', validate(createCampaignSchema), ctrl.create);
 marketingRouter.put('/campaigns/:id', validate(updateCampaignSchema), ctrl.update);

@@ -15,6 +15,11 @@ import { Customers } from './components/Customers';
 import { TeamHub } from './components/TeamHub';
 import { ERP } from './components/ERP';
 import { Orders } from './components/Orders';
+import { Admin } from './components/Admin';
+import { Marketing } from './components/Marketing';
+import { TaskManager } from './components/TaskManager';
+import { ActivityLog } from './components/ActivityLog';
+import { Integrations } from './components/Integrations';
 import { PageLoader } from './components/ui/Skeleton';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -84,6 +89,11 @@ const router = createBrowserRouter([
       { path: '/team-hub', element: <TeamHub /> },
       { path: '/erp', element: <ERP /> },
       { path: '/logistics', element: <Logistics /> },
+      { path: '/admin', element: <Admin /> },
+      { path: '/marketing', element: <Marketing /> },
+      { path: '/tasks', element: <TaskManager /> },
+      { path: '/activity-log', element: <ActivityLog /> },
+      { path: '/integrations', element: <Integrations /> },
     ]
   }
 ]);
