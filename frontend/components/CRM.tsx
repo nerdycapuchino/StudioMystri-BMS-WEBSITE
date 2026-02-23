@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { Lead } from '../types';
-import { Plus, Search, FileText, Upload, MoreVertical, Trash2, DollarSign, IndianRupee, Save, Calendar, Globe, Briefcase, Edit2, X } from 'lucide-react';
+import { Plus, Search, Filter, TrendingUp, TrendingDown, Grid, Home, Building2, Wrench, MoreHorizontal, Calendar, Trash2, Edit2, X, AlertCircle, Save, CheckCircle, XCircle } from 'lucide-react';
 import { TableSkeleton, InlineError } from './ui/Skeleton';
 
 export const CRM: React.FC = () => {
@@ -11,10 +10,19 @@ export const CRM: React.FC = () => {
     const updateLeadMut = useUpdateLead();
     const deleteLeadMut = useDeleteLead();
     const leads: Lead[] = Array.isArray(leadsData?.data || leadsData) ? (leadsData?.data || leadsData) : [];
-    const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+
+    const formatCurrency = (amount: number) => {
+        // Keeping it generic or matching the template's compact styling
+        if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+        if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}k`;
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+    };
+
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [showAdd, setShowAdd] = useState(false);
     const [isCustomSource, setIsCustomSource] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState('All');
 
     // Create Form State
     const [form, setForm] = useState<Partial<Lead>>({ companyName: '', pocName: '', value: 0, source: 'Website', type: 'Inbound', requirements: '', files: [], gstNumber: '' });
@@ -23,7 +31,19 @@ export const CRM: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState<Lead | null>(null);
 
-    const columns: Lead['status'][] = ['New', 'Negotiation', 'Won', 'Lost'];
+    // Columns mapping to match template
+    const columns: Record<string, { label: string, color: string, style: 'normal' | 'won' | 'lost' }> = {
+        'New': { label: 'Leads', color: 'blue', style: 'normal' },
+        'Negotiation': { label: 'Negotiation', color: 'red', style: 'normal' },
+        'Initial Meeting': { label: 'Initial Meeting', color: 'orange', style: 'normal' },
+        'Drafting': { label: 'Proposal', color: 'slate', style: 'normal' },
+        'Won': { label: 'Won', color: 'green', style: 'won' },
+        'Lost': { label: 'Lost', color: 'slate', style: 'lost' }
+    };
+
+    // Actual system statuses. We'll map them visually if needed, but 'New', 'Negotiation', 'Won', 'Lost' are system defaults.
+    // To match template, we'll keep the system's simple statuses but render them nicely.
+    const activeColumns = ['New', 'Negotiation', 'Won', 'Lost'];
 
     const handleCreate = () => {
         if (!form.pocName || !form.value) return;
@@ -70,229 +90,414 @@ export const CRM: React.FC = () => {
         }
     };
 
+    const filteredLeads = useMemo(() => {
+        return leads.filter(l => {
+            const matchesSearch = (l.companyName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (l.pocName || '').toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesFilter = filterType === 'All' || l.type === filterType;
+            return matchesSearch && matchesFilter;
+        });
+    }, [leads, searchTerm, filterType]);
+
+    const totalValue = useMemo(() => leads.reduce((acc, l) => acc + (l.status !== 'Lost' ? (l.value || 0) : 0), 0), [leads]);
+    const wonCount = leads.filter(l => l.status === 'Won').length;
+    const closedCount = leads.filter(l => l.status === 'Won' || l.status === 'Lost').length;
+    const winRate = closedCount > 0 ? Math.round((wonCount / closedCount) * 100) : 0;
+    const openDeals = leads.filter(l => l.status !== 'Won' && l.status !== 'Lost').length;
+    const avgDeal = openDeals > 0 ? (leads.filter(l => l.status !== 'Won' && l.status !== 'Lost').reduce((acc, l) => acc + (l.value || 0), 0) / openDeals) : 0;
+
     if (isLoading) return <div className="h-full p-10"><TableSkeleton /></div>;
-    if (isError) return <div className="h-full p-10"><InlineError message={(error as Error)?.message || 'Failed to load leads'} onRetry={refetch} /></div>;
+    if (isError) return <div className="h-full p-10"><InlineError message={(error as Error)?.message || 'Failed to load pipeline'} onRetry={refetch} /></div>;
+
+    const renderCard = (l: Lead, isWonLostColumn = false) => {
+        const cConfig = columns[l.status] || columns['New'];
+
+        if (l.status === 'Won') {
+            return (
+                <div
+                    key={l.id}
+                    onClick={() => setSelectedLead(l)}
+                    className="group bg-emerald-50/50 dark:bg-emerald-900/10 p-4 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-900/50 cursor-pointer hover:shadow-md transition-all relative overflow-hidden"
+                >
+                    <div className="flex justify-between items-start mb-2">
+                        <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" /> Won
+                        </span>
+                        <button onClick={(e) => { e.stopPropagation(); deleteLeadMut.mutate(l.id); }} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/50 rounded z-10">
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1 truncate pr-6">{l.companyName || l.pocName}</h4>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-3 truncate">{l.pocName}</p>
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-emerald-100 dark:border-emerald-900/30">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{l.lastContact}</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold text-sm">{formatCurrency(l.value)}</span>
+                    </div>
+                </div>
+            );
+        }
+
+        if (l.status === 'Lost') {
+            return (
+                <div
+                    key={l.id}
+                    onClick={() => setSelectedLead(l)}
+                    className="group bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 grayscale opacity-60 hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer relative"
+                >
+                    <div className="flex justify-between items-start mb-2">
+                        <span className="bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
+                            <XCircle className="w-3 h-3" /> Lost
+                        </span>
+                        <button onClick={(e) => { e.stopPropagation(); deleteLeadMut.mutate(l.id); }} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/50 rounded z-10">
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1 truncate">{l.companyName || l.pocName}</h4>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-3 truncate">{l.pocName}</p>
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{l.lastContact}</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-bold text-sm">{formatCurrency(l.value)}</span>
+                    </div>
+                </div>
+            );
+        }
+
+        // Active statuses (New, Negotiation)
+        const typeColors: Record<string, string> = {
+            'Inbound': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+            'Outbound': 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+            'Referral': 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+        };
+        const defaultColor = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
+
+        return (
+            <div
+                key={l.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, l.id)}
+                onClick={() => setSelectedLead(l)}
+                className={`group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50 ${l.status === 'Negotiation' ? 'border-l-4 border-l-primary' : ''}`}
+            >
+                <div className="flex justify-between items-start mb-2">
+                    <span className={`${typeColors[l.type] || defaultColor} text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide`}>
+                        {l.type}
+                    </span>
+                    <div className="flex items-center gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); deleteLeadMut.mutate(l.id); }} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-slate-50 dark:bg-slate-700 rounded z-10 tooltip" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button className="text-slate-400 cursor-grab p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+                <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1 truncate pr-2">{l.companyName || l.pocName}</h4>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-3 truncate">{l.requirements ? l.requirements : l.pocName}</p>
+
+                {l.status === 'Negotiation' && (
+                    <div className="flex items-center gap-2 mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs text-yellow-800 dark:text-yellow-200">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        Action Required
+                    </div>
+                )}
+
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase shrink-0">
+                            {l.pocName.substring(0, 2)}
+                        </div>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">{l.lastContact}</span>
+                    </div>
+                    <span className="text-primary font-bold text-sm shrink-0 ml-2">{formatCurrency(l.value)}</span>
+                </div>
+            </div>
+        );
+    };
 
     return (
-        <div className="h-full flex flex-col p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden">
-            <div className="flex justify-between items-end mb-8">
-                <div><h2 className="text-2xl md:text-4xl font-black text-slate-800 tracking-tighter">CRM Pipeline</h2><p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1">Managed Lead Management</p></div>
-                <button onClick={() => setShowAdd(true)} className="px-6 md:px-8 py-3 bg-primary text-black rounded-full font-black text-xs uppercase tracking-widest shadow-glow hover:scale-105 transition-all transform flex items-center gap-2 whitespace-nowrap">
-                    <Plus className="w-4 h-4" /> Capture Lead
-                </button>
-            </div>
+        <div className="flex-1 flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark relative">
 
-            <div className="flex-1 overflow-x-auto flex gap-6 pb-6 items-start h-full snap-x snap-mandatory">
-                {columns.map(col => (
-                    <div
-                        key={col}
-                        className="w-[85vw] md:w-80 h-full flex flex-col shrink-0 bg-slate-50/80/50 rounded-3xl border border-slate-200/60 p-4 snap-center"
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, col)}
-                    >
-                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4 px-2 flex justify-between sticky top-0">
-                            {col}
-                            <span className="bg-slate-100 px-2 py-0.5 rounded-full text-slate-800">{leads.filter(l => l.status === col).length}</span>
-                        </h3>
+            {/* Header Section */}
+            <header className="flex-none px-6 md:px-8 py-6 flex flex-col gap-6 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 z-10 shrink-0">
+                {/* Title and Primary Actions */}
+                <div className="flex flex-col md:flex-row justify-between md:items-end gap-4">
+                    <div className="flex flex-col gap-1">
+                        <h2 className="text-slate-900 dark:text-white text-3xl font-black tracking-tight">Opportunities Pipeline</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">Manage potential contracts from lead to signed deal.</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <Search className="w-5 h-5" />
+                            </span>
+                            <input
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="h-10 pl-10 pr-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary w-full md:w-64 outline-none text-slate-900 dark:text-white"
+                                placeholder="Search opportunities..."
+                            />
+                        </div>
+                        <button className="hidden sm:flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-semibold shadow-sm">
+                            <Filter className="w-5 h-5" />
+                            <span>Filter</span>
+                        </button>
+                        <button onClick={() => setShowAdd(true)} className="flex items-center justify-center gap-2 rounded-lg h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-colors text-sm font-bold shadow-sm whitespace-nowrap">
+                            <Plus className="w-5 h-5" />
+                            <span>New Opportunity</span>
+                        </button>
+                    </div>
+                </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-                            {leads.filter(l => l.status === col).map(l => (
-                                <div
-                                    key={l.id}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, l.id)}
-                                    onClick={() => setSelectedLead(l)}
-                                    className="bg-white/80 backdrop-blur-sm border border-slate-200/60 p-5 rounded-2xl hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing group shadow-lg relative"
-                                >
-                                    <div className="flex justify-between mb-2">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${l.type === 'Inbound' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-purple-500/10 text-purple-500 border-purple-500/20'}`}>{l.type}</span>
-                                        <button onClick={(e) => { e.stopPropagation(); deleteLeadMut.mutate(l.id); }} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity"><Trash2 className="w-3 h-3" /></button>
-                                    </div>
-                                    <h4 className="text-white font-bold text-lg mb-0.5 leading-tight truncate">{l.companyName || l.pocName}</h4>
-                                    <p className="text-slate-500 text-xs mb-4 truncate">{l.pocName}</p>
+                {/* KPI Stats */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div className="flex justify-between items-start">
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Total Pipeline Value</p>
+                            <TrendingUp className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-1">
+                            <p className="text-slate-900 dark:text-white text-xl md:text-2xl font-black">{formatCurrency(totalValue)}</p>
+                            <span className="text-emerald-600 dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">+12%</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div className="flex justify-between items-start">
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Open Deals</p>
+                            <TrendingUp className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-1">
+                            <p className="text-slate-900 dark:text-white text-xl md:text-2xl font-black">{openDeals}</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div className="flex justify-between items-start">
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Win Rate</p>
+                            <TrendingDown className="w-5 h-5 text-red-400" />
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-1">
+                            <p className="text-slate-900 dark:text-white text-xl md:text-2xl font-black">{winRate}%</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-1 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div className="flex justify-between items-start">
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">Avg Deal Size</p>
+                            <TrendingUp className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-1">
+                            <p className="text-slate-900 dark:text-white text-xl md:text-2xl font-black">{formatCurrency(avgDeal)}</p>
+                        </div>
+                    </div>
+                </div>
 
-                                    {l.source && <p className="text-[10px] text-slate-400 mb-2 flex items-center gap-1"><span className="w-1 h-1 rounded-full bg-zinc-500"></span> Via {l.source}</p>}
+                {/* Filters */}
+                <div className="flex gap-2 w-full overflow-x-auto hide-scroll pb-1">
+                    <button onClick={() => setFilterType('All')} className={`flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors whitespace-nowrap ${filterType === 'All' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        <Grid className="w-4 h-4" /> All Leads
+                    </button>
+                    <button onClick={() => setFilterType('Inbound')} className={`flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors whitespace-nowrap ${filterType === 'Inbound' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        <Home className="w-4 h-4" /> Inbound
+                    </button>
+                    <button onClick={() => setFilterType('Outbound')} className={`flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors whitespace-nowrap ${filterType === 'Outbound' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        <Building2 className="w-4 h-4" /> Outbound
+                    </button>
+                    <button onClick={() => setFilterType('Referral')} className={`flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors whitespace-nowrap ${filterType === 'Referral' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                        <Wrench className="w-4 h-4" /> Referral
+                    </button>
+                </div>
+            </header>
 
-                                    <div className="flex justify-between items-end pt-3 border-t border-slate-200/60">
-                                        <p className="text-primary font-mono font-bold text-sm">{formatCurrency(l.value)}</p>
-                                        <p className="text-[10px] text-slate-400 font-bold">{l.lastContact}</p>
+            {/* Kanban Board Area */}
+            <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 md:p-8 custom-scrollbar">
+                <div className="flex h-full gap-6 min-w-max pb-4">
+                    {/* Active Columns (New, Negotiation) */}
+                    {['New', 'Negotiation'].map(col => {
+                        const colLeads = filteredLeads.filter(l => l.status === col);
+                        return (
+                            <div
+                                key={col}
+                                className="flex flex-col w-80 shrink-0"
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, col)}
+                            >
+                                <div className="flex items-center justify-between mb-4 px-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">{columns[col].label}</h3>
+                                        <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">{colLeads.length}</span>
                                     </div>
                                 </div>
-                            ))}
-                            {leads.filter(l => l.status === col).length === 0 && (
-                                <div className="h-32 border-2 border-dashed border-slate-200/60 rounded-2xl flex items-center justify-center text-zinc-700 text-xs font-bold uppercase tracking-widest">
-                                    Drop Here
+                                <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+                                    {colLeads.map(l => renderCard(l))}
+                                    {colLeads.length === 0 && (
+                                        <div className="h-24 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+                                            Drop Here
+                                        </div>
+                                    )}
+                                </div>
+                                <button onClick={() => setShowAdd(true)} className="mt-2 flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-200 transition-colors text-sm font-medium">
+                                    <Plus className="w-4 h-4" /> Add Lead
+                                </button>
+                            </div>
+                        )
+                    })}
+
+                    {/* Won/Lost Column */}
+                    <div
+                        className="flex flex-col w-80 shrink-0 opacity-80 hover:opacity-100 transition-opacity"
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => {
+                            // On drop into this column, normally you'd prompt or it's just a combined view
+                            // We will default drop to Won, but UI should ideally differentiate
+                            handleDrop(e, 'Won');
+                        }}
+                    >
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">Won / Lost</h3>
+                                <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">{filteredLeads.filter(l => l.status === 'Won' || l.status === 'Lost').length}</span>
+                            </div>
+                        </div>
+                        <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+                            {filteredLeads.filter(l => l.status === 'Won' || l.status === 'Lost').map(l => renderCard(l, true))}
+                            {filteredLeads.filter(l => l.status === 'Won' || l.status === 'Lost').length === 0 && (
+                                <div className="h-24 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+                                    No Closed Deals
                                 </div>
                             )}
                         </div>
                     </div>
-                ))}
+                </div>
             </div>
 
-            {/* Lead Detail / Edit Modal */}
+            {/* View/Edit Lead Modal */}
             {selectedLead && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-                    <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-[2.5rem] w-full max-w-4xl shadow-xl shadow-slate-200/50 flex flex-col max-h-[85vh] overflow-hidden">
-                        <div className="p-8 border-b border-slate-200 flex justify-between items-start shrink-0">
-                            <div className="flex-1 mr-8">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
+                            <div className="flex-1 pr-6">
                                 {isEditing ? (
                                     <div className="space-y-4">
-                                        <input value={editForm?.companyName} onChange={e => setEditForm({ ...editForm!, companyName: e.target.value })} className="text-3xl font-black text-slate-800 uppercase bg-transparent border-b border-slate-200 w-full focus:outline-none focus:border-primary" placeholder="Company Name" />
-                                        <div className="flex gap-4">
-                                            <input value={editForm?.pocName} onChange={e => setEditForm({ ...editForm!, pocName: e.target.value })} className="bg-transparent border-b border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-primary w-full" placeholder="Contact Name" />
-                                            <input value={editForm?.email} onChange={e => setEditForm({ ...editForm!, email: e.target.value })} className="bg-transparent border-b border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-primary w-full" placeholder="Email" />
+                                        <input value={editForm?.companyName || ''} onChange={e => setEditForm({ ...editForm!, companyName: e.target.value })} className="text-2xl font-black text-slate-900 dark:text-white uppercase bg-transparent border-b border-slate-300 dark:border-slate-600 w-full focus:outline-none focus:border-primary pb-1" placeholder="Company Name" />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input value={editForm?.pocName || ''} onChange={e => setEditForm({ ...editForm!, pocName: e.target.value })} className="bg-transparent border-b border-slate-300 dark:border-slate-600 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary w-full pb-1" placeholder="Contact Name" />
+                                            <input value={editForm?.email || ''} onChange={e => setEditForm({ ...editForm!, email: e.target.value })} className="bg-transparent border-b border-slate-300 dark:border-slate-600 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary w-full pb-1" placeholder="Email Address" />
                                         </div>
                                     </div>
                                 ) : (
                                     <>
-                                        <h3 className="text-3xl font-black text-slate-800 mb-1 uppercase tracking-tight">{selectedLead.companyName || selectedLead.pocName}</h3>
-                                        <div className="text-slate-500 text-sm font-bold flex gap-2">
-                                            {selectedLead.pocName} • {selectedLead.email}
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{selectedLead.companyName || selectedLead.pocName}</h3>
+                                            <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${selectedLead.status === 'Won' ? 'bg-emerald-100 text-emerald-700' : selectedLead.status === 'Lost' ? 'bg-slate-200 text-slate-700' : 'bg-blue-100 text-blue-700'}`}>{selectedLead.status}</span>
                                         </div>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm">{selectedLead.pocName} {selectedLead.email ? `• ${selectedLead.email}` : ''}</p>
                                     </>
                                 )}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 shrink-0">
                                 {isEditing ? (
-                                    <button onClick={handleUpdate} className="px-4 py-2 bg-primary text-black rounded-full font-bold flex items-center gap-2"><Save className="w-4 h-4" /> Save Changes</button>
+                                    <button onClick={handleUpdate} className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg font-bold flex items-center gap-2 text-sm shadow-sm transition-colors"><Save className="w-4 h-4" /> Save</button>
                                 ) : (
-                                    <button onClick={startEdit} className="px-4 py-2 bg-slate-50 text-slate-800 rounded-full hover:bg-slate-100 font-bold flex items-center gap-2"><Edit2 className="w-4 h-4" /> Edit</button>
+                                    <button onClick={startEdit} className="px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 font-bold flex items-center gap-2 text-sm transition-colors"><Edit2 className="w-4 h-4" /> Edit</button>
                                 )}
-                                <button onClick={() => { setSelectedLead(null); setIsEditing(false); }} className="p-2 bg-slate-50 rounded-full hover:bg-slate-100 text-slate-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                                <button onClick={() => { setSelectedLead(null); setIsEditing(false); }} className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 transition-colors"><X className="w-5 h-5" /></button>
                             </div>
                         </div>
 
-                        <div className="p-8 overflow-y-auto space-y-8 flex-1 custom-scrollbar">
-                            {/* Status & Value */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
-                                    <p className="text-slate-500 text-[10px] uppercase font-black mb-2 tracking-widest">Project Value</p>
-                                    {isEditing ? <input type="number" value={editForm?.value} onChange={e => setEditForm({ ...editForm!, value: Number(e.target.value) })} className="bg-transparent border-b border-slate-200 text-primary font-bold text-xl w-full focus:outline-none" /> : <p className="text-2xl font-bold text-primary">{formatCurrency(selectedLead.value)}</p>}
+                        <div className="p-6 overflow-y-auto space-y-8 flex-1 custom-scrollbar">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1.5">Value</p>
+                                    {isEditing ? <input type="number" value={editForm?.value} onChange={e => setEditForm({ ...editForm!, value: Number(e.target.value) })} className="bg-transparent border-b border-primary text-slate-900 dark:text-white font-bold text-lg w-full focus:outline-none" /> : <p className="text-lg font-bold text-primary">{formatCurrency(selectedLead.value)}</p>}
                                 </div>
-                                <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
-                                    <p className="text-slate-500 text-[10px] uppercase font-black mb-2 tracking-widest">Stage</p>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1.5">Pipeline Stage</p>
                                     {isEditing ? (
-                                        <select value={editForm?.status} onChange={e => setEditForm({ ...editForm!, status: e.target.value as any })} className="bg-transparent border-b border-slate-200 text-slate-800 w-full focus:outline-none">
-                                            {columns.map(c => <option key={c} value={c} className="text-black">{c}</option>)}
+                                        <select value={editForm?.status} onChange={e => setEditForm({ ...editForm!, status: e.target.value as any })} className="bg-transparent border-b border-primary text-slate-900 dark:text-white w-full focus:outline-none font-medium">
+                                            {Object.keys(columns).map(c => <option key={c} value={c} className="text-slate-900">{c}</option>)}
                                         </select>
-                                    ) : <p className="text-2xl font-bold text-slate-800">{selectedLead.status}</p>}
+                                    ) : <p className="text-base font-bold text-slate-900 dark:text-white">{selectedLead.status}</p>}
                                 </div>
-                                <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
-                                    <p className="text-slate-500 text-[10px] uppercase font-black mb-2 tracking-widest">Source</p>
-                                    {isEditing ? <input value={editForm?.source} onChange={e => setEditForm({ ...editForm!, source: e.target.value })} className="bg-transparent border-b border-slate-200 text-slate-800 w-full focus:outline-none" /> : <p className="text-lg font-bold text-slate-800">{selectedLead.source}</p>}
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1.5">Source</p>
+                                    {isEditing ? <input value={editForm?.source} onChange={e => setEditForm({ ...editForm!, source: e.target.value })} className="bg-transparent border-b border-primary text-slate-900 dark:text-white w-full focus:outline-none font-medium" /> : <p className="text-base font-bold text-slate-900 dark:text-white">{selectedLead.source}</p>}
                                 </div>
-                                <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
-                                    <p className="text-slate-500 text-[10px] uppercase font-black mb-2 tracking-widest">Type</p>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50">
+                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1.5">Lead Type</p>
                                     {isEditing ? (
-                                        <select value={editForm?.type} onChange={e => setEditForm({ ...editForm!, type: e.target.value as any })} className="bg-transparent border-b border-slate-200 text-slate-800 w-full focus:outline-none">
-                                            <option value="Inbound" className="text-black">Inbound</option>
-                                            <option value="Outbound" className="text-black">Outbound</option>
-                                            <option value="Referral" className="text-black">Referral</option>
+                                        <select value={editForm?.type} onChange={e => setEditForm({ ...editForm!, type: e.target.value as any })} className="bg-transparent border-b border-primary text-slate-900 dark:text-white w-full focus:outline-none font-medium">
+                                            <option value="Inbound" className="text-slate-900">Inbound</option>
+                                            <option value="Outbound" className="text-slate-900">Outbound</option>
+                                            <option value="Referral" className="text-slate-900">Referral</option>
                                         </select>
-                                    ) : <p className="text-lg font-bold text-slate-800">{selectedLead.type}</p>}
+                                    ) : <p className="text-base font-bold text-slate-900 dark:text-white">{selectedLead.type}</p>}
                                 </div>
                             </div>
 
-                            {/* Detailed Info */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <h4 className="text-slate-500 font-bold mb-4 uppercase text-xs tracking-widest flex items-center gap-2"><Briefcase className="w-4 h-4" /> Requirements & Brief</h4>
-                                    {isEditing ? (
-                                        <textarea value={editForm?.requirements} onChange={e => setEditForm({ ...editForm!, requirements: e.target.value })} className="w-full bg-gradient-to-br from-slate-50 to-blue-50 p-4 rounded-2xl border border-slate-200/60 text-slate-600 h-40 focus:outline-none focus:border-primary resize-none" />
-                                    ) : (
-                                        <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-6 rounded-2xl border border-slate-200/60 text-slate-600 leading-relaxed min-h-[160px] text-sm whitespace-pre-wrap">
-                                            {selectedLead.requirements || 'No specific requirements recorded.'}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-6">
-                                    <div>
-                                        <h4 className="text-slate-500 font-bold mb-4 uppercase text-xs tracking-widest flex items-center gap-2"><FileText className="w-4 h-4" /> Additional Notes</h4>
-                                        {isEditing ? (
-                                            <textarea value={editForm?.notes} onChange={e => setEditForm({ ...editForm!, notes: e.target.value })} className="w-full bg-gradient-to-br from-slate-50 to-blue-50 p-4 rounded-2xl border border-slate-200/60 text-slate-600 h-24 focus:outline-none focus:border-primary resize-none" placeholder="Internal notes..." />
-                                        ) : (
-                                            <p className="text-slate-500 text-sm italic">{selectedLead.notes || 'No notes.'}</p>
-                                        )}
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2"><Building2 className="w-4 h-4" /> Requirements & Notes</h4>
+                                {isEditing ? (
+                                    <textarea value={editForm?.requirements || ''} onChange={e => setEditForm({ ...editForm!, requirements: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-4 rounded-xl text-sm text-slate-700 dark:text-slate-300 min-h-[120px] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-y" placeholder="Enter requirements or context..." />
+                                ) : (
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 p-4 rounded-xl text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed min-h-[100px]">
+                                        {selectedLead.requirements || <span className="text-slate-400 italic">No notes recorded.</span>}
                                     </div>
-
-                                    <div>
-                                        <h4 className="text-slate-500 font-bold mb-4 uppercase text-xs tracking-widest flex items-center gap-2"><Upload className="w-4 h-4" /> Attachments</h4>
-                                        {selectedLead.files && selectedLead.files.length > 0 ? (
-                                            <div className="flex flex-wrap gap-3">
-                                                {selectedLead.files.map((f, i) => (
-                                                    <div key={i} className="px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 flex items-center gap-2">
-                                                        <FileText className="w-4 h-4 text-primary" /> {f}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-slate-400 text-xs italic">No files attached.</p>
-                                        )}
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Capture Lead Modal - kept same as before but ensured robust */}
+            {/* Add Lead Modal */}
             {showAdd && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-                    <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-[2.5rem] w-full max-w-xl shadow-xl shadow-slate-200/50 p-6 md:p-10 space-y-6 max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Capture Lead</h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500 ml-2">POC Name</label>
-                                <input value={form.pocName} onChange={e => setForm({ ...form, pocName: e.target.value })} className="w-full bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-primary" placeholder="Full Name" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500 ml-2">Company (Optional)</label>
-                                <input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} className="w-full bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-primary" placeholder="Business Name" />
-                            </div>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-lg p-6 md:p-8 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2"><Plus className="w-5 h-5 text-primary" /> New Opportunity</h3>
+                            <button onClick={() => setShowAdd(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><X className="w-5 h-5" /></button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500 ml-2">Lead Source</label>
-                                {!isCustomSource ? (
-                                    <div className="relative">
-                                        <select value={form.source} onChange={e => {
-                                            if (e.target.value === 'custom') setIsCustomSource(true);
-                                            else setForm({ ...form, source: e.target.value });
-                                        }} className="w-full bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-primary appearance-none">
-                                            <option value="Website">Website</option>
-                                            <option value="Social Media">Social Media</option>
-                                            <option value="Referral">Referral (Friend)</option>
-                                            <option value="Walk-in">Walk-in</option>
-                                            <option value="custom" className="text-primary font-bold">+ Custom Source</option>
-                                        </select>
-                                    </div>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <input autoFocus placeholder="Enter Source" onChange={e => setForm({ ...form, source: e.target.value })} className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-primary" />
-                                        <button onClick={() => setIsCustomSource(false)} className="px-3 bg-slate-100 rounded-xl text-xs hover:bg-white/20">Reset</button>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500 ml-2">Est. Value</label>
-                                <div className="relative">
-                                    <input type="number" value={form.value || ''} onChange={e => setForm({ ...form, value: Number(e.target.value) })} className="w-full bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-xl pl-4 pr-3 py-3 text-slate-800 focus:outline-none focus:border-primary" placeholder="0.00" />
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Client / POC Name *</label>
+                                    <input value={form.pocName} onChange={e => setForm({ ...form, pocName: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none" placeholder="e.g. John Smith" autoFocus />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Company (Optional)</label>
+                                    <input value={form.companyName} onChange={e => setForm({ ...form, companyName: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none" placeholder="e.g. Acme Corp" />
                                 </div>
                             </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Lead Type</label>
+                                    <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value as any })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none">
+                                        <option value="Inbound">Inbound</option>
+                                        <option value="Outbound">Outbound</option>
+                                        <option value="Referral">Referral</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Estimated Value *</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
+                                        <input type="number" value={form.value || ''} onChange={e => setForm({ ...form, value: Number(e.target.value) })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 p-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none" placeholder="0.00" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Requirements / Brief</label>
+                                <textarea value={form.requirements} onChange={e => setForm({ ...form, requirements: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none min-h-[100px] resize-y" placeholder="Describe project scope, timeline, needs..." />
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <label className="text-[10px] uppercase font-bold text-slate-500 ml-2">Requirements / Details</label>
-                            <textarea onChange={e => setForm({ ...form, requirements: e.target.value })} placeholder="Project scope, product interests, deadlines..." className="w-full bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-primary h-24" />
-                        </div>
-
-                        <div className="flex gap-4 pt-4">
-                            <button onClick={() => setShowAdd(false)} className="flex-1 py-3 bg-slate-100 rounded-xl font-bold text-slate-800 hover:bg-slate-100 transition-colors">Cancel</button>
-                            <button onClick={handleCreate} className="flex-1 py-3 bg-primary text-black font-black uppercase text-xs tracking-widest rounded-xl shadow-glow">Save Lead</button>
+                        <div className="mt-8 flex gap-3">
+                            <button onClick={() => setShowAdd(false)} className="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                            <button onClick={handleCreate} disabled={createLead.isPending || !form.pocName || !form.value} className="flex-1 py-3 px-4 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50 flex justify-center items-center gap-2">
+                                {createLead.isPending ? <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div> : 'Create Lead'}
+                            </button>
                         </div>
                     </div>
                 </div>

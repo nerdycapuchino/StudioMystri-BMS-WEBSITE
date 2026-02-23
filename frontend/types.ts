@@ -63,16 +63,20 @@ export interface PurchaseHistoryItem {
 
 export interface Customer {
   id: string;
-  name: string;
+  name: string; // Company Name
+  contactName?: string; // Primary Contact Person
+  industry?: string;
   phone: string;
   email: string;
   gstNumber?: string;
   lastPurchase?: string;
-  totalSpend: number;
+  totalSpend: number; // LTV
   address?: string;
   shippingAddress?: string;
   notes?: string;
-  status?: 'Active' | 'Inactive';
+  status?: 'Active' | 'Inactive' | 'Lead' | 'Past Client';
+  projectCount?: number;
+  activeProjectCount?: number;
   history: PurchaseHistoryItem[];
 }
 
@@ -100,6 +104,9 @@ export interface InventoryItem {
   id: string;
   name: string;
   type: 'Raw Material' | 'Finished Good' | 'Consumable';
+  category?: string;
+  sku?: string;
+  image?: string;
   quantity: number;
   unit: string;
   reorderLevel: number;

@@ -12,346 +12,281 @@ export const HR: React.FC = () => {
 
    const employees: Employee[] = Array.isArray(empData?.data || empData) ? (empData?.data || empData) as Employee[] : [];
 
-   const formatCurrency = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
-
-   const [activeTab, setActiveTab] = useState<'staff' | 'roles' | 'policies'>('staff');
+   const [activeView, setActiveView] = useState<'directory' | 'attendance'>('directory');
    const [showAddStaff, setShowAddStaff] = useState(false);
    const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-   const [searchQuery, setSearchQuery] = useState('');
    const [selectedDept, setSelectedDept] = useState('All');
-   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-   const [newStaff, setNewStaff] = useState({ name: '', email: '', phone: '', roleId: '', department: '', salary: 0, bankDetails: '' });
-   const resetStaffForm = () => setNewStaff({ name: '', email: '', phone: '', roleId: '', department: '', salary: 0, bankDetails: '' });
+   // Add staff form state
+   const [newStaff, setNewStaff] = useState<Partial<Employee>>({ name: '', email: '', phone: '', department: '', status: 'Active', attendance: 'Present', roleId: '1' });
 
-   // Derived
-   const userRoles: UserRole[] = []; // Roles will come from backend in future
-   const departments = Array.from(new Set(employees.map(e => e.department)));
+   const departments = Array.from(new Set(employees.map(e => e.department).filter(Boolean)));
 
    const filteredEmployees = employees.filter(e => {
-      const matchesSearch = e.name.toLowerCase().includes(searchQuery.toLowerCase()) || e.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesDept = selectedDept === 'All' || e.department === selectedDept;
-      return matchesSearch && matchesDept;
+      return selectedDept === 'All' || e.department === selectedDept;
    });
 
    const handleAddStaff = () => {
-      if (newStaff.name && newStaff.email) {
-         createEmployee.mutate({
-            ...newStaff,
-            id: Math.random().toString(36).substr(2, 9),
-            joinDate: new Date().toLocaleDateString(),
-            status: 'Active',
-            attendance: 'Absent',
-            credentials: { username: newStaff.email, initialPass: 'Welcome@123' }
-         } as any, {
+      if (!newStaff.name || !newStaff.email) {
+         toast.error("Name and email are required");
+         return;
+      }
+
+      createEmployee.mutate({
+         ...newStaff,
+         id: Math.random().toString(36).substr(2, 9),
+         joinDate: new Date().toISOString(),
+         salary: Number(newStaff.salary || 0),
+         roleId: newStaff.roleId || '1',
+         status: 'Active',
+         attendance: 'Present',
+      } as any, {
+         onSuccess: () => {
+            setShowAddStaff(false);
+            setNewStaff({ name: '', email: '', phone: '', department: '', status: 'Active', attendance: 'Present', roleId: '1' });
+         }
+      });
+   };
+
+   const handleSaveEdit = () => {
+      if (editingEmployee) {
+         updateEmployeeMut.mutate({ id: editingEmployee.id, status: editingEmployee.status, attendance: editingEmployee.attendance, department: editingEmployee.department } as any, {
             onSuccess: () => {
-               setShowAddStaff(false);
-               resetStaffForm();
+               setEditingEmployee(null);
             }
          });
       }
    };
 
-   const handleUpdateEmployee = (id: string, updates: Partial<Employee>) => {
-      updateEmployeeMut.mutate({ id, ...updates } as any);
+   const getStatusStyle = (status: string) => {
+      switch (status) {
+         case 'Active': return 'bg-green-100/90 dark:bg-green-900/90 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
+         case 'Leave': return 'bg-amber-100/90 dark:bg-amber-900/90 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+         case 'Terminated':
+         case 'Inactive': return 'bg-slate-200/90 dark:bg-slate-700/90 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600';
+         default: return 'bg-blue-100/90 dark:bg-blue-900/90 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
+      }
    };
 
-   if (isLoading) {
-      return (
-         <div className="h-full flex flex-col p-6 space-y-6">
-            <div className="h-10 bg-surface-elevated rounded-xl animate-pulse w-48 border border-border-solid" />
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-               {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-surface-elevated rounded-xl animate-pulse border border-border-solid" />)}
-            </div>
-            <div className="flex-1 bg-surface-elevated rounded-xl animate-pulse border border-border-solid" />
-         </div>
-      );
-   }
-
-   if (isError) {
-      return (
-         <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-               <p className="text-error font-bold mb-2">Failed to load HR data</p>
-               <p className="text-text-muted text-sm">{(error as any)?.message || 'Unknown error'}</p>
-            </div>
-         </div>
-      );
-   }
+   const getAttendanceColor = (att: string) => {
+      switch (att) {
+         case 'Present': return 'bg-green-500';
+         case 'Late': return 'bg-amber-500';
+         case 'Absent': return 'bg-red-500';
+         case 'Half-Day': return 'bg-orange-400';
+         case 'Leave': return 'bg-blue-500';
+         default: return 'bg-slate-300';
+      }
+   };
 
    return (
-      <div className="h-full flex flex-col overflow-y-auto pr-2 relative animation-fade-in">
-         <div className="flex justify-between items-center mb-6">
-            <div>
-               <h1 className="font-playfair text-3xl text-text-primary tracking-wide mb-1">Human Resources</h1>
-               <p className="text-text-muted text-sm font-sans flex items-center gap-2">Staff & Directory Management</p>
-            </div>
-            <button
-               onClick={() => setShowAddStaff(true)}
-               className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-surface-darker rounded-lg text-sm font-bold shadow-glow transition-colors"
-            >
-               <span className="material-symbols-outlined text-[18px]">add</span> Add Employee
-            </button>
-         </div>
-
-         {/* KPI Strip */}
-         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[
-               { label: 'Total Staff', value: employees.length, icon: 'group', colorClass: 'text-primary bg-primary/10' },
-               { label: 'Present Today', value: employees.filter(e => e.attendance === 'Present').length, icon: 'how_to_reg', colorClass: 'text-success bg-success/10' },
-               { label: 'Departments', value: departments.length, icon: 'work', colorClass: 'text-info bg-info/10' },
-               { label: 'Active', value: employees.filter(e => e.status === 'Active').length, icon: 'verified_user', colorClass: 'text-bronze-DEFAULT bg-bronze-DEFAULT/10' },
-            ].map((kpi, i) => (
-               <div key={i} className="bg-surface-elevated p-6 rounded-2xl border border-border-solid relative overflow-hidden group hover:border-border-hover transition-colors">
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                     <span className={`material-symbols-outlined text-6xl ${kpi.colorClass.split(' ')[0]}`}>{kpi.icon}</span>
+      <div className="flex-1 flex flex-col h-full bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display relative z-10 w-full overflow-hidden animation-fade-in">
+         <div className="flex-none p-6 pb-4 overflow-y-auto custom-scrollbar">
+            <div className="max-w-[1440px] mx-auto flex flex-col gap-8">
+               {/* Header */}
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                  <div className="flex flex-col gap-2 max-w-xl">
+                     <h1 className="text-slate-900 dark:text-white text-3xl md:text-4xl font-light tracking-tight">People & Operations</h1>
+                     <p className="text-slate-500 dark:text-slate-400 text-base font-light">Manage staff directory, track site attendance, and oversee resource allocation.</p>
                   </div>
-                  <div className={`p-2 rounded-lg w-fit mb-4 ${kpi.colorClass}`}>
-                     <span className="material-symbols-outlined text-[20px]">{kpi.icon}</span>
+                  <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                     {/* Segmented Control */}
+                     <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg self-start sm:self-auto w-full sm:w-auto">
+                        <button onClick={() => setActiveView('directory')} className={`flex-1 sm:flex-none px-6 py-1.5 rounded text-sm font-medium transition-all ${activeView === 'directory' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'hover:bg-white/50 dark:hover:bg-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>Directory</button>
+                        <button onClick={() => setActiveView('attendance')} className={`flex-1 sm:flex-none px-6 py-1.5 rounded text-sm font-medium transition-all ${activeView === 'attendance' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'hover:bg-white/50 dark:hover:bg-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>Attendance</button>
+                     </div>
+                     <button onClick={() => setShowAddStaff(true)} className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary/30 w-full sm:w-auto">
+                        <span className="material-symbols-outlined text-[20px]">add</span>
+                        <span>Add Employee</span>
+                     </button>
                   </div>
-                  <h3 className="text-3xl font-display font-medium text-text-primary">{kpi.value}</h3>
-                  <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-1">{kpi.label}</p>
-               </div>
-            ))}
-         </div>
-
-         {/* Tabs */}
-         <div className="flex gap-1 bg-surface-dark p-1 rounded-lg border border-border-solid mb-6 w-fit">
-            {(['staff', 'roles', 'policies'] as const).map(tab => (
-               <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 rounded-md text-sm font-bold capitalize transition-all ${activeTab === tab ? 'bg-surface-elevated shadow text-text-primary border border-border-solid' : 'text-text-muted hover:text-text-primary'}`}
-               >
-                  {tab}
-               </button>
-            ))}
-         </div>
-
-         {/* Staff Tab */}
-         {activeTab === 'staff' && (
-            <>
-               <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                  <div className="flex-1 relative">
-                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-text-muted">search</span>
-                     <input
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-surface-dark border border-border-solid rounded-lg text-sm text-text-primary focus:outline-none focus:border-primary transition-colors placeholder-text-muted"
-                        placeholder="Search by name or email..."
-                     />
-                  </div>
-                  <select
-                     value={selectedDept}
-                     onChange={e => setSelectedDept(e.target.value)}
-                     className="bg-surface-dark border border-border-solid rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-primary appearance-none custom-select"
-                  >
-                     <option value="All">All Departments</option>
-                     {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
                </div>
 
-               <div className="bg-surface-elevated rounded-xl border border-border-solid overflow-hidden flex-1 shadow-sm">
-                  <table className="w-full text-sm text-left align-middle border-collapse">
-                     <thead className="bg-surface-dark text-text-muted text-xs font-bold uppercase tracking-wider border-b border-border-solid">
-                        <tr>
-                           <th className="px-6 py-4">Employee</th>
-                           <th className="px-6 py-4">Department</th>
-                           <th className="px-6 py-4">Status</th>
-                           <th className="px-6 py-4">Attendance</th>
-                           <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-border-solid">
-                        {filteredEmployees.map(emp => (
-                           <React.Fragment key={emp.id}>
-                              <tr className="hover:bg-surface-hover cursor-pointer transition-colors group" onClick={() => setExpandedId(expandedId === emp.id ? null : emp.id)}>
-                                 <td className="px-6 py-4">
-                                    <div className="flex items-center gap-4">
-                                       <div className="w-10 h-10 rounded-full bg-primary/10 text-primary border border-primary/30 flex items-center justify-center font-bold text-sm shadow-inner group-hover:bg-primary group-hover:text-surface-darker transition-colors">
-                                          {emp.name.charAt(0)}
-                                       </div>
-                                       <div>
-                                          <p className="font-bold text-text-primary">{emp.name}</p>
-                                          <p className="text-xs text-text-muted mt-0.5">{emp.email}</p>
-                                       </div>
-                                    </div>
-                                 </td>
-                                 <td className="px-6 py-4">
-                                    <span className="text-text-secondary px-3 py-1 bg-surface-dark border border-border-solid rounded text-xs font-medium">{emp.department}</span>
-                                 </td>
-                                 <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 border rounded text-[10px] uppercase font-bold tracking-wider ${emp.status === 'Active' ? 'bg-success/10 text-success border-success/30' : 'bg-error/10 text-error border-error/30'}`}>
-                                       {emp.status}
-                                    </span>
-                                 </td>
-                                 <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 border rounded text-[10px] uppercase font-bold tracking-wider ${emp.attendance === 'Present' ? 'bg-success/10 text-success border-success/30' : emp.attendance === 'Late' ? 'bg-warning/10 text-warning border-warning/30' : 'bg-surface-dark text-text-muted border-border-solid'}`}>
-                                       {emp.attendance}
-                                    </span>
-                                 </td>
-                                 <td className="px-6 py-4 text-right">
-                                    <button onClick={(e) => { e.stopPropagation(); setEditingEmployee(emp); }} className="text-text-muted hover:text-primary transition-colors inline-flex items-center justify-center p-2 rounded-lg hover:bg-primary/10">
-                                       <span className="material-symbols-outlined text-[18px]">edit</span>
-                                    </button>
-                                 </td>
-                              </tr>
-                              {expandedId === emp.id && (
-                                 <tr className="bg-surface-dark border-b border-border-solid">
-                                    <td colSpan={5} className="px-6 py-4">
-                                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 border border-border-glass rounded-xl bg-surface-elevated/50">
-                                          <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                             <div className="p-2 rounded bg-surface-dark text-text-muted border border-border-solid"><span className="material-symbols-outlined text-[18px]">call</span></div>
-                                             <div>
-                                                <p className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Phone</p>
-                                                <p className="font-mono mt-0.5">{emp.phone || 'N/A'}</p>
-                                             </div>
-                                          </div>
-                                          <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                             <div className="p-2 rounded bg-surface-dark text-text-muted border border-border-solid"><span className="material-symbols-outlined text-[18px]">event</span></div>
-                                             <div>
-                                                <p className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Join Date</p>
-                                                <p className="mt-0.5">{emp.joinDate}</p>
-                                             </div>
-                                          </div>
-                                          <div className="flex items-center gap-3 text-sm text-text-secondary">
-                                             <div className="p-2 rounded bg-surface-dark text-text-muted border border-border-solid"><span className="material-symbols-outlined text-[18px]">payments</span></div>
-                                             <div>
-                                                <p className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Salary</p>
-                                                <p className="mt-0.5 font-bold text-text-primary">{formatCurrency(emp.salary || 0)}</p>
-                                             </div>
-                                          </div>
-                                       </div>
-                                    </td>
-                                 </tr>
-                              )}
-                           </React.Fragment>
-                        ))}
-                     </tbody>
-                  </table>
+               {/* Filters Section */}
+               <div className="flex flex-wrap items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium">
+                     <span className="material-symbols-outlined text-[18px]">filter_list</span>
+                     <span>Departments</span>
+                  </div>
+                  <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+                  <button onClick={() => setSelectedDept('All')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedDept === 'All' ? 'bg-primary/10 text-primary border border-primary/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                     All
+                  </button>
+                  {departments.map((dept: any) => (
+                     <button key={dept} onClick={() => setSelectedDept(dept)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedDept === dept ? 'bg-primary/10 text-primary border border-primary/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                        {dept}
+                     </button>
+                  ))}
                </div>
-            </>
-         )}
-
-         {/* Roles Tab */}
-         {activeTab === 'roles' && (
-            <div className="bg-surface-elevated rounded-xl border border-border-solid p-8 text-center">
-               <span className="material-symbols-outlined text-4xl text-text-muted mb-4">admin_panel_settings</span>
-               <p className="text-text-primary font-bold">Role Management</p>
-               <p className="text-text-muted text-sm mt-2">Role management will be available via the Admin panel API.</p>
             </div>
-         )}
+         </div>
 
-         {/* Policies Tab */}
-         {activeTab === 'policies' && (
-            <div className="bg-surface-elevated rounded-xl border border-border-solid p-8 text-center">
-               <span className="material-symbols-outlined text-4xl text-text-muted mb-4">policy</span>
-               <p className="text-text-primary font-bold">Company Policies</p>
-               <p className="text-text-muted text-sm mt-2">Policies management will be available via the API.</p>
+         {/* Scrollable Content Area */}
+         <div className="flex-1 overflow-auto custom-scrollbar px-6 pb-8">
+            <div className="max-w-[1440px] mx-auto">
+               {isLoading ? (
+                  <div className="text-center py-12 text-slate-500">Loading personnel records...</div>
+               ) : isError ? (
+                  <div className="text-center py-12 text-rose-500">Error loading data.</div>
+               ) : activeView === 'directory' ? (
+                  /* Directory Grid */
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                     {filteredEmployees.map(emp => (
+                        <div key={emp.id} className="group relative flex flex-col bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg dark:hover:shadow-slate-900/50 hover:border-primary/30 transition-all duration-300">
+                           <div className="aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-900 flex items-center justify-center relative">
+                              {/* Avatar Placeholder */}
+                              <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:scale-105 transition-transform duration-500">
+                                 <span className="material-symbols-outlined text-9xl">person</span>
+                              </div>
+                              <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+                                 <span className={`px-2.5 py-1 rounded text-xs font-semibold backdrop-blur-sm border ${getStatusStyle(emp.status)}`}>
+                                    {emp.status}
+                                 </span>
+                              </div>
+                           </div>
+                           <div className="flex flex-col p-4 gap-1 relative z-10 bg-white dark:bg-slate-800">
+                              <div className="flex justify-between items-start">
+                                 <div>
+                                    <h3 className="text-slate-900 dark:text-white text-lg font-semibold leading-tight group-hover:text-primary transition-colors">{emp.name}</h3>
+                                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{emp.department || 'Staff Member'}</p>
+                                 </div>
+                                 <button onClick={() => setEditingEmployee(emp)} className="text-slate-400 hover:text-primary transition-colors">
+                                    <span className="material-symbols-outlined text-[20px]">edit</span>
+                                 </button>
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                                 <div className="flex items-center gap-1 text-slate-400 text-xs truncate mr-2">
+                                    <span className="material-symbols-outlined text-[14px]">badge</span>
+                                    <span className="truncate">{emp.email}</span>
+                                 </div>
+                                 <div className="flex gap-2 shrink-0">
+                                    <a href={`mailto:${emp.email}`} className="size-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors">
+                                       <span className="material-symbols-outlined text-[18px]">mail</span>
+                                    </a>
+                                    <a href={`tel:${emp.phone}`} className="size-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-colors">
+                                       <span className="material-symbols-outlined text-[18px]">call</span>
+                                    </a>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               ) : (
+                  /* Attendance View */
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                     <div className="grid grid-cols-[200px_1fr] border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <div className="p-4 border-r border-slate-100 dark:border-slate-700">Employee</div>
+                        <div className="p-4 relative flex items-center justify-between w-full opacity-60">
+                           <span>Status Marker</span>
+                           <span>Attendance Record</span>
+                           <span>Status</span>
+                        </div>
+                     </div>
+                     {filteredEmployees.map(emp => (
+                        <div key={`att-${emp.id}`} className="grid grid-cols-[200px_1fr] border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
+                           <div className="p-3 border-r border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 text-xs font-bold font-sans">
+                                 {emp.name.charAt(0)}
+                              </div>
+                              <div className="min-w-0">
+                                 <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{emp.name}</p>
+                                 <p className="text-xs text-slate-500 truncate">{emp.department}</p>
+                              </div>
+                           </div>
+                           <div className="p-3 relative flex items-center">
+                              <div className={`h-2 rounded-full w-[80%] ml-[5%] relative group-hover:h-3 transition-all cursor-pointer ${getAttendanceColor(emp.attendance)}`}>
+                                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                    {emp.attendance}
+                                 </div>
+                              </div>
+                              <div className="ml-auto pr-4 font-medium text-sm text-slate-700 dark:text-slate-300">
+                                 {emp.attendance}
+                              </div>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               )}
             </div>
-         )}
+         </div>
 
-         {/* Add Employee Modal */}
+         {/* Modals */}
          {showAddStaff && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animation-fade-in">
-               <div className="bg-surface-elevated border border-border-solid rounded-2xl shadow-xl shadow-black w-full max-w-md p-6">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+               <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-xl border border-slate-200 dark:border-slate-700">
                   <div className="flex justify-between items-center mb-6">
-                     <h3 className="font-bold text-xl text-text-primary">Add New Employee</h3>
-                     <button onClick={() => { setShowAddStaff(false); resetStaffForm(); }} className="text-text-muted hover:text-white transition-colors"><span className="material-symbols-outlined">close</span></button>
+                     <h3 className="text-2xl font-display font-medium text-slate-900 dark:text-white">Add New Employee</h3>
+                     <button onClick={() => setShowAddStaff(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><span className="material-symbols-outlined">close</span></button>
                   </div>
                   <div className="space-y-4">
-                     <div>
-                        <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Full Name</label>
-                        <input value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value })} placeholder="John Doe" className="w-full bg-surface-dark border border-border-solid p-3 rounded-lg text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
-                     </div>
-                     <div>
-                        <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Email Address</label>
-                        <input type="email" value={newStaff.email} onChange={e => setNewStaff({ ...newStaff, email: e.target.value })} placeholder="john@example.com" className="w-full bg-surface-dark border border-border-solid p-3 rounded-lg text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
+                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                           <input value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20" />
+                        </div>
+                        <div>
+                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
+                           <input value={newStaff.department} onChange={e => setNewStaff({ ...newStaff, department: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20" />
+                        </div>
                      </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                           <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Phone</label>
-                           <input value={newStaff.phone} onChange={e => setNewStaff({ ...newStaff, phone: e.target.value })} placeholder="+91" className="w-full bg-surface-dark border border-border-solid p-3 rounded-lg text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
+                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                           <input value={newStaff.email} onChange={e => setNewStaff({ ...newStaff, email: e.target.value })} type="email" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20" />
                         </div>
                         <div>
-                           <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Department</label>
-                           <input value={newStaff.department} onChange={e => setNewStaff({ ...newStaff, department: e.target.value })} placeholder="e.g. Sales" className="w-full bg-surface-dark border border-border-solid p-3 rounded-lg text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
+                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone</label>
+                           <input value={newStaff.phone} onChange={e => setNewStaff({ ...newStaff, phone: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20" />
                         </div>
                      </div>
-                     <div>
-                        <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Base Salary (INR)</label>
-                        <input type="number" value={newStaff.salary || ''} onChange={e => setNewStaff({ ...newStaff, salary: Number(e.target.value) })} placeholder="0.00" className="w-full bg-surface-dark border border-border-solid p-3 rounded-lg text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
-                     </div>
                   </div>
-                  <div className="mt-8 flex gap-3">
-                     <button onClick={() => { setShowAddStaff(false); resetStaffForm(); }} className="flex-1 bg-surface-hover text-text-primary py-3 rounded-lg font-bold hover:bg-surface-dark transition-colors border border-border-solid">Cancel</button>
-                     <button
-                        onClick={handleAddStaff}
-                        disabled={createEmployee.isPending}
-                        className="flex-1 bg-primary text-surface-darker py-3 rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-glow flex items-center justify-center gap-2"
-                     >
-                        {createEmployee.isPending ? <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> : <span className="material-symbols-outlined text-[18px]">person_add</span>}
-                        {createEmployee.isPending ? 'Adding...' : 'Add Employee'}
+                  <div className="flex gap-3 mt-8">
+                     <button onClick={() => setShowAddStaff(false)} className="flex-1 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
+                     <button onClick={handleAddStaff} className="flex-1 py-2 bg-primary text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex justify-center items-center">
+                        {createEmployee.isPending ? <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> : 'Save Employee'}
                      </button>
                   </div>
                </div>
             </div>
          )}
 
-         {/* Edit Employee Modal */}
          {editingEmployee && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animation-fade-in">
-               <div className="bg-surface-elevated border border-border-solid rounded-2xl shadow-xl shadow-black w-full max-w-sm p-6">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+               <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-xl border border-slate-200 dark:border-slate-700">
                   <div className="flex justify-between items-center mb-6">
-                     <h3 className="font-bold text-lg text-text-primary flex items-center gap-2">
-                        <span className="material-symbols-outlined text-text-muted">manage_accounts</span>
-                        Modify: {editingEmployee.name}
-                     </h3>
-                     <button onClick={() => setEditingEmployee(null)} className="text-text-muted hover:text-white transition-colors"><span className="material-symbols-outlined">close</span></button>
+                     <h3 className="text-xl font-display font-medium text-slate-900 dark:text-white">Edit: {editingEmployee.name}</h3>
+                     <button onClick={() => setEditingEmployee(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><span className="material-symbols-outlined">close</span></button>
                   </div>
                   <div className="space-y-4">
                      <div>
-                        <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Status</label>
-                        <div className="relative">
-                           <select
-                              value={editingEmployee.status}
-                              onChange={e => setEditingEmployee({ ...editingEmployee, status: e.target.value as any })}
-                              className="w-full bg-surface-dark border border-border-solid p-3 rounded-lg text-sm text-text-primary focus:border-primary focus:outline-none transition-colors appearance-none"
-                           >
-                              <option value="Active">Active</option>
-                              <option value="Inactive">Inactive</option>
-                           </select>
-                           <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">expand_more</span>
-                        </div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
+                        <input value={editingEmployee.department || ''} onChange={e => setEditingEmployee({ ...editingEmployee, department: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20" />
                      </div>
                      <div>
-                        <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Attendance</label>
-                        <div className="relative">
-                           <select
-                              value={editingEmployee.attendance}
-                              onChange={e => setEditingEmployee({ ...editingEmployee, attendance: e.target.value as any })}
-                              className="w-full bg-surface-dark border border-border-solid p-3 rounded-lg text-sm text-text-primary focus:border-primary focus:outline-none transition-colors appearance-none"
-                           >
-                              <option value="Present">Present</option>
-                              <option value="Absent">Absent</option>
-                              <option value="Late">Late</option>
-                              <option value="Leave">Leave</option>
-                           </select>
-                           <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none">expand_more</span>
-                        </div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                        <select value={editingEmployee.status} onChange={e => setEditingEmployee({ ...editingEmployee, status: e.target.value as any })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20">
+                           <option value="Active">Active</option>
+                           <option value="Inactive">Inactive</option>
+                           <option value="Leave">On Leave</option>
+                           <option value="Terminated">Terminated</option>
+                        </select>
+                     </div>
+                     <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Attendance Today</label>
+                        <select value={editingEmployee.attendance} onChange={e => setEditingEmployee({ ...editingEmployee, attendance: e.target.value as any })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20">
+                           <option value="Present">Present</option>
+                           <option value="Absent">Absent</option>
+                           <option value="Late">Late</option>
+                           <option value="Half-Day">Half-Day</option>
+                           <option value="Leave">On Leave</option>
+                        </select>
                      </div>
                   </div>
-                  <div className="mt-8 flex gap-3">
-                     <button onClick={() => setEditingEmployee(null)} className="flex-1 bg-surface-hover text-text-primary py-3 rounded-lg font-bold hover:bg-surface-dark transition-colors border border-border-solid">Cancel</button>
-                     <button
-                        onClick={() => {
-                           handleUpdateEmployee(editingEmployee.id, { status: editingEmployee.status, attendance: editingEmployee.attendance });
-                           setEditingEmployee(null);
-                        }}
-                        disabled={updateEmployeeMut.isPending}
-                        className="flex-1 bg-primary text-surface-darker py-3 rounded-lg font-bold hover:bg-primary-hover transition-colors shadow-glow"
-                     >
-                        {updateEmployeeMut.isPending ? 'Saving...' : 'Save Changes'}
+                  <div className="flex gap-3 mt-8">
+                     <button onClick={() => setEditingEmployee(null)} className="flex-1 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
+                     <button onClick={handleSaveEdit} className="flex-1 py-2 bg-primary text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex justify-center items-center">
+                        {updateEmployeeMut.isPending ? <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> : 'Save Changes'}
                      </button>
                   </div>
                </div>

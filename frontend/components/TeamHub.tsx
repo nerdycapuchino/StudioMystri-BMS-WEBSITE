@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useChannels, useMessages } from '../hooks/useTeam';
 import { useEmployees } from '../hooks/useHR';
 import { ChatMessage, Channel } from '../types';
-import { Plus, Hash, Lock, User, Send, Video, X, Shield, Search, Paperclip, Download, Trash2 } from 'lucide-react';
+// Import lucide-react icons that match the Material Symbols used in the template
+import { Plus, Hash, Lock, Search, Paperclip, Send, Bell, Settings, MoreVertical, Menu, Home, Folder, MessageSquare, Users as UsersIcon, X, Mic, Video, Trash2, Download, Smile, AtSign } from 'lucide-react';
 import { getSocket } from '../services/socket';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -39,6 +39,9 @@ export const TeamHub: React.FC = () => {
    const [showDMModal, setShowDMModal] = useState(false);
    const [newChannelName, setNewChannelName] = useState('');
    const [newChannelType, setNewChannelType] = useState<'public' | 'private'>('public');
+
+   // Mobile Sidebar State
+   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
    useEffect(() => {
       if (teamChannels && teamChannels.length > 0 && !teamChannels.find(c => c.id === selectedChannel.id)) {
@@ -107,6 +110,11 @@ export const TeamHub: React.FC = () => {
       };
    }, [selectedChannel.id, qc]);
 
+   // Scroll to bottom on initial load of messages
+   useEffect(() => {
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+   }, [selectedChannel.id, teamMessages.length]);
+
    const startCall = async () => {
       try {
          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -127,8 +135,8 @@ export const TeamHub: React.FC = () => {
       setIsInCall(false);
    };
 
-   const handleSendMessage = (e: React.FormEvent) => {
-      e.preventDefault();
+   const handleSendMessage = (e?: React.FormEvent) => {
+      if (e) e.preventDefault();
       if (!newMessage.trim() || !currentUser) return;
       try {
          const socket = getSocket();
@@ -137,11 +145,12 @@ export const TeamHub: React.FC = () => {
       setNewMessage('');
    };
 
-   const handleDeleteMessage = (messageId: string) => {
-      try { getSocket().emit('message:delete', messageId); } catch { /* ignore */ }
-   };
-
-   const handleKeyDown = () => {
+   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+         e.preventDefault();
+         handleSendMessage();
+         return;
+      }
       try {
          const socket = getSocket();
          socket.emit('typing:start', selectedChannel.id);
@@ -152,10 +161,13 @@ export const TeamHub: React.FC = () => {
       } catch { /* socket not ready */ }
    };
 
+   const handleDeleteMessage = (messageId: string) => {
+      try { getSocket().emit('message:delete', messageId); } catch { /* ignore */ }
+   };
+
    const handleCreateChannel = () => {
       if (!newChannelName.trim()) return;
-      // Channel creation would need a dedicated hook/endpoint
-      // For now, just close the modal
+      // Channel creation logic...
       setShowChannelModal(false);
       setNewChannelName('');
    };
@@ -167,216 +179,321 @@ export const TeamHub: React.FC = () => {
          setSelectedChannel(existing);
       }
       setShowDMModal(false);
+      setIsMobileMenuOpen(false);
    };
 
    const currentMessages = teamMessages.filter(m => m.channelId === selectedChannel.id);
-
    const publicChannels = teamChannels.filter(c => c.type === 'public');
    const privateChannels = teamChannels.filter(c => c.type === 'private');
    const dmChannels = teamChannels.filter(c => c.type === 'dm');
 
+   // Helper for rendering channel list items
+   const renderChannelItem = (ch: Channel, icon: React.ReactNode, isDM = false, targetId?: string) => {
+      const isActive = selectedChannel.id === ch.id;
+      const isOnline = isDM && targetId ? onlineUserIds.includes(targetId) : false;
+
+      return (
+         <button
+            key={ch.id}
+            onClick={() => { setSelectedChannel(ch); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg group transition-colors ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 border-l-4 border-primary dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 border-l-4 border-transparent'}`}
+         >
+            <div className="flex items-center gap-3 truncate">
+               {isDM ? (
+                  <div className="relative shrink-0">
+                     <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 uppercase">
+                        {ch.name.substring(0, 2)}
+                     </div>
+                     <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white dark:border-slate-900 rounded-full ${isOnline ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
+                  </div>
+               ) : (
+                  <span className={`text-[18px] opacity-70 group-hover:opacity-100 transition-opacity ${isActive ? 'text-primary' : ''}`}>
+                     {icon}
+                  </span>
+               )}
+               <span className={`text-sm truncate ${isActive ? 'font-medium' : ''}`}>{ch.name}</span>
+            </div>
+         </button>
+      );
+   };
+
    return (
-      <div className="flex h-full w-full overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800 flex-col md:flex-row">
-         {/* Channels Sidebar */}
-         <aside className="w-full md:w-72 bg-slate-50/80 border-r border-slate-200/60 flex flex-col h-auto md:h-full shrink-0 overflow-hidden">
-            <div className="p-6 font-black tracking-tighter text-xl border-b border-slate-200/60 hidden md:flex items-center justify-between uppercase">
-               <span>Team Hub</span>
-               <div className="flex gap-2">
-                  <button onClick={() => setShowChannelModal(true)} className="p-1 hover:bg-slate-100 rounded-lg text-primary transition-colors">
-                     <Plus className="w-5 h-5" />
-                  </button>
+      <div className="flex flex-col md:flex-row h-full w-full bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display overflow-hidden relative">
+
+         {/* Mobile Header */}
+         <div className="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <div className="flex items-center gap-2">
+               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">MB</div>
+               <span className="font-bold text-lg">MystriBMS</span>
+            </div>
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-500 dark:text-slate-400 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+         </div>
+
+         {/* Sidebar Navigation */}
+         <aside className={`absolute md:relative z-40 w-72 h-[calc(100%-65px)] md:h-full flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shrink-0 transition-transform duration-300 md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0 flex' : '-translate-x-full md:flex hidden'}`}>
+            {/* Sidebar Header */}
+            <div className="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
+               <div className="flex items-center gap-3">
+                  <div className="bg-slate-200 dark:bg-slate-700 rounded-full h-10 w-10 relative flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold uppercase border border-slate-300 dark:border-slate-600">
+                     {currentUser?.name?.substring(0, 2) || 'U'}
+                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+                  </div>
+                  <div className="flex flex-col">
+                     <h1 className="text-slate-900 dark:text-white text-sm font-semibold leading-tight truncate w-32">{currentUser?.name || 'User'}</h1>
+                     <p className="text-slate-500 dark:text-slate-400 text-xs font-normal capitalize">{currentUser?.role || 'Member'}</p>
+                  </div>
+               </div>
+               <button className="text-slate-400 hover:text-primary transition-colors p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <Settings className="w-5 h-5" />
+               </button>
+            </div>
+
+            {/* Search Sidebar */}
+            <div className="px-4 py-4 shrink-0">
+               <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 border border-slate-200/50 dark:border-slate-700/50 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all">
+                  <Search className="text-slate-400 w-4 h-4 shrink-0" />
+                  <input className="bg-transparent border-none text-sm w-full focus:ring-0 text-slate-700 dark:text-slate-200 placeholder-slate-400 py-0.5 ml-2 outline-none" placeholder="Jump to..." type="text" />
                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-               {/* Public Channels */}
+            {/* Navigation Links */}
+            <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-6 custom-scrollbar">
+               {/* Main Menu (Static Links for UI Completeness) */}
                <div>
-                  <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">
-                     <span>Channels</span>
-                  </div>
-                  <div className="space-y-0.5">
-                     {publicChannels.map(ch => (
-                        <button
-                           key={ch.id}
-                           onClick={() => setSelectedChannel(ch)}
-                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-slate-500 hover:text-white hover:bg-slate-50'}`}
-                        >
-                           <Hash className="w-4 h-4 opacity-50" /> {ch.name}
-                        </button>
-                     ))}
-                  </div>
+                  <div className="px-3 mb-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</div>
+                  <nav className="space-y-1">
+                     <a href="#" className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group">
+                        <Home className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
+                        <span className="text-sm font-medium">Overview</span>
+                     </a>
+                     <a href="#" className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group">
+                        <Folder className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
+                        <span className="text-sm font-medium">All Projects</span>
+                     </a>
+                     <div className="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors group cursor-pointer">
+                        <MessageSquare className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium">Messages</span>
+                     </div>
+                     <a href="#" className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group">
+                        <UsersIcon className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors" />
+                        <span className="text-sm font-medium">Team</span>
+                     </a>
+                  </nav>
                </div>
 
-               {/* Private Channels */}
+               {/* Channels */}
                <div>
-                  <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">
-                     <span>Private</span>
+                  <div className="flex items-center justify-between px-3 mb-2">
+                     <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Channels</div>
+                     <button onClick={() => setShowChannelModal(true)} className="text-slate-400 hover:text-primary transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <Plus className="w-4 h-4" />
+                     </button>
                   </div>
-                  <div className="space-y-0.5">
-                     {privateChannels.map(ch => (
-                        <button
-                           key={ch.id}
-                           onClick={() => setSelectedChannel(ch)}
-                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-slate-500 hover:text-white hover:bg-slate-50'}`}
-                        >
-                           <Lock className="w-4 h-4 opacity-50" /> {ch.name}
-                        </button>
-                     ))}
-                  </div>
+                  <nav className="space-y-0.5">
+                     {publicChannels.map(ch => renderChannelItem(ch, <Hash className="w-4 h-4" />))}
+                     {privateChannels.map(ch => renderChannelItem(ch, <Lock className="w-4 h-4" />))}
+                  </nav>
                </div>
 
                {/* Direct Messages */}
                <div>
-                  <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">
-                     <span>Direct Messages</span>
-                     <button onClick={() => setShowDMModal(true)} className="hover:text-primary transition-colors">
-                        <Plus className="w-3.5 h-3.5" />
+                  <div className="flex items-center justify-between px-3 mb-2">
+                     <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Direct Messages</div>
+                     <button onClick={() => setShowDMModal(true)} className="text-slate-400 hover:text-primary transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <Plus className="w-4 h-4" />
                      </button>
                   </div>
-                  <div className="space-y-0.5">
-                     {dmChannels.map(ch => (
-                        <button
-                           key={ch.id}
-                           onClick={() => setSelectedChannel(ch)}
-                           className={`w-full text-left px-3 py-2 rounded-xl flex items-center gap-3 transition-all ${selectedChannel.id === ch.id ? 'bg-primary/20 text-primary font-bold' : 'text-slate-500 hover:text-white hover:bg-slate-50'}`}
-                        >
-                           <div className={`size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(ch.id.replace('dm-', '').replace(currentUser?.id || '', '').replace('-', '')) ? 'bg-green-500' : 'bg-transparent border border-slate-300 shadow-none'}`}></div>
-                           {ch.name}
-                        </button>
-                     ))}
-                  </div>
+                  <nav className="space-y-0.5">
+                     {dmChannels.map(ch => {
+                        const targetId = ch.id.replace('dm-', '').replace(currentUser?.id || '', '').replace('-', '');
+                        return renderChannelItem(ch, null, true, targetId);
+                     })}
+                  </nav>
                </div>
             </div>
          </aside>
 
-         {/* Chat Area */}
-         <div className="flex-1 border-r border-slate-200/60 bg-white/80 backdrop-blur-sm flex flex-col shrink-0 min-h-0">
-            <div className="h-16 flex items-center px-6 border-b border-slate-200/60 bg-white/80 backdrop-blur-sm/50 backdrop-blur-sm shrink-0 justify-between">
-               <div className="flex items-center gap-3">
-                  {selectedChannel.type === 'public' ? <Hash className="w-5 h-5 text-primary" /> : selectedChannel.type === 'private' ? <Lock className="w-5 h-5 text-amber-500" /> : <User className="w-5 h-5 text-indigo-400" />}
-                  <h2 className="font-black text-lg uppercase tracking-tight">
-                     {selectedChannel.name}
-                  </h2>
+         {/* Mobile overlay for sidebar */}
+         {isMobileMenuOpen && (
+            <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
+         )}
+
+         {/* Main Content Area */}
+         <main className="flex-1 flex flex-col h-full relative min-w-0 bg-background-light dark:bg-background-dark">
+
+            {/* Chat Header */}
+            <header className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+               <div className="flex flex-col min-w-0 pr-4">
+                  <div className="flex items-center gap-2">
+                     {selectedChannel.type === 'private' ? <Lock className="w-4 h-4 text-slate-400 shrink-0" /> : selectedChannel.type === 'public' ? <Hash className="w-4 h-4 text-slate-400 shrink-0" /> : <div className={`w-2 h-2 rounded-full shrink-0 ${selectedChannel.type === 'dm' ? 'bg-green-500' : ''}`} />}
+                     <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">{selectedChannel.name}</h2>
+                     <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-medium text-primary bg-primary/10 rounded-full uppercase tracking-wider shrink-0">{selectedChannel.type === 'dm' ? 'DM' : 'Channel'}</span>
+                  </div>
                </div>
-               <div className="flex gap-2">
-                  <button
-                     onClick={() => alert("Simulating Export Chat History...\n\n(In production, this would download a transcript of the conversation.)")}
-                     className="text-slate-500 hover:text-primary p-2 bg-slate-50 hover:bg-primary/10 rounded-full transition-all"
-                     title="Export Chat"
-                  >
-                     <Download className="w-5 h-5" />
-                  </button>
-                  <button onClick={startCall} className="text-slate-500 hover:text-primary p-2 bg-slate-50 hover:bg-primary/10 rounded-full transition-all">
+
+               <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                  {/* Participants Avatar Group (Hidden on tiny screens) */}
+                  <div className="hidden sm:flex -space-x-2 mr-2">
+                     {employees.slice(0, 3).map((emp, i) => (
+                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">
+                           {emp.name.substring(0, 2)}
+                        </div>
+                     ))}
+                     {employees.length > 3 && (
+                        <div className="flex items-center justify-center w-8 h-8 text-xs font-medium text-white bg-slate-400 border-2 border-white dark:border-slate-900 rounded-full hover:bg-slate-500 z-10">
+                           +{employees.length - 3}
+                        </div>
+                     )}
+                  </div>
+
+                  <div className="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+
+                  <button onClick={startCall} className="p-2 text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors tooltip" title="Start Call">
                      <Video className="w-5 h-5" />
                   </button>
-               </div>
-            </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col-reverse custom-scrollbar">
-               <div ref={messagesEndRef} />
-               {[...currentMessages].reverse().map(msg => (
-                  <div key={msg.id} className={`flex gap-4 ${msg.sender === (currentUser?.name || '') ? 'flex-row-reverse' : ''}`}>
-                     <div className={`size-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 border border-slate-200/60 shadow-inner ${msg.sender === (currentUser?.name || '') ? 'bg-primary text-background-dark' : 'bg-slate-100 text-slate-600'}`}>
-                        {msg.avatar}
-                     </div>
-                     <div className={`max-w-[70%] ${msg.sender === (currentUser?.name || '') ? 'items-end' : 'items-start'} flex flex-col gap-1.5`}>
-                        <div className="flex items-center gap-2 px-1">
-                           <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{msg.sender}</p>
-                           <p className="text-[10px] text-slate-400 font-medium">{msg.timestamp}</p>
-                        </div>
-                        <div className={`p-4 rounded-[1.5rem] text-sm leading-relaxed shadow-lg relative group ${msg.sender === (currentUser?.name || '') ? 'bg-primary/10 text-primary border border-primary/20 rounded-tr-none' : 'bg-slate-50/80 rounded-tl-none text-slate-600 border border-slate-200/60'}`}>
-                           {msg.content}
-                           {msg.sender === (currentUser?.name || '') && (
-                              <button type="button" onClick={() => handleDeleteMessage(msg.id)} className="absolute opacity-0 group-hover:opacity-100 -left-10 top-1/2 -translate-y-1/2 p-2 hover:text-red-500 text-slate-500 transition-all">
-                                 <Trash2 className="w-4 h-4" />
-                              </button>
-                           )}
-                        </div>
-                     </div>
-                  </div>
-               ))}
+                  <button className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block">
+                     <Bell className="w-5 h-5" />
+                     <span className="absolute top-1.5 right-1.5 block w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
+                  </button>
+
+                  <button className="p-2 text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                     <MoreVertical className="w-5 h-5" />
+                  </button>
+               </div>
+            </header>
+
+            {/* Messages Stream */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 flex flex-col custom-scrollbar">
+
                {currentMessages.length === 0 && (
-                  <div className="flex-1 flex flex-col items-center justify-center opacity-20">
-                     <Hash className="w-16 h-16 mb-4" />
-                     <p className="font-black uppercase tracking-widest text-xs">Beginning of history</p>
+                  <div className="flex-1 flex flex-col items-center justify-center opacity-40 py-10">
+                     {selectedChannel.type === 'dm' ? <AtSign className="w-16 h-16 mb-4 text-slate-400" /> : <Hash className="w-16 h-16 mb-4 text-slate-400" />}
+                     <p className="font-bold text-slate-500">This is the beginning of {selectedChannel.name}</p>
+                     <p className="text-sm text-slate-400 mt-2">Send a message to start the conversation.</p>
                   </div>
                )}
+
+               {currentMessages.map((msg, i) => {
+                  const isSelf = msg.sender === (currentUser?.name || '');
+                  const showAvatar = !isSelf && (i === 0 || currentMessages[i - 1].sender !== msg.sender);
+
+                  if (isSelf) {
+                     return (
+                        <div key={msg.id} className="flex gap-3 flex-row-reverse group animate-in slide-in-from-right-4 duration-300">
+                           {/* Self Avatar Spacer or Render */}
+                           <div className="w-8 h-8 rounded-lg shrink-0 mt-1 flex items-center justify-center bg-primary text-white font-bold text-[10px] uppercase shadow-sm">
+                              {msg.sender.substring(0, 2)}
+                           </div>
+                           <div className="flex flex-col items-end max-w-[85%] md:max-w-2xl">
+                              <div className="flex items-baseline gap-2 mb-1 flex-row-reverse">
+                                 <span className="text-sm font-bold text-slate-900 dark:text-white">You</span>
+                                 <span className="text-xs text-slate-400">{msg.timestamp}</span>
+                              </div>
+                              <div className="bg-primary/10 dark:bg-primary/20 p-3 md:p-4 rounded-xl rounded-tr-sm text-slate-800 dark:text-slate-100 text-sm leading-relaxed relative border border-primary/20 dark:border-primary/10 inline-block text-left break-words max-w-full">
+                                 {msg.content}
+                                 <button type="button" onClick={() => handleDeleteMessage(msg.id)} className="absolute opacity-0 group-hover:opacity-100 -left-10 top-1/2 -translate-y-1/2 p-2 hover:text-red-500 text-slate-400 transition-all rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                                    <Trash2 className="w-4 h-4" />
+                                 </button>
+                              </div>
+                           </div>
+                        </div>
+                     );
+                  } else {
+                     // Incoming format (mimicking template)
+                     return (
+                        <div key={msg.id} className="flex gap-3 group animate-in slide-in-from-left-4 duration-300">
+                           <div className={`w-8 h-8 rounded-lg shrink-0 mt-1 flex items-center justify-center font-bold text-[10px] uppercase text-slate-600 bg-slate-200 dark:bg-slate-700 dark:text-slate-300 shadow-sm border border-slate-300 dark:border-slate-600 ${!showAvatar && 'invisible'}`}>
+                              {msg.sender.substring(0, 2)}
+                           </div>
+                           <div className="flex flex-col max-w-[85%] md:max-w-2xl">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                 <span className="text-sm font-bold text-slate-900 dark:text-white">{msg.sender}</span>
+                                 <span className="text-xs text-slate-400">{msg.timestamp}</span>
+                              </div>
+                              <div className="bg-white dark:bg-slate-800 p-3 md:p-4 rounded-xl rounded-tl-sm shadow-sm border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm leading-relaxed inline-block break-words max-w-full">
+                                 {msg.content}
+                              </div>
+                           </div>
+                        </div>
+                     );
+                  }
+               })}
+               <div ref={messagesEndRef} className="h-1" />
             </div>
 
-            <div className="px-6 pb-2">
+            {/* Typing Indicator */}
+            <div className="px-6 pb-1 min-h-[20px] shrink-0">
                {typingUsers.length > 0 && (
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 italic animate-pulse">
                      {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                   </p>
                )}
             </div>
-            <form onSubmit={handleSendMessage} className="p-6 pt-2 bg-white/80 backdrop-blur-sm shrink-0">
-               <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-full p-1.5 border border-slate-200 flex items-center focus-within:ring-2 focus-within:ring-primary/30 transition-all shadow-xl shadow-slate-200/50">
-                  <button type="button" className="p-2.5 text-slate-500 hover:text-white transition-colors">
-                     <Paperclip className="w-5 h-5" />
-                  </button>
-                  <input
-                     value={newMessage}
-                     onChange={e => setNewMessage(e.target.value)}
-                     onKeyDown={handleKeyDown}
-                     className="flex-1 bg-transparent border-none text-sm px-4 focus:ring-0 outline-none placeholder:text-zinc-700"
-                     placeholder={`Message ${selectedChannel.type === 'dm' ? '@' : '#'}${selectedChannel.name}...`}
-                  />
-                  <button className="size-10 bg-primary text-background-dark rounded-full flex items-center justify-center shadow-glow active:scale-90 transition-transform">
-                     <Send className="w-5 h-5 fill-current" />
-                  </button>
-               </div>
-            </form>
-         </div>
 
-         {/* Direct Message (Desktop Only Info/Activity) */}
-         <aside className="hidden xl:flex w-72 bg-slate-50/80 border-l border-slate-200/60 p-6 flex-col">
-            <div className="text-center mb-8">
-               <div className="size-20 bg-slate-50 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl font-black text-slate-500 border border-slate-200">
-                  {selectedChannel.name.charAt(0)}
-               </div>
-               <h3 className="text-lg font-black text-slate-800">{selectedChannel.name}</h3>
-               <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">
-                  {selectedChannel.type === 'dm' ? 'Personal Thread' : `${selectedChannel.type} Channel`}
-               </p>
-            </div>
-
-            <div className="flex-1 space-y-6">
-               <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Channel Details</p>
-                  <div className="space-y-3">
-                     <div className="flex items-center gap-3 text-sm text-slate-500">
-                        <Clock className="w-4 h-4" />
-                        Created 2 weeks ago
-                     </div>
-                     <div className="flex items-center gap-3 text-sm text-slate-500">
-                        <Shield className="w-4 h-4" />
-                        Encrypted conversation
+            {/* Input Area */}
+            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
+               <div className="max-w-5xl mx-auto">
+                  <div className="relative flex flex-col bg-background-light dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+                     <textarea
+                        value={newMessage}
+                        onChange={e => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="w-full bg-transparent border-none focus:ring-0 p-3 pt-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 resize-none min-h-[60px] outline-none"
+                        placeholder={`Message ${selectedChannel.type === 'dm' ? '@' : '#'}${selectedChannel.name}...`}
+                     />
+                     {/* Bottom Actions */}
+                     <div className="flex items-center justify-between p-2 border-t border-slate-100 dark:border-slate-700/50">
+                        <div className="flex items-center gap-1">
+                           <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Attach file">
+                              <Paperclip className="w-4 h-4" />
+                           </button>
+                           <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block" title="Emoji">
+                              <Smile className="w-4 h-4" />
+                           </button>
+                           <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block" title="Mention">
+                              <AtSign className="w-4 h-4" />
+                           </button>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <span className="text-xs text-slate-400 hidden md:inline-block"><strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line</span>
+                           <button
+                              onClick={() => handleSendMessage()}
+                              disabled={!newMessage.trim()}
+                              className="bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                           >
+                              <span className="hidden sm:inline">Send</span>
+                              <Send className="w-4 h-4" />
+                           </button>
+                        </div>
                      </div>
                   </div>
                </div>
             </div>
-         </aside>
+         </main>
 
-         {/* Video Call (Toggleable Overlay) */}
+         {/* Video Call Modal */}
          {isInCall && (
-            <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
-               <header className="p-6 flex justify-between items-center bg-slate-900/20 backdrop-blur-md">
+            <div className="fixed inset-0 z-[200] bg-slate-900 flex flex-col animate-in fade-in duration-300">
+               <header className="p-4 md:p-6 flex justify-between items-center bg-slate-900/50 backdrop-blur-md absolute top-0 w-full z-10">
                   <div className="flex items-center gap-3">
-                     <div className="size-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
-                     <span className="font-black text-xs uppercase tracking-widest text-slate-800">Live Meeting • {selectedChannel.name}</span>
+                     <div className="size-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                     <span className="font-bold text-sm text-white">Live Meeting • {selectedChannel.name}</span>
                   </div>
-                  <button onClick={endCall} className="p-2 hover:bg-slate-100 rounded-full text-slate-500">
+                  <button onClick={endCall} className="p-2 hover:bg-white/10 rounded-full text-white/70 hover:text-white transition-colors">
                      <X className="w-6 h-6" />
                   </button>
                </header>
-               <main className="flex-1 relative flex items-center justify-center overflow-hidden">
+               <main className="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
                   <video ref={localVideoRef} autoPlay playsInline muted className="h-full w-full object-cover scale-x-[-1]" />
-                  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-8 bg-slate-50/80 backdrop-blur-2xl px-12 py-6 rounded-full border border-slate-200 shadow-xl shadow-slate-200/50">
-                     <button className="size-14 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center"><Mic className="w-6 h-6" /></button>
-                     <button className="size-14 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center"><Video className="w-6 h-6" /></button>
-                     <div className="w-px h-8 bg-slate-100 mx-2"></div>
-                     <button onClick={endCall} className="px-10 h-14 bg-red-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-700 transition-colors">End Call</button>
+
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-6 bg-slate-900/80 backdrop-blur-md px-6 md:px-8 py-4 rounded-2xl border border-white/10 shadow-2xl">
+                     <button className="size-12 rounded-full bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors"><Mic className="w-5 h-5" /></button>
+                     <button className="size-12 rounded-full bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors"><Video className="w-5 h-5" /></button>
+                     <div className="w-px h-8 bg-white/20 mx-1 md:mx-2"></div>
+                     <button onClick={endCall} className="px-6 h-12 bg-red-600 rounded-xl font-bold text-sm text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">End Call</button>
                   </div>
                </main>
             </div>
@@ -384,81 +501,103 @@ export const TeamHub: React.FC = () => {
 
          {/* New Channel Modal */}
          {showChannelModal && (
-            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-               <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-[2.5rem] p-10 w-full max-w-lg shadow-xl shadow-slate-200/50 space-y-8">
-                  <div className="flex justify-between items-center">
-                     <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">New Channel</h3>
-                     <button onClick={() => setShowChannelModal(false)} className="text-slate-500 hover:text-white transition-colors">
-                        <X className="w-6 h-6" />
+            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+               <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
+                  <div className="flex justify-between items-center mb-6">
+                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">Create Channel</h3>
+                     <button onClick={() => setShowChannelModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <X className="w-5 h-5" />
                      </button>
                   </div>
                   <div className="space-y-6">
-                     <div className="flex bg-gradient-to-br from-slate-50 to-blue-50 p-1 rounded-2xl border border-slate-200/60">
+                     <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
                         <button
                            onClick={() => setNewChannelType('public')}
-                           className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${newChannelType === 'public' ? 'bg-primary text-black' : 'text-slate-500'}`}
+                           className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${newChannelType === 'public' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                            Public
                         </button>
                         <button
                            onClick={() => setNewChannelType('private')}
-                           className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${newChannelType === 'private' ? 'bg-amber-500 text-black' : 'text-slate-500'}`}
+                           className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${newChannelType === 'private' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                         >
                            Private
                         </button>
                      </div>
-                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-500 uppercase ml-4">Channel Name</label>
-                        <input
-                           value={newChannelName}
-                           onChange={e => setNewChannelName(e.target.value)}
-                           className="w-full bg-gradient-to-br from-slate-50 to-blue-50 border border-slate-200 rounded-full px-8 py-4 text-slate-800 focus:ring-2 focus:ring-primary/50 outline-none placeholder:text-zinc-800"
-                           placeholder="e.g. design-sync"
-                        />
+                     <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Channel Name</label>
+                        <div className="relative">
+                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                              {newChannelType === 'public' ? <Hash className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                           </span>
+                           <input
+                              value={newChannelName}
+                              onChange={e => setNewChannelName(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none"
+                              placeholder="e.g. design-sync"
+                              autoFocus
+                           />
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1">Names must be lowercase, without spaces or periods.</p>
                      </div>
                   </div>
-                  <button
-                     onClick={handleCreateChannel}
-                     disabled={!newChannelName.trim()}
-                     className="w-full py-5 bg-primary disabled:opacity-50 text-black font-black uppercase text-xs tracking-widest rounded-full shadow-glow"
-                  >
-                     Construct Channel
-                  </button>
+                  <div className="mt-8 flex gap-3">
+                     <button onClick={() => setShowChannelModal(false)} className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
+                     <button
+                        onClick={handleCreateChannel}
+                        disabled={!newChannelName.trim()}
+                        className="flex-1 py-2.5 bg-primary disabled:opacity-50 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                     >
+                        Create
+                     </button>
+                  </div>
                </div>
             </div>
          )}
 
          {/* New DM Modal */}
          {showDMModal && (
-            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-               <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-[2.5rem] p-10 w-full max-w-lg shadow-xl shadow-slate-200/50 space-y-8 max-h-[80vh] flex flex-col">
-                  <div className="flex justify-between items-center shrink-0">
-                     <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Direct Message</h3>
-                     <button onClick={() => setShowDMModal(false)} className="text-slate-500 hover:text-white">
-                        <X className="w-6 h-6" />
+            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+               <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
+                  <div className="flex justify-between items-center mb-4 shrink-0">
+                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">New Message</h3>
+                     <button onClick={() => setShowDMModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <X className="w-5 h-5" />
                      </button>
                   </div>
-                  <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4 border border-slate-200/60 flex items-center gap-3 shrink-0">
+                  <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-700 flex items-center gap-2 shrink-0 mb-4 focus-within:border-primary/50 transition-colors">
                      <Search className="w-4 h-4 text-slate-400" />
-                     <input className="bg-transparent border-none text-sm w-full focus:ring-0 text-slate-800" placeholder="Search team members..." />
+                     <input className="bg-transparent border-none text-sm w-full focus:ring-0 text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400" placeholder="Search team members..." autoFocus />
                   </div>
-                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
-                     {employees.filter(e => e.id !== currentUser?.id).map(emp => (
-                        <button
-                           key={emp.id}
-                           onClick={() => handleStartDM(emp)}
-                           className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-200/60 transition-all text-left"
-                        >
-                           <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-500 border border-slate-200">
-                              {emp.name.charAt(0)}
+                  <div className="flex-1 overflow-y-auto custom-scrollbar -mx-2 px-2">
+                     <div className="space-y-1">
+                        {employees.filter(e => e.id !== currentUser?.id).map(emp => {
+                           const isOnline = onlineUserIds.includes(emp.id);
+                           return (
+                              <button
+                                 key={emp.id}
+                                 onClick={() => handleStartDM(emp)}
+                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors text-left group"
+                              >
+                                 <div className="relative shrink-0">
+                                    <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 uppercase text-xs">
+                                       {emp.name.substring(0, 2)}
+                                    </div>
+                                    <div className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white dark:border-slate-800 ${isOnline ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}></div>
+                                 </div>
+                                 <div className="min-w-0 flex-1">
+                                    <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">{emp.name}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{emp.role || emp.email}</p>
+                                 </div>
+                              </button>
+                           );
+                        })}
+                        {employees.length <= 1 && (
+                           <div className="text-center py-8 text-sm text-slate-500">
+                              No other team members found.
                            </div>
-                           <div>
-                              <p className="font-bold text-slate-800">{emp.name}</p>
-                              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{emp.email}</p>
-                           </div>
-                           <div className={`ml-auto size-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)] ${onlineUserIds.includes(emp.id) ? 'bg-green-500' : 'bg-transparent border border-slate-300 shadow-none'}`}></div>
-                        </button>
-                     ))}
+                        )}
+                     </div>
                   </div>
                </div>
             </div>
@@ -466,11 +605,3 @@ export const TeamHub: React.FC = () => {
       </div>
    );
 };
-
-// Local icon placeholders missing from standard Lucide
-const Mic = (props: any) => (
-   <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
-);
-const Clock = (props: any) => (
-   <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-);

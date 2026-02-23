@@ -16,7 +16,7 @@ export const createEmployee = (data: Record<string, unknown>) =>
     api.post('/hr/employees', data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const updateEmployee = ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-    api.patch(`/hr/employees/${id}`, data).then(r => ('data' in r.data ? r.data.data : r.data));
+    api.put(`/hr/employees/${id}`, data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const markAttendance = (data: Record<string, unknown>) =>
     api.post('/hr/attendance', data).then(r => ('data' in r.data ? r.data.data : r.data));

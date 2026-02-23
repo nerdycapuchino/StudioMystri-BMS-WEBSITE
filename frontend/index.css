@@ -8,52 +8,53 @@
 @layer base {
   :root {
     /* Backgrounds */
-    --bg-primary: #122017;
-    --bg-gradient: linear-gradient(135deg, #122017 0%, #0d1410 100%);
+    --bg-primary: #f6f7f8;
+    --bg-gradient: linear-gradient(135deg, #f6f7f8 0%, #ffffff 100%);
 
     /* Surfaces */
-    --surface-card: rgba(26, 38, 30, 0.8);
-    --surface-elevated: #1a261e;
-    --surface-hover: #223026;
+    --surface-card: #ffffff;
+    --surface-elevated: #ffffff;
+    --surface-hover: #f1f5f9;
 
     /* Text */
-    --text-primary: #F9FAFB;
-    --text-secondary: #9eb7a8;
-    --text-muted: #9eb7a8;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
 
     /* Borders */
-    --border-glass: rgba(42, 56, 48, 0.5);
-    --border-solid: #2a3830;
-    --border-hover: #38e07b;
+    --border-glass: rgba(226, 232, 240, 0.5);
+    --border-solid: #e2e8f0;
+    --border-hover: #137fec;
 
     /* Accent */
-    --accent-primary: #38e07b;
-    --accent-secondary: #cd7f32;
+    --accent-primary: #137fec;
+    --accent-secondary: #0f172a;
 
     /* Status */
-    --success: #38e07b;
-    --warning: #eab308;
+    --success: #10b981;
+    --warning: #f59e0b;
     --error: #ef4444;
 
     /* Shadows */
-    --shadow-light: 0 0 15px rgba(56, 224, 123, 0.1);
+    --shadow-light: 0 0 15px rgba(19, 127, 236, 0.1);
   }
 
   body {
     font-family: 'Public Sans', 'Inter', sans-serif;
-    background-color: #f6f8f7;
-    /* Default light, dark mode toggled by .dark class on HTML */
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     min-height: 100vh;
   }
 
   html.dark body {
-    background-color: #122017;
+    background-color: #101922;
+    color: #f1f5f9;
   }
 
-  /* Dark Luxury Scrollbar */
+  /* ArchFirm ERP Scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -61,25 +62,20 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #2a3830;
-    border-radius: 4px;
+    background: #cbd5e0;
+    border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #38e07b;
+    background: #137fec;
   }
 
-  /* Retain light mode fallback for scrollbar just in case */
-  html:not(.dark) ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+  html.dark ::-webkit-scrollbar-thumb {
+    background: #1e293b;
   }
 
-  html:not(.dark) ::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-  }
-
-  html:not(.dark) ::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
+  html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #137fec;
   }
 }
 
@@ -119,37 +115,36 @@
 
   /* Primary button */
   .btn-primary {
-    background: #38e07b;
-    color: #122017;
+    background: #137fec;
+    color: white;
     font-weight: 700;
     padding: 0.625rem 1.5rem;
     border-radius: 0.75rem;
-    box-shadow: 0 0 15px rgba(56, 224, 123, 0.15);
+    box-shadow: 0 4px 6px -1px rgba(19, 127, 236, 0.2);
     transition: all 0.2s;
   }
 
   .btn-primary:hover {
-    background: #2bc968;
-    box-shadow: 0 0 25px rgba(56, 224, 123, 0.3);
+    background: #0d6ed1;
+    box-shadow: 0 10px 15px -3px rgba(19, 127, 236, 0.3);
     transform: translateY(-1px);
   }
 
   /* Secondary button */
   .btn-secondary {
-    background: #1a261e;
-    border: 1px solid #2a3830;
-    color: #F9FAFB;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
     font-weight: 500;
     padding: 0.625rem 1.5rem;
     border-radius: 0.75rem;
-    backdrop-filter: blur(4px);
     transition: all 0.2s;
   }
 
   .btn-secondary:hover {
-    background: #223026;
-    border-color: #38e07b;
-    color: white;
+    background: #ffffff;
+    border-color: #137fec;
+    color: #137fec;
   }
 
   /* No-scrollbar utility */

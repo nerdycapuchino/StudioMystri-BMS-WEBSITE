@@ -14,6 +14,7 @@ import { HR } from './components/HR';
 import { Customers } from './components/Customers';
 import { TeamHub } from './components/TeamHub';
 import { ERP } from './components/ERP';
+import { Orders } from './components/Orders';
 import { PageLoader } from './components/ui/Skeleton';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -71,9 +72,9 @@ const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       { path: '/', element: <Navigate to="/dashboard" replace /> },
-      { path: '/dashboard', element: <Dashboard changeModule={() => { }} /> },
+      { path: '/dashboard', element: <Dashboard /> },
       { path: '/pos', element: <POS /> },
-      { path: '/orders', element: <div className="p-8 text-white">Orders Page Component Not Converted Yet</div> },
+      { path: '/orders', element: <Orders /> },
       { path: '/clients', element: <Customers /> },
       { path: '/crm', element: <CRM /> },
       { path: '/projects', element: <Projects /> },

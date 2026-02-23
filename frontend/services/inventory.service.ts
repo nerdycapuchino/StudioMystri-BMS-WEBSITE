@@ -15,13 +15,13 @@ export const createInventoryItem = (data: Record<string, unknown>) =>
     api.post('/inventory', data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const updateInventoryItem = ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-    api.patch(`/inventory/${id}`, data).then(r => ('data' in r.data ? r.data.data : r.data));
+    api.put(`/inventory/${id}`, data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const deleteInventoryItem = (id: string) =>
     api.delete(`/inventory/${id}`).then(() => undefined);
 
 export const recordStockTransaction = ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-    api.post(`/inventory/${id}/transactions`, data).then(r => ('data' in r.data ? r.data.data : r.data));
+    api.post(`/inventory/${id}/transaction`, data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const getStockTransactions = (params?: { itemId?: string }) =>
     api.get('/inventory/transactions', { params }).then(r => ('data' in r.data ? r.data.data : r.data));
