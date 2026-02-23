@@ -45,7 +45,7 @@ const MainLayout: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    let socket: ReturnType<typeof getSocket>;
+    let socket: ReturnType<typeof getSocket> | null = null;
     try {
       socket = getSocket();
     } catch {
@@ -53,16 +53,15 @@ const MainLayout: React.FC = () => {
     }
     if (!socket) return;
 
-    // Request current count on connect
     if (socket.connected) {
       socket.emit('notifications:ping');
     }
 
-    socket.on('notifications:count', ({ unread }) => {
+    socket.on('notifications:count', ({ unread }: { unread: number }) => {
       qc.setQueryData(['notifications', 'unread'], unread);
     });
 
-    socket.on('notification:new', (notification) => {
+    socket.on('notification:new', (notification: any) => {
       qc.setQueryData(['notifications', undefined], (old: any) => ({
         ...old,
         data: [notification, ...(old?.data || [])]
@@ -71,10 +70,8 @@ const MainLayout: React.FC = () => {
     });
 
     return () => {
-      try {
-        socket.off('notifications:count');
-        socket.off('notification:new');
-      } catch { /* ignore */ }
+      socket?.off('notifications:count');
+      socket?.off('notification:new');
     };
   }, [isAuthenticated, qc]);
 
