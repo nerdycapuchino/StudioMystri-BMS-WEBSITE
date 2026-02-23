@@ -1,3 +1,4 @@
+import { validateQuery } from '../../middleware/validateQuery';
 import { Router } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../../config/db';
@@ -9,7 +10,7 @@ export const activityLogRouter = Router();
 // Admin only
 activityLogRouter.use(requireRole('ADMIN'));
 
-activityLogRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
+activityLogRouter.get('/', validateQuery, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { skip, take, page, limit } = paginate(req.query as Record<string, string>);
         const query = req.query as Record<string, string>;

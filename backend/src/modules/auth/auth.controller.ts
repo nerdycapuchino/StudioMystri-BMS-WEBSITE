@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import * as authService from './auth.service';
 import { env } from '../../config/env';
 
@@ -59,8 +60,21 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
  */
 export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        if (req.user?.id) {
-            await authService.logout(req.user.id);
+        let userId = req.user?.id;
+        const refreshToken = req.cookies?.refreshToken;
+
+        // If no user from access token (expired), try to extract from refresh cookie
+        if (!userId && refreshToken) {
+            try {
+                const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { id: string };
+                userId = decoded.id;
+            } catch {
+                // Invalid token - ignore
+            }
+        }
+
+        if (userId) {
+            await authService.logout(userId);
         }
 
         // Clear the refresh token cookie

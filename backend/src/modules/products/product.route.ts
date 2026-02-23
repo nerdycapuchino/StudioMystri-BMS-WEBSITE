@@ -1,3 +1,4 @@
+import { validateQuery } from '../../middleware/validateQuery';
 import { Router } from 'express';
 import * as ctrl from './product.controller';
 import { validate } from '../../middleware/validate';
@@ -6,7 +7,7 @@ import { upload } from '../../middleware/upload';
 
 export const productsRouter = Router();
 
-productsRouter.get('/', ctrl.list);
+productsRouter.get('/', validateQuery, ctrl.list);
 productsRouter.get('/barcode/:code', ctrl.getByBarcode);
 productsRouter.get('/:id', ctrl.getById);
 productsRouter.post('/', validate(createProductSchema), ctrl.create);

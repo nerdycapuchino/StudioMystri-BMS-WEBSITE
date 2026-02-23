@@ -1,3 +1,4 @@
+import { validateQuery } from '../../middleware/validateQuery';
 import { Router } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../../config/db';
@@ -5,7 +6,7 @@ import { success } from '../../utils/apiResponse';
 
 export const searchRouter = Router();
 
-searchRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
+searchRouter.get('/', validateQuery, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const q = (req.query.q as string) || '';
         if (!q || q.length < 2) {

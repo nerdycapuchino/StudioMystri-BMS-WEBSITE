@@ -3,13 +3,13 @@ import { AnyZodObject, ZodError } from 'zod';
 
 /**
  * Generic Zod validation middleware factory.
- * Validates req.body against the provided schema.
+ * Validates req[source] against the provided schema.
  * Returns 400 with structured error messages on failure.
  */
-export const validate = (schema: AnyZodObject) => {
+export const validate = (schema: AnyZodObject, source: 'body' | 'query' | 'params' = 'body') => {
     return (req: Request, res: Response, next: NextFunction): void => {
         try {
-            schema.parse(req.body);
+            schema.parse(req[source]);
             next();
         } catch (error) {
             if (error instanceof ZodError) {

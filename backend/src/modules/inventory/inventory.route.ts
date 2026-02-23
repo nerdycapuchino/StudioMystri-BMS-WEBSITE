@@ -1,3 +1,4 @@
+import { validateQuery } from '../../middleware/validateQuery';
 import { Router } from 'express';
 import * as ctrl from './inventory.controller';
 import { validate } from '../../middleware/validate';
@@ -8,7 +9,7 @@ export const inventoryRouter = Router();
 // Items
 inventoryRouter.get('/transactions', ctrl.listTransactions);
 inventoryRouter.get('/suppliers', ctrl.listSuppliers);
-inventoryRouter.get('/', ctrl.list);
+inventoryRouter.get('/', validateQuery, ctrl.list);
 inventoryRouter.get('/:id', ctrl.getById);
 inventoryRouter.post('/', validate(createInventorySchema), ctrl.create);
 inventoryRouter.put('/:id', validate(updateInventorySchema), ctrl.update);

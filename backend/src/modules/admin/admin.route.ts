@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as ctrl from './admin.controller';
 import { validate } from '../../middleware/validate';
-import { createUserSchema, updateUserSchema, updateSettingsSchema } from './admin.schema';
+import { createUserSchema, updateUserSchema, updateSettingsSchema, listUsersSchema } from './admin.schema';
 import { verifyToken, requireRole } from '../../middleware/auth';
 import { upload } from '../../middleware/upload';
 
@@ -15,7 +15,7 @@ adminRouter.use(verifyToken);
 adminRouter.use(requireRole('ADMIN'));
 
 // Users
-adminRouter.get('/users', ctrl.listUsers);
+adminRouter.get('/users', validate(listUsersSchema, 'query'), ctrl.listUsers);
 adminRouter.get('/users/:id', ctrl.getUser);
 adminRouter.post('/users', validate(createUserSchema), ctrl.createUser);
 adminRouter.put('/users/:id', validate(updateUserSchema), ctrl.updateUser);

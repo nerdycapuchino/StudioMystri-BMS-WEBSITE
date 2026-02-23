@@ -12,8 +12,8 @@ authRouter.post('/login', validate(loginSchema), authController.login);
 // POST /api/v1/auth/refresh
 authRouter.post('/refresh', authController.refresh);
 
-// POST /api/v1/auth/logout (requires auth to identify user)
-authRouter.post('/logout', verifyToken, authController.logout);
+// POST /api/v1/auth/logout
+authRouter.post('/logout', authController.logout);
 
 // GET /api/v1/auth/me (requires auth)
 authRouter.get('/me', verifyToken, authController.me);

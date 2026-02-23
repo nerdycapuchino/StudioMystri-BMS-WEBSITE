@@ -54,15 +54,16 @@ export const softDelete = async (id: string) => {
 };
 
 export const recalculateStats = async (customerId: string) => {
-    const orders = await prisma.order.findMany({
+    const stats = await prisma.order.aggregate({
         where: { customerId },
-        select: { total: true },
+        _count: { id: true },
+        _sum: { total: true },
     });
     await prisma.customer.update({
         where: { id: customerId },
         data: {
-            totalOrders: orders.length,
-            totalSpent: orders.reduce((sum, o) => sum + o.total, 0),
+            totalOrders: stats._count.id,
+            totalSpent: stats._sum.total || 0,
         },
     });
 };

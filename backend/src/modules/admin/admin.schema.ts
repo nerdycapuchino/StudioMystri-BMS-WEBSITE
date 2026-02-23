@@ -27,5 +27,13 @@ export const updateSettingsSchema = z.object({
     branch: z.string().optional().nullable(),
 });
 
+export const listUsersSchema = z.object({
+    page: z.string().optional(),
+    limit: z.string().optional(),
+    search: z.string().optional(),
+    sortBy: z.string().optional(),
+    order: z.enum(['asc', 'desc']).optional(),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

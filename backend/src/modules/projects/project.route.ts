@@ -1,3 +1,4 @@
+import { validateQuery } from '../../middleware/validateQuery';
 import { Router } from 'express';
 import * as ctrl from './project.controller';
 import { validate } from '../../middleware/validate';
@@ -6,7 +7,7 @@ import { createProjectSchema, updateProjectSchema, updateStageSchema, addPayment
 export const projectsRouter = Router();
 
 projectsRouter.get('/stats', ctrl.stats);
-projectsRouter.get('/', ctrl.list);
+projectsRouter.get('/', validateQuery, ctrl.list);
 projectsRouter.get('/:id', ctrl.getById);
 projectsRouter.post('/', validate(createProjectSchema), ctrl.create);
 projectsRouter.put('/:id', validate(updateProjectSchema), ctrl.update);

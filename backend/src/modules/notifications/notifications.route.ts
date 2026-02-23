@@ -1,3 +1,4 @@
+import { validateQuery } from '../../middleware/validateQuery';
 import { Router } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../../config/db';
@@ -7,7 +8,7 @@ import { success } from '../../utils/apiResponse';
 export const notificationsRouter = Router();
 
 // GET /api/v1/notifications — list for current user
-notificationsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
+notificationsRouter.get('/', validateQuery, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { skip, take, page, limit } = paginate(req.query as Record<string, string>);
         const where: Record<string, unknown> = { userId: req.user!.id };

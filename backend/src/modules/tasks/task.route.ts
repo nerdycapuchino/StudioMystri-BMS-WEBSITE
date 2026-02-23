@@ -1,3 +1,4 @@
+import { validateQuery } from '../../middleware/validateQuery';
 import { Router } from 'express';
 import * as ctrl from './task.controller';
 import { validate } from '../../middleware/validate';
@@ -5,7 +6,7 @@ import { createTaskSchema, updateTaskSchema, updateTaskStatusSchema } from './ta
 
 export const tasksRouter = Router();
 tasksRouter.get('/my', ctrl.myTasks);
-tasksRouter.get('/', ctrl.list);
+tasksRouter.get('/', validateQuery, ctrl.list);
 tasksRouter.get('/:id', ctrl.getById);
 tasksRouter.post('/', validate(createTaskSchema), ctrl.create);
 tasksRouter.put('/:id', validate(updateTaskSchema), ctrl.update);
