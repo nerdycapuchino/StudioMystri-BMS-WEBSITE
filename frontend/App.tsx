@@ -95,3 +95,5 @@ export const AppRouter: React.FC = () => {
     </AuthProvider>
   );
 };
+
+export default AppRouter;
