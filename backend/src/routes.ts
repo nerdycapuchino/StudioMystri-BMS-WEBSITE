@@ -59,5 +59,5 @@ apiRouter.use('/marketing', verifyToken, marketingRouter);
 apiRouter.use('/erp', verifyToken, erpRouter);
 apiRouter.use('/activity-log', verifyToken, activityLogRouter);
 apiRouter.use('/notifications', verifyToken, notificationsRouter);
-apiRouter.use('/admin', verifyToken, adminRouter);
+apiRouter.use('/admin', adminRouter);
 apiRouter.use('/search', verifyToken, searchRouter);

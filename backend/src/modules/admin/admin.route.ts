@@ -2,12 +2,16 @@ import { Router } from 'express';
 import * as ctrl from './admin.controller';
 import { validate } from '../../middleware/validate';
 import { createUserSchema, updateUserSchema, updateSettingsSchema } from './admin.schema';
-import { requireRole } from '../../middleware/auth';
+import { verifyToken, requireRole } from '../../middleware/auth';
 import { upload } from '../../middleware/upload';
 
 export const adminRouter = Router();
 
-// All admin routes require ADMIN role
+// Public: login page needs this for branding
+adminRouter.get('/settings', ctrl.getSettings);
+
+// All other admin routes require valid token & ADMIN role
+adminRouter.use(verifyToken);
 adminRouter.use(requireRole('ADMIN'));
 
 // Users
@@ -17,7 +21,6 @@ adminRouter.post('/users', validate(createUserSchema), ctrl.createUser);
 adminRouter.put('/users/:id', validate(updateUserSchema), ctrl.updateUser);
 adminRouter.delete('/users/:id', ctrl.deleteUser);
 
-// Settings
-adminRouter.get('/settings', ctrl.getSettings);
+// Settings (updates)
 adminRouter.put('/settings', validate(updateSettingsSchema), ctrl.updateSettings);
 adminRouter.post('/settings/logo', upload.single('logo'), ctrl.uploadLogo);
