@@ -13,7 +13,7 @@ export const listEmployees = async (query: Record<string, string>) => {
 
     const where: Record<string, unknown> = {};
     if (query.department) where.department = query.department;
-    if (query.status) where.status = query.status;
+    if (query.status) where.status = query.status.toUpperCase();
     if (query.search) {
         where.OR = [
             { name: { contains: query.search, mode: 'insensitive' } },
@@ -108,11 +108,20 @@ export const listAttendance = async (query: Record<string, string>) => {
     if (query.employeeId) where.employeeId = query.employeeId;
     if (query.status) where.status = query.status as AttendanceStatus;
     if (query.month) {
-        const [year, month] = query.month.split('-').map(Number);
-        where.date = {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1),
-        };
+        let year, month;
+        if (query.year) {
+             year = parseInt(query.year, 10);
+             month = parseInt(query.month, 10);
+        } else {
+             [year, month] = query.month.split('-').map(Number);
+        }
+
+        if (!isNaN(year) && !isNaN(month)) {
+            where.date = {
+                gte: new Date(year, month - 1, 1),
+                lt: new Date(year, month, 1),
+            };
+        }
     }
 
     const [data, total] = await Promise.all([

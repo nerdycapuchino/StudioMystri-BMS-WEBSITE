@@ -201,7 +201,7 @@ export const HR: React.FC = () => {
                                  </div>
                               </div>
                               <div className="ml-auto pr-4 font-medium text-sm text-slate-700 dark:text-slate-300">
-                                 {emp.attendance}
+                                 {typeof emp.attendance === 'string' ? emp.attendance : (emp.attendance as any)?.status || '-'}
                               </div>
                            </div>
                         </div>

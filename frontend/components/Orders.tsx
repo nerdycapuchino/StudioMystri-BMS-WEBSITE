@@ -140,7 +140,9 @@ export const Orders: React.FC = () => {
                                             {order.orderNumber || `#${order.id.slice(-6).toUpperCase()}`}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-medium text-slate-900 dark:text-white">{order.customerName || order.customer?.name || 'Walk-in Customer'}</div>
+                                            <div className="font-medium text-slate-900 dark:text-white">
+                                                {typeof order.customerName === 'string' ? order.customerName : (order.customer?.name || 'Walk-in Customer')}
+                                            </div>
                                             <div className="text-[10px] text-slate-500 dark:text-slate-400">{order.customer?.email || 'No contact info'}</div>
                                         </td>
                                         <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
