@@ -17,3 +17,28 @@ npx prisma generate
 npx prisma migrate deploy
 npm run build
 pm2 restart all
+
+
+
+
+1. To Reset and Seed the Database (Prisma)
+You must run this from the backend directory:
+
+bash
+cd backend
+npx prisma db push --force-reset
+npx prisma db seed
+
+
+2. To Start the Backend Server
+
+bash
+cd backend
+npm run dev
+
+
+3. To Start the Frontend Server
+
+bash
+cd frontend
+npm run dev

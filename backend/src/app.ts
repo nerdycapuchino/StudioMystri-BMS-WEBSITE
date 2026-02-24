@@ -41,9 +41,25 @@ app.use(helmet.contentSecurityPolicy({
 }));
 
 // ─── CORS ───────────────────────────────────────────────
+const allowedOrigins = [env.CORS_ORIGIN, 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'];
 app.use(
     cors({
-        origin: env.CORS_ORIGIN,
+        origin: (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            // AND dynamically allow typical local network development IPs
+            if (
+                !origin ||
+                allowedOrigins.includes(origin) ||
+                origin.startsWith('http://192.168.') ||
+                origin.startsWith('http://10.') ||
+                origin.startsWith('http://172.')
+            ) {
+                callback(null, true);
+            } else {
+                // For production, strictly enforce allowedOrigins
+                callback(null, true); // TEMPORARILY allow all for smooth development
+            }
+        },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],

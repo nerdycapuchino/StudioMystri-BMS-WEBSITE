@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useLeads, useCreateLead, useUpdateLead, useDeleteLead, useConvertLeadToProject } from '../hooks/useLeads';
 import { Lead } from '../types';
-import { Plus, Search, Filter, TrendingUp, TrendingDown, Grid, Home, Building2, Wrench, MoreHorizontal, Calendar, Trash2, Edit2, X, AlertCircle, Save, CheckCircle, XCircle, Rocket } from 'lucide-react';
+import { Plus, Search, Filter, TrendingUp, TrendingDown, Grid, Home, Building2, Wrench, MoreHorizontal, Calendar, Trash2, Edit2, X, AlertCircle, Save, CheckCircle, XCircle, Rocket, GripVertical } from 'lucide-react';
 import { TableSkeleton, InlineError } from './ui/Skeleton';
+import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, useDraggable, useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 export const CRM: React.FC = () => {
     const { data: leadsData, isLoading, isError, error, refetch } = useLeads();
@@ -45,6 +47,36 @@ export const CRM: React.FC = () => {
     // Actual system statuses. We'll map them visually if needed, but 'New', 'Negotiation', 'Won', 'Lost' are system defaults.
     // To match template, we'll keep the system's simple statuses but render them nicely.
     const activeColumns = ['New', 'Initial Meeting', 'Proposal', 'Negotiation', 'Drafting', 'Won', 'Lost']; // Updated active columns
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor)
+    );
+
+    const [activeId, setActiveId] = useState<string | null>(null);
+
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveId(null);
+
+        if (!over) return;
+
+        const leadId = active.id as string;
+        const newStatus = over.id as Lead['status'];
+
+        const lead = leads.find(l => l.id === leadId);
+        if (lead && lead.status !== newStatus) {
+            updateLeadMut.mutate({ id: leadId, data: { status: newStatus } });
+        }
+    };
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
@@ -111,20 +143,7 @@ export const CRM: React.FC = () => {
     //     setIsEditing(true);
     // };
 
-    const handleDragStart = (e: React.DragEvent, id: string) => {
-        e.dataTransfer.setData('leadId', id);
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-    };
-
-    const handleDrop = (e: React.DragEvent, status: Lead['status']) => {
-        const id = e.dataTransfer.getData('leadId');
-        if (id) {
-            updateLeadMut.mutate({ id, data: { status } });
-        }
-    };
+    const activeLead = activeId ? leads.find(l => l.id === activeId) : null;
 
     const filteredLeads = useMemo(() => {
         return leads.filter(l => {
@@ -147,98 +166,8 @@ export const CRM: React.FC = () => {
     if (isLoading) return <div className="h-full p-10"><TableSkeleton /></div>;
     if (isError) return <div className="h-full p-10"><InlineError message={(error as Error)?.message || 'Failed to load pipeline'} onRetry={refetch} /></div>;
 
-    const renderCard = (l: Lead) => {
-        const typeColors: Record<string, string> = {
-            'Inbound': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-            'Outbound': 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-            'Referral': 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-        };
-        const defaultColor = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
-
-        if (l.status === 'Won') {
-            return (
-                <div key={l.id} onClick={() => setSelectedLead(l)} className="group bg-green-50/50 dark:bg-green-900/10 p-4 rounded-xl shadow-sm border border-green-200 dark:border-green-900/50 cursor-pointer hover:shadow-md transition-all">
-                    <div className="flex justify-between items-start mb-2">
-                        <span className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" /> Won
-                        </span>
-                    </div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1">{l.companyName || l.pocName}</h4>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">Architectural Planning</p>
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-green-100 dark:border-green-900/30">
-                        <div className="flex items-center gap-2">
-                            <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">{l.pocName.charAt(0)}</div>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">1mo ago</span>
-                        </div>
-                        <span className="text-green-700 dark:text-green-400 font-bold text-sm">{formatCurrency(l.value)}</span>
-                    </div>
-                </div>
-            );
-        }
-
-        if (l.status === 'Lost') {
-            return (
-                <div key={l.id} onClick={() => setSelectedLead(l)} className="group bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 grayscale opacity-60 hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                        <span className="bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
-                            <XCircle className="w-3 h-3" /> Lost
-                        </span>
-                    </div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1">{l.companyName || l.pocName}</h4>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">Public Bid</p>
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-slate-700/50">
-                        <div className="flex items-center gap-2">
-                            <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">{l.pocName.charAt(0)}</div>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">1mo ago</span>
-                        </div>
-                        <span className="text-slate-500 dark:text-slate-400 font-bold text-sm">{formatCurrency(l.value)}</span>
-                    </div>
-                </div>
-            );
-        }
-
-        return (
-            <div
-                key={l.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, l.id)}
-                onClick={() => setSelectedLead(l)}
-                className={`group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing transition-all hover:border-primary/50 ${(l.status as string) === 'Negotiation' ? 'border-l-4 border-l-primary' : ''}`}
-            >
-                <div className="flex justify-between items-start mb-2">
-                    <span className={`${typeColors[l.type] || defaultColor} text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide`}>
-                        {(l.status as string) === 'New' ? 'New Lead' : l.status}
-                    </span>
-                    <button className="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreHorizontal className="w-5 h-5" />
-                    </button>
-                </div>
-                <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1">{l.companyName || l.pocName}</h4>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">{l.requirements || 'No specific notes'}</p>
-
-                {(l.status as string) === 'Initial Meeting' && (
-                    <div className="flex items-center gap-2 mb-3">
-                        <Calendar className="w-4 h-4 text-slate-400" />
-                        <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">Scheduled: {l.lastContact}</span>
-                    </div>
-                )}
-
-                {(l.status as string) === 'Negotiation' && (
-                    <div className="flex items-center gap-2 mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs text-yellow-800 dark:text-yellow-200">
-                        <AlertCircle className="w-4 h-4" />
-                        Budget revision required
-                    </div>
-                )}
-
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
-                    <div className="flex items-center gap-2">
-                        <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">{l.pocName.charAt(0)}</div>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{l.lastContact}</span>
-                    </div>
-                    <span className="text-primary font-bold text-sm">{formatCurrency(l.value)}</span>
-                </div>
-            </div>
-        );
+    const renderCard = (l: Lead, isOverlay = false) => {
+        return <CRMCard key={l.id} lead={l} setSelectedLead={setSelectedLead} isOverlay={isOverlay} formatCurrency={formatCurrency} />;
     };
 
     return (
@@ -342,54 +271,43 @@ export const CRM: React.FC = () => {
 
             {/* Kanban Board Area */}
             <div className="flex-1 overflow-x-auto overflow-y-hidden p-8 custom-scrollbar">
-                <div className="flex h-full gap-6 min-w-max pb-4">
-                    {/* Map all columns from template */}
-                    {Object.entries(columns).map(([id, col]) => {
-                        // Filter out 'Won' and 'Lost' from individual columns as they are handled in a combined column
-                        if (id === 'Won' || id === 'Lost') return null;
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                >
+                    <div className="flex h-full gap-6 min-w-max pb-4">
+                        {/* Map all columns from template */}
+                        {Object.entries(columns).map(([id, col]) => {
+                            // Filter out 'Won' and 'Lost' from individual columns as they are handled in a combined column
+                            if (id === 'Won' || id === 'Lost') return null;
 
-                        const colLeads = filteredLeads.filter(l => l.status === id);
+                            const colLeads = filteredLeads.filter(l => l.status === id);
 
-                        return (
-                            <div key={id} className="flex flex-col w-80 shrink-0" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, id as Lead['status'])}>
-                                <div className="flex items-center justify-between mb-4 px-1">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">{col.label}</h3>
-                                        <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">{colLeads.length}</span>
-                                    </div>
-                                    <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                                        <MoreHorizontal className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
-                                    {colLeads.map(l => renderCard(l))}
-                                </div>
-                                <button onClick={() => setShowAdd(true)} className="mt-2 flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-600 transition-colors text-sm font-medium">
-                                    <Plus className="w-5 h-5" />
-                                    <span>Add {col.label}</span>
-                                </button>
-                            </div>
-                        );
-                    })}
+                            return (
+                                <CRMColumn key={id} id={id} col={col} colLeads={colLeads} renderCard={renderCard} setShowAdd={setShowAdd} />
+                            );
+                        })}
 
-                    {/* Column: Won / Lost */}
-                    <div className="flex flex-col w-80 shrink-0 opacity-80 hover:opacity-100 transition-opacity" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 'Won')}>
-                        <div className="flex items-center justify-between mb-4 px-1">
-                            <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">Won / Lost</h3>
-                                <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">
-                                    {filteredLeads.filter(l => l.status === 'Won' || l.status === 'Lost').length}
-                                </span>
-                            </div>
-                            <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                                <MoreHorizontal className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
-                            {filteredLeads.filter(l => l.status === 'Won' || l.status === 'Lost').map(l => renderCard(l))}
-                        </div>
+                        {/* Column: Won / Lost */}
+                        <CRMColumn
+                            id="WonLost"
+                            isCompound={true}
+                            col={{ label: 'Won / Lost', color: 'slate', style: 'normal' }}
+                            colLeads={filteredLeads.filter(l => l.status === 'Won' || l.status === 'Lost')}
+                            renderCard={renderCard}
+                            setShowAdd={setShowAdd}
+                        />
                     </div>
-                </div>
+                    <DragOverlay>
+                        {activeLead ? (
+                            <div className="opacity-80 scale-105 pointer-events-none">
+                                {renderCard(activeLead, true)}
+                            </div>
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
             </div>
 
             {/* Add/Edit Modal Layer */}
@@ -529,6 +447,132 @@ export const CRM: React.FC = () => {
                     </div>
                 </div>
             )}
+        </div>
+    );
+};
+
+const CRMColumn = ({ id, col, colLeads, renderCard, setShowAdd, isCompound = false }: any) => {
+    const { setNodeRef, isOver } = useDroppable({
+        id,
+    });
+
+    return (
+        <div ref={setNodeRef} className={`flex flex-col w-80 shrink-0 transition-colors rounded-xl p-2 -m-2 ${isOver ? 'bg-slate-100 dark:bg-slate-800 ring-2 ring-primary ring-opacity-50' : ''} ${isCompound ? 'opacity-80 hover:opacity-100' : ''}`}>
+            <div className="flex items-center justify-between mb-4 px-1">
+                <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wider">{col.label}</h3>
+                    <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold px-2 py-0.5 rounded-full">{colLeads.length}</span>
+                </div>
+                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                    <MoreHorizontal className="w-5 h-5" />
+                </button>
+            </div>
+            <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
+                {colLeads.map((l: any) => renderCard(l))}
+            </div>
+            {!isCompound && (
+                <button onClick={() => setShowAdd(true)} className="mt-2 flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-600 transition-colors text-sm font-medium">
+                    <Plus className="w-5 h-5" />
+                    <span>Add {col.label}</span>
+                </button>
+            )}
+        </div>
+    );
+};
+
+const CRMCard = ({ lead: l, setSelectedLead, isOverlay, formatCurrency }: any) => {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: l.id,
+    });
+
+    const style = transform ? {
+        transform: CSS.Translate.toString(transform),
+    } : undefined;
+
+    const typeColors: Record<string, string> = {
+        'Inbound': 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+        'Outbound': 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+        'Referral': 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+    };
+    const defaultColor = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
+
+    if (l.status === 'Won' || l.status === 'Lost') {
+        const isWon = l.status === 'Won';
+        return (
+            <div
+                ref={setNodeRef}
+                style={style}
+                {...(isOverlay ? {} : listeners)}
+                {...(isOverlay ? {} : attributes)}
+                onClick={() => !isDragging && setSelectedLead(l)}
+                className={`group ${isWon ? 'bg-green-50/50 dark:bg-green-900/10 border-green-200 dark:border-green-900/50' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'} p-4 rounded-xl shadow-sm border cursor-pointer hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
+            >
+                <div className="flex justify-between items-start mb-2">
+                    {isWon ? (
+                        <span className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" /> Won
+                        </span>
+                    ) : (
+                        <span className="bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1">
+                            <XCircle className="w-3 h-3" /> Lost
+                        </span>
+                    )}
+                </div>
+                <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1">{l.companyName || l.pocName}</h4>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">{isWon ? 'Architectural Planning' : 'Public Bid'}</p>
+                <div className={`flex items-center justify-between mt-4 pt-3 border-t ${isWon ? 'border-green-100 dark:border-green-900/30' : 'border-slate-200 dark:border-slate-700/50'}`}>
+                    <div className="flex items-center gap-2">
+                        <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">{l.pocName.charAt(0)}</div>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">1mo ago</span>
+                    </div>
+                    <span className={`${isWon ? 'text-green-700 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'} font-bold text-sm`}>{formatCurrency(l.value)}</span>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...(isOverlay ? {} : listeners)}
+            {...(isOverlay ? {} : attributes)}
+            onClick={() => !isDragging && setSelectedLead(l)}
+            className={`group bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all hover:border-primary/50 ${(l.status as string) === 'Negotiation' ? 'border-l-4 border-l-primary' : ''} ${isDragging ? 'opacity-50' : 'opacity-100'} ${!isOverlay ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        >
+            <div className="flex justify-between items-start mb-2">
+                <span className={`${typeColors[l.type] || defaultColor} text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide flex items-center gap-1`}>
+                    <GripVertical className="w-3 h-3 text-slate-400/50" />
+                    {(l.status as string) === 'New' ? 'New Lead' : l.status}
+                </span>
+                <button className="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MoreHorizontal className="w-5 h-5" />
+                </button>
+            </div>
+            <h4 className="font-bold text-slate-900 dark:text-white text-base mb-1">{l.companyName || l.pocName}</h4>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">{l.requirements || 'No specific notes'}</p>
+
+            {(l.status as string) === 'Initial Meeting' && (
+                <div className="flex items-center gap-2 mb-3">
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                    <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">Scheduled: {l.lastContact}</span>
+                </div>
+            )}
+
+            {(l.status as string) === 'Negotiation' && (
+                <div className="flex items-center gap-2 mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs text-yellow-800 dark:text-yellow-200">
+                    <AlertCircle className="w-4 h-4" />
+                    Budget revision required
+                </div>
+            )}
+
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                <div className="flex items-center gap-2">
+                    <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">{l.pocName.charAt(0)}</div>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{l.lastContact}</span>
+                </div>
+                <span className="text-primary font-bold text-sm">{formatCurrency(l.value)}</span>
+            </div>
         </div>
     );
 };

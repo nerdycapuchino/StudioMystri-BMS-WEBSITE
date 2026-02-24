@@ -21,6 +21,14 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
         success(res, d, 'User updated');
     } catch (e) { next(e); }
 };
+
+export const generateResetLink = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const d = await svc.generateResetLink(req.params.id, req.user!.id);
+        logActivity(prisma, req.user?.id, 'ADMIN', 'RESET_LINK_GENERATED', req.params.id, {}, req.ip);
+        success(res, d, 'Reset link generated successfully');
+    } catch (e) { next(e); }
+};
 export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         await svc.deactivateUser(req.params.id, req.user!.id);

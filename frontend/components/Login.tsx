@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCompanySettings } from '../hooks/useAdmin';
-import { Mail, Lock, Eye, EyeOff, HardHat, Moon, Sun } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Layers, Moon, Sun } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const Login: React.FC = () => {
+   const navigate = useNavigate();
    const { login } = useAuth();
    const { data: companySettings } = useCompanySettings();
    const [email, setEmail] = useState('');
@@ -17,6 +20,12 @@ export const Login: React.FC = () => {
    const [isDark, setIsDark] = useState(true);
 
    useEffect(() => {
+      // Force clear slate: automatically remove stale tokens so users aren't locked out
+      localStorage.removeItem('bms_token');
+      localStorage.removeItem('bms_user');
+   }, []);
+
+   useEffect(() => {
       if (isDark) document.documentElement.classList.add('dark');
       else document.documentElement.classList.remove('dark');
    }, [isDark]);
@@ -27,7 +36,10 @@ export const Login: React.FC = () => {
       setError('');
 
       try {
-         await login(email, password);
+         const cleanEmail = email.trim();
+         const cleanPassword = password.trim();
+         await login(cleanEmail, cleanPassword);
+         navigate('/dashboard'); // Explicitly redirect to dashboard on 200 OK
       } catch (err: any) {
          setError(err?.response?.data?.message || err?.message || 'Invalid email or password');
       } finally {
@@ -56,7 +68,7 @@ export const Login: React.FC = () => {
                         </span>
                      </div>
                      <h2 className="text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl max-w-2xl drop-shadow-md">
-                        Constructing the future, <br /> <span className="text-slate-300">one blueprint at a time.</span>
+                        Constructing the future, <br /> <span className="text-slate-300">one project at a time.</span>
                      </h2>
                      <p className="mt-4 max-w-lg text-lg text-slate-300/90 font-light drop-shadow">
                         Seamlessly manage your architectural projects, assets, and workflows in one unified ecosystem.
@@ -66,13 +78,23 @@ export const Login: React.FC = () => {
 
                {/* Right Side: Login Form */}
                <div className="flex w-full flex-col justify-center bg-background-light dark:bg-background-dark px-6 py-12 md:w-1/2 md:px-12 lg:w-2/5 lg:px-16 xl:w-1/3 xl:px-20 border-l border-slate-200 dark:border-slate-800 relative z-30 transition-colors duration-300 shadow-2xl md:shadow-none">
+                  {/* Mobile specific header image */}
+                  <div
+                     className="md:hidden absolute top-0 left-0 w-full h-40 bg-cover bg-center opacity-30"
+                     style={{ backgroundImage: "url('https://images.unsplash.com/photo-1600607686527-6fb886090705?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')", WebkitMaskImage: "linear-gradient(to bottom, black 50%, transparent 100%)" }}
+                  ></div>
+
                   <div className="w-full max-w-md mx-auto relative z-10 animate-in fade-in slide-in-from-right-8 duration-700">
                      <div className="mb-10 flex flex-col gap-2">
                         <div className="flex items-center gap-3 mb-2">
-                           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-lg shadow-primary/30">
-                              <HardHat className="w-6 h-6" />
-                           </div>
-                           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Studio Mystri BMS</h1>
+                           {settings.logoUrl ? (
+                              <img src={settings.logoUrl} alt="Logo" className="h-10 w-auto object-contain rounded" />
+                           ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-lg shadow-primary/30">
+                                 <span className="material-symbols-outlined text-[24px]">architecture</span>
+                              </div>
+                           )}
+                           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{settings.name || 'Studio Mystri BMS'}</h1>
                         </div>
                         <h2 className="text-base font-normal text-slate-500 dark:text-slate-400">
                            Welcome back. Please enter your details.
@@ -93,7 +115,7 @@ export const Login: React.FC = () => {
                                  type="email"
                                  value={email}
                                  onChange={e => setEmail(e.target.value)}
-                                 placeholder="architect@blueprint.com"
+                                 placeholder="architect@domain.com"
                                  required
                               />
                            </div>
@@ -129,14 +151,14 @@ export const Login: React.FC = () => {
                         <div className="flex items-center justify-between">
                            <label className="flex items-center gap-2 cursor-pointer group">
                               <input
-                                 className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600 dark:bg-slate-700 transition-all"
+                                 className="peer h-4 w-4 appearance-none rounded border border-slate-300 checked:border-primary checked:bg-primary dark:border-slate-600 dark:bg-slate-700 dark:checked:border-primary dark:checked:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all cursor-pointer"
                                  type="checkbox"
                                  checked={rememberMe}
                                  onChange={e => setRememberMe(e.target.checked)}
                               />
                               <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-slate-300 transition-colors">Keep me logged in</span>
                            </label>
-                           <a className="text-sm font-semibold text-primary hover:text-blue-600 transition-colors" href="#">Forgot password?</a>
+                           <button onClick={(e) => { e.preventDefault(); toast('Contact your administrator to reset your password', { icon: 'ℹ️' }); }} className="text-sm font-semibold text-primary hover:text-blue-600 transition-colors" type="button">Forgot password?</button>
                         </div>
 
                         {error && (
@@ -160,11 +182,6 @@ export const Login: React.FC = () => {
                         </button>
                      </form>
 
-                     <div className="mt-10 flex items-center justify-center gap-6">
-                        <a className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors" href="#">Privacy Policy</a>
-                        <span className="text-xs text-slate-400 dark:text-slate-600">•</span>
-                        <a className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors" href="#">Terms of Service</a>
-                     </div>
                   </div>
                </div>
             </div>
@@ -177,7 +194,7 @@ export const Login: React.FC = () => {
                className="p-2.5 rounded-full bg-white/10 backdrop-blur-md border border-slate-200/20 text-slate-800 dark:text-slate-200 hover:bg-white/20 dark:hover:bg-slate-800/60 shadow-lg transition-all"
                title="Toggle Theme"
             >
-               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+               {isDark ? <Sun className="w-5 h-5 drop-shadow-sm" /> : <Moon className="w-5 h-5 drop-shadow-sm" />}
             </button>
          </div>
       </div>

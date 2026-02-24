@@ -1,7 +1,15 @@
 import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
 import { getAccessToken, setAccessToken, clearAccessToken } from './tokenStore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const getApiBase = () => {
+    if ((import.meta as any).env.VITE_API_URL) return (import.meta as any).env.VITE_API_URL;
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        return `http://${hostname}:5000/api/v1`;
+    }
+    return 'http://localhost:5000/api/v1';
+};
+const API_BASE = getApiBase();
 
 const api = axios.create({
     baseURL: API_BASE,

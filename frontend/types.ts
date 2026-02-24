@@ -103,16 +103,17 @@ export interface Lead {
 export interface InventoryItem {
   id: string;
   name: string;
-  type: 'Raw Material' | 'Finished Good' | 'Consumable';
+  type: 'RAW' | 'FINISHED' | 'CONSUMABLE';
   category?: string;
   sku?: string;
   image?: string;
   quantity: number;
   unit: string;
-  reorderLevel: number;
+  reorderPoint?: number;
   cost: number;
   location?: string;
-  supplier?: string;
+  supplierId?: string;
+  supplier?: Supplier;
   batchNumber?: string;
   expiryDate?: string;
   barcode?: string;

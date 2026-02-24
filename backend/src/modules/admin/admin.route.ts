@@ -20,6 +20,7 @@ adminRouter.get('/users/:id', ctrl.getUser);
 adminRouter.post('/users', validate(createUserSchema), ctrl.createUser);
 adminRouter.put('/users/:id', validate(updateUserSchema), ctrl.updateUser);
 adminRouter.delete('/users/:id', ctrl.deleteUser);
+adminRouter.post('/users/:id/reset-link', ctrl.generateResetLink);
 
 // Settings (updates)
 adminRouter.put('/settings', validate(updateSettingsSchema), ctrl.updateSettings);

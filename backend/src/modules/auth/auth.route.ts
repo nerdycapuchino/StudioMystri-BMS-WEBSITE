@@ -17,3 +17,7 @@ authRouter.post('/logout', verifyToken, authController.logout);
 
 // GET /api/v1/auth/me (requires auth)
 authRouter.get('/me', verifyToken, authController.me);
+
+// POST /api/v1/auth/reset-password
+import { resetPasswordSchema } from './auth.schema';
+authRouter.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);

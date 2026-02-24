@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser, useCompanySettings, useUpdateCompanySettings } from '../hooks/useAdmin';
+import { useUsers, useCreateUser, useUpdateUser, useDeactivateUser, useCompanySettings, useUpdateCompanySettings, useGenerateResetLink } from '../hooks/useAdmin';
 import { useEmployees } from '../hooks/useHR';
-import { Settings, Users, Shield, Key, Plus, X, Edit2, Trash2, Save, Building2, Eye, EyeOff, Search, Info } from 'lucide-react';
+import { Settings, Users, Shield, Key, Plus, X, Edit2, Trash2, Save, Building2, Eye, EyeOff, Search, Info, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const Admin: React.FC = () => {
@@ -12,17 +12,19 @@ export const Admin: React.FC = () => {
   const { data: empData } = useEmployees();
 
   const createUser = useCreateUser();
+  const generateResetLinkMut = useGenerateResetLink();
   const updateUserMut = useUpdateUser();
   const deactivateUser = useDeactivateUser();
   const updateSettings = useUpdateCompanySettings();
 
   const users: any[] = Array.isArray(usersData?.data || usersData) ? (usersData?.data || usersData) : [];
   const employees: any[] = Array.isArray(empData?.data || empData) ? (empData?.data || empData) : [];
-  const companySettings: any = (settingsData?.data || settingsData) || { name: '', address: '', phone: '', email: '', gstNumber: '', logoUrl: '' };
+  const companySettings: any = (settingsData as any)?.data || settingsData || { name: '', address: '', phone: '', email: '', gstNumber: '', logoUrl: '' };
 
   const [activeTab, setActiveTab] = useState<'users' | 'permissions' | 'credentials' | 'settings'>('users');
   const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Viewer', password: '' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', role: 'ARCHITECT' });
+  const [setupLinkObj, setSetupLinkObj] = useState<{ link: string, email: string } | null>(null);
   const [editSettings, setEditSettings] = useState(false);
   const [settingsForm, setSettingsForm] = useState(companySettings);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
@@ -32,15 +34,21 @@ export const Admin: React.FC = () => {
   const handleAddUser = () => {
     if (newUser.name && newUser.email) {
       createUser.mutate(newUser as any, {
-        onSuccess: () => {
+        onSuccess: (data) => {
           setShowAddUser(false);
-          setNewUser({ name: '', email: '', role: 'Viewer', password: '' });
-          toast.success("User added successfully");
+          setNewUser({ name: '', email: '', role: 'ARCHITECT' });
+          setSetupLinkObj({ link: data?.setupLink, email: data?.email });
         }
       });
     } else {
       toast.error("Name and Email required");
     }
+  };
+
+  const handleGenerateResetLink = (userId: string, email: string) => {
+    generateResetLinkMut.mutate(userId as any, {
+      onSuccess: (data) => setSetupLinkObj({ link: data?.resetLink, email })
+    });
   };
 
   const handleDeactivateUser = (id: string) => {
@@ -141,11 +149,12 @@ export const Admin: React.FC = () => {
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">{u.role}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${u.status === 'Active' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
-                          {u.status || 'Active'}
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${u.isActive === false ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>
+                          {u.isActive === false ? 'Inactive' : 'Active'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right flex justify-end gap-1">
+                        <button onClick={() => handleGenerateResetLink(u.id, u.email)} className="text-blue-500 hover:text-blue-600 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors tooltip" title="Generate Reset Link"><Key className="w-4 h-4" /></button>
                         <button onClick={() => handleDeactivateUser(u.id)} className="text-red-500 hover:text-red-600 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors tooltip" title="Deactivate"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>
@@ -182,7 +191,7 @@ export const Admin: React.FC = () => {
                           <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 flex items-center justify-center mb-1">
                             <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
                           </div>
-                          <span class="text-sm font-bold text-slate-800 dark:text-slate-100">Manager</span>
+                          <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Manager</span>
                           <span className="text-[10px] font-medium text-slate-400">Team Lead</span>
                         </div>
                       </th>
@@ -423,20 +432,56 @@ export const Admin: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase">Role Access</label>
                 <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none">
-                  <option value="Super Admin">Administrator</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Staff">Staff</option>
-                  <option value="Viewer">Viewer</option>
+                  <option value="SUPER_ADMIN">Owner (Super Admin)</option>
+                  <option value="ADMIN">Administrator</option>
+                  <option value="DESIGNER">Designer</option>
+                  <option value="ARCHITECT">Architect</option>
+                  <option value="SALES">Sales</option>
+                  <option value="FINANCE">Finance</option>
+                  <option value="HR">HR</option>
                 </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase">Initial Password</label>
-                <input type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="Leave blank to auto-generate" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary outline-none" />
               </div>
             </div>
             <button onClick={handleAddUser} disabled={createUser.isPending} className="w-full mt-6 bg-primary text-white py-3 rounded-lg font-bold shadow-sm shadow-primary/20 hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {createUser.isPending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Users className="w-4 h-4" />}
               {createUser.isPending ? 'Provisioning...' : 'Provision Account'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Setup Link Modal */}
+      {setupLinkObj && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg p-8 border border-slate-200 dark:border-slate-700 flex flex-col items-center animate-in zoom-in-95 duration-200 text-center">
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 text-green-600 rounded-full flex items-center justify-center mb-4">
+              <Key className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-2xl text-slate-900 dark:text-white mb-2">Secure Link Generated</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 max-w-sm">
+              Copy this link and send it to <strong>{setupLinkObj.email}</strong> to securely set their password.
+            </p>
+
+            <div className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-3 flex items-center justify-between gap-3 mb-6 font-mono text-xs">
+              <div className="overflow-x-auto whitespace-nowrap custom-scrollbar text-slate-600 dark:text-slate-300">
+                {setupLinkObj.link || 'Link missing (Server error)'}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(setupLinkObj.link);
+                  toast.success("Link copied to clipboard!");
+                }}
+                className="flex-shrink-0 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 p-2 rounded hover:text-primary transition-colors text-slate-500"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+
+            <button
+              onClick={() => setSetupLinkObj(null)}
+              className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-3 rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Done
             </button>
           </div>
         </div>

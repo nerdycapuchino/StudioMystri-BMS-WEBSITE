@@ -2,15 +2,14 @@ import { z } from 'zod';
 
 export const createUserSchema = z.object({
     name: z.string().min(1, 'Name is required'),
-    email: z.string().email(),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    role: z.enum(['ADMIN', 'SALES', 'HR', 'FINANCE', 'MANAGER']).optional(),
+    email: z.string().email('Invalid email address'),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'DESIGNER', 'ARCHITECT', 'SALES', 'FINANCE', 'HR'], { required_error: 'Role is required' }),
 });
 
 export const updateUserSchema = z.object({
     name: z.string().min(1).optional(),
     email: z.string().email().optional(),
-    role: z.enum(['ADMIN', 'SALES', 'HR', 'FINANCE', 'MANAGER']).optional(),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'DESIGNER', 'ARCHITECT', 'SALES', 'FINANCE', 'HR']).optional(),
     isActive: z.boolean().optional(),
 });
 

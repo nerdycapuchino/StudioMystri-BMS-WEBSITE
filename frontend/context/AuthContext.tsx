@@ -21,7 +21,17 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+// Dynamically target the backend API based on the hostname where the frontend is loaded
+// This fixes CORS and connection errors when accessing via local network (e.g., 192.168.1.x) instead of localhost
+const getApiBase = () => {
+    if ((import.meta as any).env.VITE_API_URL) return (import.meta as any).env.VITE_API_URL;
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        return `http://${hostname}:5000/api/v1`;
+    }
+    return 'http://localhost:5000/api/v1';
+};
+const API_BASE = getApiBase();
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<AuthUser | null>(null);

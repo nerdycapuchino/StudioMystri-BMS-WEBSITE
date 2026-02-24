@@ -145,36 +145,8 @@ export const Logistics: React.FC = () => {
 
          {/* Main Content Area: Map & List */}
          <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-320px)] min-h-[600px] mb-8">
-            {/* Left Column: Map Widget (Static Placeholder) */}
-            <div className="xl:w-5/12 w-full bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
-               <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-[#1a2634] z-10">
-                  <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                     <span className="material-symbols-outlined text-primary">map</span>
-                     Live Fleet Tracking
-                  </h3>
-                  <div className="flex gap-2">
-                     <button className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-500 dark:text-slate-400 transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">filter_list</span>
-                     </button>
-                     <button className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-500 dark:text-slate-400 transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">fullscreen</span>
-                     </button>
-                  </div>
-               </div>
-               <div className="relative w-full h-full bg-slate-50 dark:bg-slate-800/50 flex flex-col items-center justify-center p-8 text-center text-slate-400 dark:text-slate-500">
-                  <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                     <span className="material-symbols-outlined text-[32px] text-slate-400">satellite_alt</span>
-                  </div>
-                  <h4 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">GPS Tracking Offline</h4>
-                  <p className="text-sm max-w-sm">Live map view requires active GPS module integration. Currently displaying static shipping schedules.</p>
-                  <button className="mt-6 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                     Configure Integration
-                  </button>
-               </div>
-            </div>
-
-            {/* Right Column: Shipment List */}
-            <div className="xl:w-7/12 w-full bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
+            {/* Shipment List */}
+            <div className="w-full bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
                {/* List Header & Filters */}
                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap gap-4 justify-between items-center">
                   <div className="flex flex-wrap gap-2">
@@ -183,8 +155,8 @@ export const Logistics: React.FC = () => {
                            key={status}
                            onClick={() => setFilterStatus(status)}
                            className={`px-3 py-1.5 text-xs font-medium rounded-md shadow-sm transition-colors ${filterStatus === status
-                                 ? 'bg-primary text-white'
-                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                              ? 'bg-primary text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                               }`}
                         >
                            {status === 'All' ? 'All Shipments' : status}
@@ -230,9 +202,9 @@ export const Logistics: React.FC = () => {
                                        value={ship.status}
                                        onChange={e => handleStatusUpdate(ship.id, e.target.value)}
                                        className={`cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-primary/20 appearance-none outline-none ${ship.status === 'Delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                                             ship.status === 'In Transit' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                                                ship.status === 'Returned' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                                                   'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                                          ship.status === 'In Transit' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                                             ship.status === 'Returned' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                                                'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
                                           }`}
                                     >
                                        <option value="Pending">🕒 Pending</option>

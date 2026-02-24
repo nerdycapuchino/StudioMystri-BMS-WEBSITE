@@ -7,6 +7,13 @@ export const Sidebar: React.FC = () => {
     const firstName = user?.name?.split(' ')[0] || 'User';
     const role = user?.role || 'Administrator';
 
+    const ADMIN_ONLY = ['SUPER_ADMIN', 'ADMIN'];
+    const SALES_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SALES'];
+    const FINANCE_ROLES = ['SUPER_ADMIN', 'ADMIN', 'FINANCE'];
+    const HR_ROLES = ['SUPER_ADMIN', 'ADMIN', 'HR'];
+    const OPS_ROLES = ['SUPER_ADMIN', 'ADMIN', 'DESIGNER', 'ARCHITECT'];
+    const POS_ROLES = [...SALES_ROLES, ...FINANCE_ROLES];
+
     return (
         <aside className="flex w-64 flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto shrink-0 transition-colors duration-300">
             <div>
@@ -39,44 +46,50 @@ export const Sidebar: React.FC = () => {
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
                     <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pipeline & Sales</p>
 
-                    <NavLink
-                        to="/crm"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">rocket_launch</span>
-                        <span className="text-sm font-medium">CRM Pipeline</span>
-                    </NavLink>
+                    {SALES_ROLES.includes(role) && (
+                        <>
+                            <NavLink
+                                to="/crm"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                    }`
+                                }
+                            >
+                                <span className="material-symbols-outlined">rocket_launch</span>
+                                <span className="text-sm font-medium">CRM Pipeline</span>
+                            </NavLink>
 
-                    <NavLink
-                        to="/clients"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">group</span>
-                        <span className="text-sm font-medium">Clients</span>
-                    </NavLink>
+                            <NavLink
+                                to="/clients"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                    }`
+                                }
+                            >
+                                <span className="material-symbols-outlined">group</span>
+                                <span className="text-sm font-medium">Clients</span>
+                            </NavLink>
+                        </>
+                    )}
 
-                    <NavLink
-                        to="/pos"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">point_of_sale</span>
-                        <span className="text-sm font-medium">POS Terminal</span>
-                    </NavLink>
+                    {POS_ROLES.includes(role) && (
+                        <NavLink
+                            to="/pos"
+                            className={({ isActive }) =>
+                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                }`
+                            }
+                        >
+                            <span className="material-symbols-outlined">point_of_sale</span>
+                            <span className="text-sm font-medium">POS Terminal</span>
+                        </NavLink>
+                    )}
 
                     <NavLink
                         to="/orders"
@@ -94,44 +107,51 @@ export const Sidebar: React.FC = () => {
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
                     <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Execution & Supply</p>
 
-                    <NavLink
-                        to="/projects"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">architecture</span>
-                        <span className="text-sm font-medium">Projects</span>
-                    </NavLink>
+                    {OPS_ROLES.includes(role) && (
+                        <>
+                            <NavLink
+                                to="/projects"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                    }`
+                                }
+                            >
+                                <span className="material-symbols-outlined">architecture</span>
+                                <span className="text-sm font-medium">Projects</span>
+                            </NavLink>
 
-                    <NavLink
-                        to="/inventory"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">inventory_2</span>
-                        <span className="text-sm font-medium">Warehouse</span>
-                    </NavLink>
+                            <NavLink
+                                to="/inventory"
+                                className={({ isActive }) =>
+                                    `group flex items-center justify-between rounded-lg px-3 py-2.5 transition-all ${isActive
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                    }`
+                                }
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined">inventory_2</span>
+                                    <span className="text-sm font-medium">Warehouse</span>
+                                </div>
+                                <span className="bg-red-500/20 text-red-500 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3 LOW</span>
+                            </NavLink>
 
-                    <NavLink
-                        to="/logistics"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">local_shipping</span>
-                        <span className="text-sm font-medium">Logistics</span>
-                    </NavLink>
+                            <NavLink
+                                to="/logistics"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                    }`
+                                }
+                            >
+                                <span className="material-symbols-outlined">local_shipping</span>
+                                <span className="text-sm font-medium">Logistics</span>
+                            </NavLink>
+                        </>
+                    )}
 
                     <NavLink
                         to="/scanner"
@@ -149,44 +169,50 @@ export const Sidebar: React.FC = () => {
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
                     <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Organization</p>
 
-                    <NavLink
-                        to="/finance"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">payments</span>
-                        <span className="text-sm font-medium">Finance & Invoicing</span>
-                    </NavLink>
+                    {FINANCE_ROLES.includes(role) && (
+                        <NavLink
+                            to="/finance"
+                            className={({ isActive }) =>
+                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                }`
+                            }
+                        >
+                            <span className="material-symbols-outlined">payments</span>
+                            <span className="text-sm font-medium">Finance & Invoicing</span>
+                        </NavLink>
+                    )}
 
-                    <NavLink
-                        to="/erp"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">settings_suggest</span>
-                        <span className="text-sm font-medium">ERP Core</span>
-                    </NavLink>
+                    {ADMIN_ONLY.includes(role) && (
+                        <NavLink
+                            to="/erp"
+                            className={({ isActive }) =>
+                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                }`
+                            }
+                        >
+                            <span className="material-symbols-outlined">settings_suggest</span>
+                            <span className="text-sm font-medium">ERP Core</span>
+                        </NavLink>
+                    )}
 
-                    <NavLink
-                        to="/hr"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">badge</span>
-                        <span className="text-sm font-medium">HR Management</span>
-                    </NavLink>
+                    {HR_ROLES.includes(role) && (
+                        <NavLink
+                            to="/hr"
+                            className={({ isActive }) =>
+                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                }`
+                            }
+                        >
+                            <span className="material-symbols-outlined">badge</span>
+                            <span className="text-sm font-medium">HR Management</span>
+                        </NavLink>
+                    )}
 
                     <NavLink
                         to="/team-hub"
@@ -200,12 +226,41 @@ export const Sidebar: React.FC = () => {
                         <span className="material-symbols-outlined">forum</span>
                         <span className="text-sm font-medium">Team Hub</span>
                     </NavLink>
+
+                    {ADMIN_ONLY.includes(role) && (
+                        <NavLink
+                            to="/settings"
+                            className={({ isActive }) =>
+                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                }`
+                            }
+                        >
+                            <span className="material-symbols-outlined">settings</span>
+                            <span className="text-sm font-medium">System Settings</span>
+                        </NavLink>
+                    )}
                 </nav>
             </div>
 
-            {/* User Profile */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 p-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer group">
+            {/* Bottom System Status */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                        <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">System Normal</span>
+                    </div>
+                    <div className="h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary w-[32%] transition-all duration-500"></div>
+                    </div>
+                    <div className="flex justify-between mt-1.5">
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Resource Load</span>
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">32%</span>
+                    </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 p-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer group">
                     <img
                         src={`https://ui-avatars.com/api/?name=${firstName}&background=137fec&color=fff&bold=true`}
                         alt="Profile"

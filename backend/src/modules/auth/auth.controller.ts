@@ -49,8 +49,13 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
                 accessToken: result.accessToken,
             },
         });
-    } catch (error) {
-        next(error);
+    } catch (error: any) {
+        // If the refresh token is invalid/expired, gracefully fail with 401
+        // so the frontend knows to wipe local state and show the login page
+        res.status(401).json({
+            success: false,
+            message: error.message || 'Invalid or expired session. Please log in again.'
+        });
     }
 };
 
@@ -92,6 +97,23 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
             success: true,
             message: 'User profile retrieved',
             data: user,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * POST /api/v1/auth/reset-password
+ */
+export const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        await authService.resetPassword(req.body);
+
+        res.json({
+            success: true,
+            message: 'Password successfully reset',
+            data: null,
         });
     } catch (error) {
         next(error);

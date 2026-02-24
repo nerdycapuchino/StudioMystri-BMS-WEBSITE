@@ -22,175 +22,141 @@ export const Dashboard: React.FC = () => {
    const activityList = Array.isArray(activities) ? activities : [];
 
    return (
-      <div className="w-full animation-fade-in relative z-10">
-         {/* Header Area */}
-         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-            <div>
-               <h1 className="font-playfair text-3xl text-text-primary tracking-wide mb-1">Command Center</h1>
-               <p className="text-text-muted text-sm font-sans flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                  Live Dashboard Analytics
-               </p>
-            </div>
-            <div className="flex items-center gap-3">
-               <button className="bg-surface-elevated border border-border-solid hover:border-border-hover text-text-primary px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                  <span className="material-symbols-outlined text-lg">download</span>
-                  Export PDF
-               </button>
-               <Link to="/pos" className="bg-primary hover:bg-primary-hover text-surface-darker px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-glow">
-                  <span className="material-symbols-outlined text-lg">add</span>
-                  New Sale
-               </Link>
-            </div>
+      <div className="mx-auto max-w-7xl flex flex-col gap-8 animation-fade-in relative z-10">
+         {/* Welcome Section */}
+         <div className="flex flex-col gap-1">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Overview</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Welcome back, here's what's happening today.</p>
          </div>
 
          {statsLoading ? <CardSkeleton count={3} /> : statsError ? <InlineError message={(statsErr as Error)?.message || 'Failed to load'} onRetry={retryStats} /> : (
             <>
-               {/* KPI Grid */}
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  {/* Daily Revenue */}
-                  <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden group hover:border-border-hover transition-colors">
-                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span className="material-symbols-outlined text-6xl text-primary">account_balance_wallet</span>
+               {/* KPI Cards */}
+               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  {/* Revenue Card */}
+                  <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition hover:shadow-md">
+                     <div className="flex items-center justify-between">
+                        <div>
+                           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Revenue</p>
+                           <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{formatCurrency(stats?.salesToday || 0)}</h3>
+                        </div>
+                        <div className="rounded-full bg-green-50 dark:bg-green-900/20 p-3 text-green-600 dark:text-green-400">
+                           <span className="material-symbols-outlined">trending_up</span>
+                        </div>
                      </div>
-                     <h3 className="text-text-muted text-xs font-bold uppercase tracking-widest mb-2">Daily Revenue</h3>
-                     <div className="flex items-end gap-3 mb-4">
-                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
-                           {formatCurrency(stats?.salesToday || 0)}
+                     <div className="mt-4 flex items-center gap-2">
+                        <span className="flex items-center text-sm font-medium text-green-600 dark:text-green-400">
+                           <span className="material-symbols-outlined text-[16px] mr-1">arrow_upward</span>
+                           12%
                         </span>
-                        <span className="text-success text-xs font-bold bg-success/10 px-2 py-1 rounded flex items-center mb-1">
-                           <span className="material-symbols-outlined text-[14px]">trending_up</span> 12%
-                        </span>
-                     </div>
-                     <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-primary h-1.5 rounded-full" style={{ width: '68%' }}></div>
+                        <span className="text-sm text-slate-400">vs last month</span>
                      </div>
                   </div>
 
-                  {/* Active Projects */}
-                  <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden group hover:border-border-hover transition-colors">
-                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span className="material-symbols-outlined text-6xl text-bronze-DEFAULT">architecture</span>
+                  {/* Active Projects Card */}
+                  <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition hover:shadow-md">
+                     <div className="flex items-center justify-between">
+                        <div>
+                           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Active Projects</p>
+                           <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{stats?.activeProjects || 0}</h3>
+                        </div>
+                        <div className="rounded-full bg-primary/10 p-3 text-primary">
+                           <span className="material-symbols-outlined">architecture</span>
+                        </div>
                      </div>
-                     <h3 className="text-text-muted text-xs font-bold uppercase tracking-widest mb-2">Active Projects</h3>
-                     <div className="flex items-end gap-3 mb-4">
-                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
-                           {stats?.activeProjects || 0}
+                     <div className="mt-4 flex items-center gap-2">
+                        <span className="flex items-center text-sm font-medium text-primary">
+                           +{stats?.pipelineLeads || 0} pending
                         </span>
-                        <span className="text-primary text-xs font-bold tracking-wide mb-1">
-                           In Production
-                        </span>
-                     </div>
-                     <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-bronze-DEFAULT h-1.5 rounded-full" style={{ width: '45%' }}></div>
+                        <span className="text-sm text-slate-400">approval</span>
                      </div>
                   </div>
 
-                  {/* Pending Quotes / Pipeline Leads */}
-                  <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden group hover:border-border-hover transition-colors">
-                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span className="material-symbols-outlined text-6xl text-text-muted">receipt_long</span>
+                  {/* System Health Card or Inventory */}
+                  <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition hover:shadow-md">
+                     <div className="flex items-center justify-between">
+                        <div>
+                           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">System Health (Inventory)</p>
+                           <h3 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                              {stats?.lowStockCount > 0 ? `${stats.lowStockCount} Low` : '98%'}
+                           </h3>
+                        </div>
+                        <div className={`rounded-full p-3 ${stats?.lowStockCount > 0 ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'}`}>
+                           <span className="material-symbols-outlined">{stats?.lowStockCount > 0 ? 'inventory_2' : 'dns'}</span>
+                        </div>
                      </div>
-                     <h3 className="text-text-muted text-xs font-bold uppercase tracking-widest mb-2">Pending Pipeline Leads</h3>
-                     <div className="flex items-end gap-3 mb-4">
-                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
-                           {stats?.pipelineLeads || 0}
-                        </span>
-                        <span className="text-text-muted text-xs mb-1">
-                           Awaiting Approval
-                        </span>
+                     <div className="mt-4 flex items-center gap-2">
+                        <Link to="/inventory" className={`flex items-center text-sm font-medium transition-colors ${stats?.lowStockCount > 0 ? 'text-red-600 dark:text-red-400 hover:text-red-500' : 'text-slate-600 dark:text-slate-300'}`}>
+                           <span className={`inline-block h-2 w-2 rounded-full mr-2 ${stats?.lowStockCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></span>
+                           {stats?.lowStockCount > 0 ? 'Review Critical Items' : 'Operational'}
+                        </Link>
                      </div>
-                     <div className="w-full bg-surface-dark rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-text-muted h-1.5 rounded-full" style={{ width: '30%' }}></div>
-                     </div>
-                  </div>
-
-                  {/* Inventory Alerts */}
-                  <div className="bg-surface-elevated border border-error/30 rounded-2xl p-6 relative overflow-hidden group hover:border-error transition-colors">
-                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <span className="material-symbols-outlined text-6xl text-error">inventory_2</span>
-                     </div>
-                     <h3 className="text-error text-xs font-bold uppercase tracking-widest mb-2">Low Stock Alerts</h3>
-                     <div className="flex items-end gap-3 mb-4">
-                        <span className="text-3xl font-display font-medium text-text-primary tracking-tight">
-                           {stats?.lowStockCount || 0}
-                        </span>
-                        <span className="text-error text-xs font-bold bg-error/10 px-2 py-1 rounded flex items-center mb-1">
-                           Critical Items
-                        </span>
-                     </div>
-                     <Link to="/inventory" className="text-xs text-error hover:text-white transition-colors underline underline-offset-4 decoration-error/50">
-                        Review Inventory
-                     </Link>
                   </div>
                </div>
 
-               {/* Main Content Area */}
-               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                  {/* Charts Section */}
-                  <div className="xl:col-span-2 space-y-6">
-                     <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 relative overflow-hidden h-[400px] flex flex-col">
-                        <div className="industrial-grid-bg absolute inset-0 opacity-50"></div>
-                        <div className="relative z-10 flex justify-between items-center mb-8">
-                           <div>
-                              <h3 className="text-text-primary font-bold text-lg">Revenue Trends</h3>
-                              <p className="text-text-muted text-sm">Last 7 Days Performance</p>
-                           </div>
-                           <div className="flex gap-2 bg-surface-dark rounded-lg p-1 border border-border-solid">
-                              <button className="px-3 py-1 text-xs font-medium bg-surface-elevated text-text-primary rounded shadow-sm border border-border-solid">7D</button>
-                              <button className="px-3 py-1 text-xs font-medium text-text-muted hover:text-text-primary">30D</button>
-                              <button className="px-3 py-1 text-xs font-medium text-text-muted hover:text-text-primary">YTD</button>
-                           </div>
+               {/* Charts Section */}
+               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mt-4">
+                  {/* Revenue Trends */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm lg:col-span-2 flex flex-col min-h-[400px]">
+                     <div className="mb-6 flex items-center justify-between">
+                        <div>
+                           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Revenue Trends</h3>
+                           <p className="text-sm text-slate-500 dark:text-slate-400">Local Performance</p>
                         </div>
+                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-800 p-1">
+                           <button className="rounded-md bg-white dark:bg-slate-700 px-3 py-1 text-xs font-medium text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-slate-600">7 Days</button>
+                           <button className="rounded-md px-3 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">30 Days</button>
+                           <button className="rounded-md px-3 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">12 Months</button>
+                        </div>
+                     </div>
 
-                        <div className="flex-1 w-full min-h-0 relative z-10 mask-linear-fade">
-                           {chartLoading ? <ChartSkeleton /> : (
-                              <ResponsiveContainer width="100%" height="100%">
-                                 <AreaChart data={revData}>
-                                    <defs>
-                                       <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="5%" stopColor="#38e07b" stopOpacity={0.2} />
-                                          <stop offset="95%" stopColor="#38e07b" stopOpacity={0} />
-                                       </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#2a3830" vertical={false} />
-                                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#9eb7a8', fontSize: 12 }} dy={10} />
-                                    <YAxis hide />
-                                    <Tooltip
-                                       contentStyle={{ backgroundColor: '#1a261e', border: '1px solid #2a3830', borderRadius: '8px', color: '#F9FAFB' }}
-                                       itemStyle={{ color: '#38e07b', fontWeight: 'bold' }}
-                                    />
-                                    <Area type="monotone" dataKey="rev" stroke="#38e07b" strokeWidth={2} fill="url(#colorRev)" />
-                                 </AreaChart>
-                              </ResponsiveContainer>
-                           )}
-                        </div>
+                     <div className="relative flex-1 w-full min-h-0">
+                        {chartLoading ? <ChartSkeleton /> : (
+                           <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={revData}>
+                                 <defs>
+                                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                       <stop offset="5%" stopColor="#137fec" stopOpacity={0.2} />
+                                       <stop offset="95%" stopColor="#137fec" stopOpacity={0} />
+                                    </linearGradient>
+                                 </defs>
+                                 <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" vertical={false} strokeOpacity={0.2} />
+                                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
+                                 <YAxis hide />
+                                 <Tooltip
+                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#f8fafc' }}
+                                    itemStyle={{ color: '#137fec', fontWeight: 'bold' }}
+                                 />
+                                 <Area type="monotone" dataKey="rev" stroke="#137fec" strokeWidth={2} fill="url(#colorRev)" />
+                              </AreaChart>
+                           </ResponsiveContainer>
+                        )}
                      </div>
                   </div>
 
-                  {/* Right Sidebar Area */}
-                  <div className="space-y-6">
-                     {/* Activity Log */}
-                     <div className="bg-surface-elevated border border-border-solid rounded-2xl p-6 h-[400px] flex flex-col">
-                        <h3 className="text-text-primary font-bold text-lg mb-6 flex items-center gap-2">
-                           <span className="material-symbols-outlined text-primary">history</span>
+                  {/* System Logs */}
+                  <div className="flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm min-h-[400px] h-[400px]">
+                     <div className="mb-6 flex-shrink-0">
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                           <span className="material-symbols-outlined text-primary text-[20px]">history</span>
                            System Logs
                         </h3>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
-                           {activityList.slice(0, 6).map((act: any, i: number) => (
-                              <div key={act.id || i} className="flex gap-4 group">
-                                 <div className="flex flex-col items-center">
-                                    <div className={`w-2.5 h-2.5 rounded-full ${act.type === 'alert' ? 'bg-error shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-primary shadow-[0_0_8px_rgba(56,224,123,0.3)]'} ring-4 ring-surface-dark z-10`}></div>
-                                    {i !== activityList.length - 1 && <div className="w-px h-full bg-border-solid -mb-6 mt-1 group-hover:bg-border-hover transition-colors"></div>}
-                                 </div>
-                                 <div className="pb-1">
-                                    <p className="text-sm text-text-primary">{act.message}</p>
-                                    <p className="text-xs text-text-muted mt-1 font-mono">{act.timestamp || 'Just now'}</p>
-                                 </div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Recent activity stream</p>
+                     </div>
+                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
+                        {activityList.slice(0, 6).map((act: any, i: number) => (
+                           <div key={act.id || i} className="flex gap-4 group">
+                              <div className="flex flex-col items-center">
+                                 <div className={`w-2.5 h-2.5 rounded-full ${act.type === 'alert' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-primary shadow-[0_0_8px_rgba(19,127,236,0.3)]'} ring-4 ring-slate-50 dark:ring-slate-900 z-10`}></div>
+                                 {i !== activityList.length - 1 && <div className="w-px h-full bg-slate-200 dark:bg-slate-700 -mb-6 mt-1 group-hover:bg-slate-300 dark:group-hover:bg-slate-600 transition-colors"></div>}
                               </div>
-                           ))}
-                           {activityList.length === 0 && <p className="text-text-muted text-sm italic">No recent activity logged.</p>}
-                        </div>
+                              <div className="pb-1">
+                                 <p className="text-sm text-slate-900 dark:text-white">{act.message}</p>
+                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">{act.timestamp || 'Just now'}</p>
+                              </div>
+                           </div>
+                        ))}
+                        {activityList.length === 0 && <p className="text-slate-500 text-sm italic">No recent activity logged.</p>}
                      </div>
                   </div>
                </div>

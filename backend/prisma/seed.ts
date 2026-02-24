@@ -23,8 +23,25 @@ async function main() {
     console.log('✅ Company Settings created');
 
     // ─── Users ─────────────────────────────────────────────
+    const superAdminHash = await bcrypt.hash('SuperAdmin@1234', 12);
     const adminHash = await bcrypt.hash('Admin@1234', 12);
     const salesHash = await bcrypt.hash('Sales@1234', 12);
+    const designerHash = await bcrypt.hash('Designer@1234', 12);
+    const architectHash = await bcrypt.hash('Architect@1234', 12);
+    const financeHash = await bcrypt.hash('Finance@1234', 12);
+    const hrHash = await bcrypt.hash('HR@1234', 12);
+
+    const superAdminUser = await prisma.user.upsert({
+        where: { email: 'it-support@studiomystri.com' },
+        update: {},
+        create: {
+            name: 'IT Management',
+            email: 'it-support@studiomystri.com',
+            passwordHash: superAdminHash,
+            role: 'SUPER_ADMIN',
+            isActive: true,
+        },
+    });
 
     const adminUser = await prisma.user.upsert({
         where: { email: 'admin@studiomystri.com' },
@@ -33,7 +50,31 @@ async function main() {
             name: 'Vikram Malhotra',
             email: 'admin@studiomystri.com',
             passwordHash: adminHash,
-            role: UserRole.ADMIN,
+            role: 'ADMIN',
+            isActive: true,
+        },
+    });
+
+    const designerUser = await prisma.user.upsert({
+        where: { email: 'designer@studiomystri.com' },
+        update: {},
+        create: {
+            name: 'Ananya Singh',
+            email: 'designer@studiomystri.com',
+            passwordHash: designerHash,
+            role: 'DESIGNER',
+            isActive: true,
+        },
+    });
+
+    const architectUser = await prisma.user.upsert({
+        where: { email: 'architect@studiomystri.com' },
+        update: {},
+        create: {
+            name: 'Arjun Desai',
+            email: 'architect@studiomystri.com',
+            passwordHash: architectHash,
+            role: 'ARCHITECT',
             isActive: true,
         },
     });
@@ -45,12 +86,36 @@ async function main() {
             name: 'Kabir Khan',
             email: 'sales@studiomystri.com',
             passwordHash: salesHash,
-            role: UserRole.SALES,
+            role: 'SALES',
             isActive: true,
         },
     });
 
-    console.log(`✅ Users: ${adminUser.name} (Admin), ${salesUser.name} (Sales)`);
+    const financeUser = await prisma.user.upsert({
+        where: { email: 'finance@studiomystri.com' },
+        update: {},
+        create: {
+            name: 'Priya Verma',
+            email: 'finance@studiomystri.com',
+            passwordHash: financeHash,
+            role: 'FINANCE',
+            isActive: true,
+        },
+    });
+
+    const hrUser = await prisma.user.upsert({
+        where: { email: 'hr@studiomystri.com' },
+        update: {},
+        create: {
+            name: 'Neha Kapoor',
+            email: 'hr@studiomystri.com',
+            passwordHash: hrHash,
+            role: 'HR',
+            isActive: true,
+        },
+    });
+
+    console.log(`✅ Users: Super Admin, Admin, Designer, Architect, Sales, Finance, HR created successfully.`);
 
     // ─── Employees ─────────────────────────────────────────
     await prisma.employee.createMany({

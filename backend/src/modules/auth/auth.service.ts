@@ -30,15 +30,25 @@ const generateRefreshToken = (payload: TokenPayload): string => {
  * Login: Validate credentials and return tokens
  */
 export const login = async (input: LoginInput) => {
-    const { email, password } = input;
+    const email = input.email.toLowerCase();
+    const { password } = input;
 
     // Find user by email
+    console.log(`[AUTH DEBUG] Login attempt for: ${email}`);
     const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+        console.log(`[AUTH DEBUG] User not found: ${email}`);
+    }
 
     // Timing attack mitigation: always perform a password compare
     const dummyHash = '$2a$10$0G6s0Pz60G6s0Pz60G6s0Ou1o0S0v0I0v0I0v0I0v0I0v0I0v0I'; // Validly formatted Bcrypt hash
     const passwordToCompare = user ? user.passwordHash : dummyHash;
     const isPasswordValid = await bcrypt.compare(password, passwordToCompare);
+
+    if (user && !isPasswordValid) {
+        console.log(`[AUTH DEBUG] Invalid password for: ${email}`);
+    }
 
     if (!user || !isPasswordValid) {
         throw createError(401, 'Invalid email or password');
@@ -93,19 +103,19 @@ export const refreshAccessToken = async (refreshToken: string) => {
     try {
         decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as TokenPayload;
     } catch {
-        throw createError(401, 'Invalid or expired refresh token');
+        throw createError(401, 'Invalid or expired refresh token'); // Caught by controller
     }
 
-    // Find the user and compare stored hash
+    // Find the user and compare stored hash. If no user, it's an old token from a reset DB.
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
     if (!user || !user.refreshToken) {
-        throw createError(401, 'Invalid refresh token');
+        throw createError(401, 'Invalid refresh token - user not found or logged out natively. Please log in again.');
     }
 
     const isTokenValid = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isTokenValid) {
-        throw createError(401, 'Refresh token has been revoked');
+        throw createError(401, 'Refresh token has been revoked. Please log in again.');
     }
 
     if (!user.isActive) {
@@ -165,4 +175,30 @@ export const getCurrentUser = async (userId: string) => {
     }
 
     return user;
+};
+
+/**
+ * Reset Password using a valid reset token
+ */
+export const resetPassword = async (input: import('./auth.schema').ResetPasswordInput) => {
+    const { email, token, newPassword } = input;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user || user.resetToken !== token || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+        throw createError(400, 'Invalid or expired reset token');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            passwordHash,
+            resetToken: null,
+            resetTokenExpiry: null,
+        },
+    });
+
+    return true;
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useInventory, useCreateInventoryItem, useUpdateInventoryItem, useDeleteInventoryItem, useSuppliers } from '../hooks/useInventory';
+import { useInventory, useCreateInventoryItem, useUpdateInventoryItem, useDeleteInventoryItem, useSuppliers, useRecordStockTransaction } from '../hooks/useInventory';
 import { useShipments } from '../hooks/useLogistics';
 import { InventoryItem, Supplier } from '../types';
 import toast from 'react-hot-toast';
@@ -9,6 +9,7 @@ export const Warehouse: React.FC = () => {
     const createItem = useCreateInventoryItem();
     const updateItem = useUpdateInventoryItem();
     const deleteItem = useDeleteInventoryItem();
+    const recordStockTransaction = useRecordStockTransaction();
     const { data: suppliersData } = useSuppliers();
     const { data: shipmentsData } = useShipments();
 
@@ -21,6 +22,8 @@ export const Warehouse: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'inventory' | 'logistics' | 'suppliers'>('inventory');
     const [showAdd, setShowAdd] = useState(false);
     const [editItem, setEditItem] = useState<InventoryItem | null>(null);
+    const [transactionItem, setTransactionItem] = useState<InventoryItem | null>(null);
+    const [transactionForm, setTransactionForm] = useState({ type: 'IN', quantity: '', reason: '' });
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedSupplier, setSelectedSupplier] = useState('All');
@@ -28,37 +31,39 @@ export const Warehouse: React.FC = () => {
 
     const [form, setForm] = useState({
         name: '', sku: '', category: '', quantity: 0, unit: 'pcs',
-        cost: 0, reorderLevel: 10, supplier: '', location: '', barcode: '', image: ''
+        cost: 0, reorderPoint: 10, supplierId: '', location: '', barcode: '', image: '', type: 'RAW'
     });
 
-    const resetForm = () => setForm({ name: '', sku: '', category: '', quantity: 0, unit: 'pcs', cost: 0, reorderLevel: 10, supplier: '', location: '', barcode: '', image: '' });
+    const resetForm = () => setForm({ name: '', sku: '', category: '', quantity: 0, unit: 'pcs', cost: 0, reorderPoint: 10, supplierId: '', location: '', barcode: '', image: '', type: 'RAW' });
 
     const categories = Array.from(new Set(inventory.map(i => i.category || 'Uncategorized')));
-    const suppliers = Array.from(new Set(inventory.filter(i => i.supplier).map(i => i.supplier as string)));
+    const suppliers = Array.from(new Set(inventory.filter(i => i.supplier).map(i => i.supplier?.name || 'Unknown')));
 
     const filteredInventory = inventory.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || (item.sku || '').toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCat = selectedCategory === 'All' || item.category === selectedCategory || (!item.category && selectedCategory === 'Uncategorized');
-        const matchesSup = selectedSupplier === 'All' || item.supplier === selectedSupplier;
+        const matchesSup = selectedSupplier === 'All' || item.supplier?.name === selectedSupplier;
 
         let matchesStatus = true;
-        if (selectedStatus === 'In Stock') matchesStatus = item.quantity > item.reorderLevel;
-        if (selectedStatus === 'Low Stock') matchesStatus = item.quantity <= item.reorderLevel && item.quantity > 0;
+        const rp = item.reorderPoint || 0;
+        if (selectedStatus === 'In Stock') matchesStatus = item.quantity > rp;
+        if (selectedStatus === 'Low Stock') matchesStatus = item.quantity <= rp && item.quantity > 0;
         if (selectedStatus === 'Out of Stock') matchesStatus = item.quantity <= 0;
 
         return matchesSearch && matchesCat && matchesSup && matchesStatus;
     });
 
     const handleSave = () => {
+        const { image, ...submitData } = form;
+
         if (editItem) {
-            updateItem.mutate({ id: editItem.id, ...form } as any, {
-                onSuccess: () => { setEditItem(null); resetForm(); toast.success('Item updated'); }
+            updateItem.mutate({ id: editItem.id, data: { ...submitData, barcode: submitData.barcode || undefined } } as any, {
+                onSuccess: () => { setEditItem(null); setShowAdd(false); resetForm(); toast.success('Item updated'); }
             });
         } else {
             createItem.mutate({
-                ...form,
-                id: Math.random().toString(36).substr(2, 9),
-                barcode: form.barcode || `SKU-${Date.now()}`
+                ...submitData,
+                barcode: submitData.barcode || `SKU-${Date.now()}`
             } as any, {
                 onSuccess: () => { setShowAdd(false); resetForm(); toast.success('Item added'); }
             });
@@ -69,6 +74,22 @@ export const Warehouse: React.FC = () => {
         if (confirm('Delete this item?')) {
             deleteItem.mutate(id as any, { onSuccess: () => toast.success('Item deleted') });
         }
+    };
+
+    const handleTransaction = () => {
+        if (!transactionItem || !transactionForm.quantity || Number(transactionForm.quantity) <= 0) {
+            toast.error('Valid positive quantity required');
+            return;
+        }
+        recordStockTransaction.mutate({
+            id: transactionItem.id,
+            data: { type: transactionForm.type, quantity: Number(transactionForm.quantity), reason: transactionForm.reason }
+        } as any, {
+            onSuccess: () => {
+                setTransactionItem(null);
+                setTransactionForm({ type: 'IN', quantity: '', reason: '' });
+            }
+        });
     };
 
     if (isLoading) {
@@ -232,7 +253,8 @@ export const Warehouse: React.FC = () => {
                                             </tr>
                                         ) : (
                                             paginatedItems.map(item => {
-                                                const maxStockForBar = Math.max(item.quantity, item.reorderLevel * 2, 100);
+                                                const rp = item.reorderPoint || 0;
+                                                const maxStockForBar = Math.max(item.quantity, rp * 2, 100);
                                                 const stockPercentage = Math.min(100, Math.round((item.quantity / maxStockForBar) * 100));
 
                                                 let statusLabel = 'Healthy';
@@ -243,11 +265,11 @@ export const Warehouse: React.FC = () => {
                                                     statusLabel = 'Out of Stock';
                                                     statusColor = 'text-rose-600';
                                                     barColor = 'bg-rose-500';
-                                                } else if (item.quantity <= item.reorderLevel) {
+                                                } else if (item.quantity <= rp) {
                                                     statusLabel = 'Low Stock';
                                                     statusColor = 'text-rose-600';
                                                     barColor = 'bg-rose-500';
-                                                } else if (item.quantity <= item.reorderLevel * 1.5) {
+                                                } else if (item.quantity <= rp * 1.5) {
                                                     statusLabel = 'Medium';
                                                     statusColor = 'text-primary';
                                                     barColor = 'bg-primary';
@@ -271,7 +293,7 @@ export const Warehouse: React.FC = () => {
                                                                     {!item.image && <span className="material-symbols-outlined text-slate-400">image</span>}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-semibold text-slate-900 group-hover:text-primary transition-colors cursor-pointer" onClick={() => { setEditItem(item); setForm({ name: item.name, sku: item.sku || '', category: item.category || '', image: item.image || '', quantity: item.quantity, cost: item.cost, reorderLevel: item.reorderLevel, unit: item.unit || 'pcs', supplier: item.supplier || '', location: item.location || '', barcode: item.barcode || '' }); }}>{item.name}</p>
+                                                                    <p className="font-semibold text-slate-900 group-hover:text-primary transition-colors cursor-pointer" onClick={() => { setEditItem(item); setForm({ name: item.name, sku: item.sku || '', category: item.category || '', image: item.image || '', quantity: item.quantity, cost: item.cost, reorderPoint: item.reorderPoint || 0, unit: item.unit || 'pcs', supplierId: item.supplierId || '', location: item.location || '', barcode: item.barcode || '', type: item.type || 'RAW' as any }); }}>{item.name}</p>
                                                                     <p className="text-sm text-slate-500 font-mono mt-0.5">SKU: {item.sku || item.barcode || item.id}</p>
                                                                 </div>
                                                             </div>
@@ -286,7 +308,7 @@ export const Warehouse: React.FC = () => {
                                                                 <div className="flex justify-between items-end">
                                                                     <span className="text-sm font-medium text-slate-700">{item.quantity} <span className="text-xs text-slate-400 font-normal">{(item.unit || 'units').toLowerCase()}</span></span>
                                                                     <span className={`text-xs font-medium flex items-center gap-1 ${statusColor}`}>
-                                                                        {item.quantity <= item.reorderLevel && <span className="material-symbols-outlined text-[14px]">warning</span>} {statusLabel}
+                                                                        {item.quantity <= (item.reorderPoint || 0) && <span className="material-symbols-outlined text-[14px]">warning</span>} {statusLabel}
                                                                     </span>
                                                                 </div>
                                                                 <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -304,7 +326,10 @@ export const Warehouse: React.FC = () => {
                                                             </button>
                                                             {/* Dropdown Menu styling could be added here, for now using direct action buttons on hover */}
                                                             <div className="absolute right-10 top-1/2 -translate-y-1/2 hidden group-hover/menu:flex items-center gap-2 bg-white shadow-md border border-slate-200 rounded-lg p-1 z-10 transition-all">
-                                                                <button onClick={() => { setEditItem(item); setForm({ name: item.name, sku: item.sku || '', category: item.category || '', image: item.image || '', quantity: item.quantity, cost: item.cost, reorderLevel: item.reorderLevel, unit: item.unit || 'pcs', supplier: item.supplier || '', location: item.location || '', barcode: item.barcode || '' }); }} className="p-1.5 text-slate-500 hover:text-primary hover:bg-slate-50 rounded" title="Edit">
+                                                                <button onClick={() => { setTransactionItem(item); setTransactionForm({ type: 'IN', quantity: '', reason: '' }); }} className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-slate-50 rounded" title="Adjust Stock">
+                                                                    <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
+                                                                </button>
+                                                                <button onClick={() => { setEditItem(item); setForm({ name: item.name, sku: item.sku || '', category: item.category || '', image: item.image || '', quantity: item.quantity, cost: item.cost, reorderPoint: item.reorderPoint || 0, unit: item.unit || 'pcs', supplierId: item.supplierId || '', location: item.location || '', barcode: item.barcode || '', type: item.type || 'RAW' as any }); }} className="p-1.5 text-slate-500 hover:text-primary hover:bg-slate-50 rounded" title="Edit">
                                                                     <span className="material-symbols-outlined text-[18px]">edit</span>
                                                                 </button>
                                                                 <button onClick={() => handleDelete(item.id)} className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-slate-50 rounded" title="Delete">
@@ -444,7 +469,10 @@ export const Warehouse: React.FC = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-semibold text-slate-600 ml-1">Supplier</label>
-                                    <input value={form.supplier} onChange={e => setForm({ ...form, supplier: e.target.value })} placeholder="e.g. Italian Stone Co." className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900" />
+                                    <select value={form.supplierId} onChange={e => setForm({ ...form, supplierId: e.target.value })} className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900">
+                                        <option value="">No Supplier</option>
+                                        {suppliersList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
                                 </div>
                             </div>
 
@@ -461,7 +489,7 @@ export const Warehouse: React.FC = () => {
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-semibold text-slate-600 ml-1">Low Stock Alert Level</label>
-                                    <input type="number" value={form.reorderLevel || ''} onChange={e => setForm({ ...form, reorderLevel: Number(e.target.value) })} placeholder="10" className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900" />
+                                    <input type="number" value={form.reorderPoint || ''} onChange={e => setForm({ ...form, reorderPoint: Number(e.target.value) })} placeholder="10" className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900" />
                                 </div>
                             </div>
 
@@ -495,6 +523,75 @@ export const Warehouse: React.FC = () => {
                                     <span className="material-symbols-outlined text-[18px]">save</span>
                                 )}
                                 {editItem ? 'Save Changes' : 'Confirm Addition'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Stock Transaction Modal */}
+            {transactionItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => { setTransactionItem(null); }}></div>
+
+                    {/* Modal Content */}
+                    <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-sm relative z-10 flex flex-col">
+                        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-emerald-600">swap_horiz</span>
+                                Adjust Stock
+                            </h3>
+                            <button onClick={() => { setTransactionItem(null); }} className="text-slate-400 hover:text-slate-700 transition-colors p-1 rounded-full hover:bg-slate-200">
+                                <span className="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <p className="text-sm text-slate-500">Item</p>
+                                <p className="font-bold text-slate-900">{transactionItem.name}</p>
+                                <p className="text-xs text-slate-500 font-mono mt-0.5">Current Stock: {transactionItem.quantity} {transactionItem.unit || 'units'}</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600 ml-1">Type *</label>
+                                <select value={transactionForm.type} onChange={e => setTransactionForm({ ...transactionForm, type: e.target.value })} className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900">
+                                    <option value="IN">Receive (Stock In)</option>
+                                    <option value="OUT">Dispatch (Stock Out)</option>
+                                    <option value="ADJUSTMENT">Adjustment (Set Exact)</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600 ml-1">Quantity *</label>
+                                <input type="number" value={transactionForm.quantity} onChange={e => setTransactionForm({ ...transactionForm, quantity: e.target.value })} placeholder="0" className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900" />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600 ml-1">Reason</label>
+                                <input value={transactionForm.reason} onChange={e => setTransactionForm({ ...transactionForm, reason: e.target.value })} placeholder="e.g. Scrapped, Restocked" className="w-full border border-slate-200 p-2.5 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900" />
+                            </div>
+                        </div>
+
+                        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 rounded-b-xl">
+                            <button
+                                onClick={() => { setTransactionItem(null); }}
+                                className="px-4 py-2 border border-slate-300 bg-white text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleTransaction}
+                                disabled={recordStockTransaction.isPending || !transactionForm.quantity}
+                                className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {recordStockTransaction.isPending ? (
+                                    <span className="material-symbols-outlined animate-spin text-[18px]">loop</span>
+                                ) : (
+                                    <span className="material-symbols-outlined text-[18px]">check</span>
+                                )}
+                                Confirm
                             </button>
                         </div>
                     </div>

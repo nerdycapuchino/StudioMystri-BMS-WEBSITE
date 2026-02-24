@@ -13,6 +13,9 @@ export const updateUser = ({ id, data }: { id: string; data: Record<string, unkn
 export const deactivateUser = (id: string) =>
     api.delete(`/admin/users/${id}`).then(r => ('data' in r.data ? r.data.data : r.data));
 
+export const generateResetLink = (id: string) =>
+    api.post(`/admin/users/${id}/reset-link`).then(r => ('data' in r.data ? r.data.data : r.data));
+
 export const getCompanySettings = (): Promise<CompanySettings> =>
     api.get('/admin/settings').then(r => ('data' in r.data ? r.data.data : r.data));
 

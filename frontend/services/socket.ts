@@ -7,7 +7,13 @@ let socket: Socket | null = null;
 export const getSocket = (): Socket => {
     if (!socket) {
         try {
-            socket = io(import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000', {
+            const getApiBaseSocket = () => {
+                if ((import.meta as any).env.VITE_API_URL) return (import.meta as any).env.VITE_API_URL.replace('/api/v1', '');
+                if (typeof window !== 'undefined') return `http://${window.location.hostname}:5000`;
+                return 'http://localhost:5000';
+            };
+
+            socket = io(getApiBaseSocket(), {
                 auth: { token: getAccessToken() },
                 transports: ['websocket', 'polling'],
                 autoConnect: false,
