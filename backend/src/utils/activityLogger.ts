@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../config/logger';
 
-type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'LOGIN' | 'LOGOUT' | 'EXPORT' | 'STATUS_CHANGE' | 'CONVERT_TO_PROJECT';
+type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'LOGIN' | 'LOGOUT' | 'EXPORT' | 'STATUS_CHANGE' | 'CONVERT_TO_PROJECT' | 'RESET_LINK_GENERATED';
 
 /**
  * Log an activity to the ActivityLog table.
