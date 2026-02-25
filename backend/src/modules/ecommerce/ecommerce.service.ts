@@ -34,14 +34,14 @@ export const createEcommerceOrder = async (orderData: any) => {
         // 1. Inventory Check & Lock
         for (const item of items) {
             const product = await tx.product.findUnique({ where: { id: item.productId } });
-            if (!product || product.stock < item.quantity) {
+            if (!product || product.stockQuantity < item.quantity) {
                 throw new Error(`Insufficient stock for product ${item.productId}`);
             }
 
             // Deduct stock immediately (lock)
             await tx.product.update({
                 where: { id: item.productId },
-                data: { stock: product.stock - item.quantity },
+                data: { stockQuantity: product.stockQuantity - item.quantity },
             });
         }
 
@@ -115,20 +115,28 @@ export const validateDiscountCode = async (code: string, orderAmount: number, us
         throw new Error('Invalid or inactive discount code');
     }
 
-    if (discount.validUntil && new Date(discount.validUntil) < new Date()) {
+    if (discount.expiryDate && new Date(discount.expiryDate) < new Date()) {
         throw new Error('Discount code has expired');
     }
 
-    if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
+    if (discount.usageLimit && discount.usedCount >= discount.usageLimit) {
         throw new Error('Discount code usage limit reached');
+    }
+
+    if (discount.minOrderAmount && orderAmount < discount.minOrderAmount) {
+        throw new Error(`Minimum order amount of ${discount.minOrderAmount} required`);
     }
 
     // Calculate discount amount
     let discountAmount = 0;
     if (discount.type === 'FLAT') {
         discountAmount = discount.value;
-    } else if ((discount.type as any) === 'PERCENT' || (discount.type as any) === 'PERCENTAGE') {
+    } else if (discount.type === 'PERCENT') {
         discountAmount = (orderAmount * discount.value) / 100;
+    }
+
+    if (discount.maxDiscountAmount && discountAmount > discount.maxDiscountAmount) {
+        discountAmount = discount.maxDiscountAmount;
     }
 
     return {
