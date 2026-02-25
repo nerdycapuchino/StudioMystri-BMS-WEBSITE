@@ -27,6 +27,10 @@ model User {
   messages         Message[]
   notifications    Notification[]
   assignedTasks    Task[]         @relation("AssignedTasks")
+  referralsMade    Referral[]     @relation("ReferralsMade")
+  referralsUsed    Referral[]     @relation("ReferralsUsed")
+  orders           Order[]
+  emailLogs        EmailLog[]
 
   @@map("users")
 }
@@ -84,23 +88,30 @@ model Lead {
 }
 
 model Product {
-  id          String           @id @default(uuid())
-  name        String
-  sku         String           @unique
-  barcode     String?
-  category    String
-  price       Float
-  cost        Float?
-  stock       Int              @default(0)
-  unit        String           @default("pcs")
-  description String?
-  materials   String?
-  dimensions  String?
-  images      String[]         @default([])
-  manualUrl   String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  variants    ProductVariant[]
+  id               String           @id @default(uuid())
+  name             String
+  sku              String           @unique
+  barcode          String?
+  category         String
+  price            Float
+  cost             Float?
+  stockQuantity    Int              @default(0)
+  unit             String           @default("pcs")
+  description      String?
+  materials        String?
+  dimensions       String?
+  weight           Float?
+  images           String[]         @default([])
+  manualUrl        String?
+  ecommerceVisible Boolean          @default(false)
+  discountPrice    Float?
+  seoTitle         String?
+  seoDescription   String?
+  ogImage          String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  variants         ProductVariant[]
+  orderItems       OrderItem[]
 
   @@map("products")
 }
@@ -121,22 +132,34 @@ model ProductVariant {
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  orderNumber   String      @unique
-  items         Json
-  subtotal      Float
-  taxAmount     Float       @default(0)
-  discount      Float       @default(0)
-  total         Float
-  status        OrderStatus @default(COMPLETED)
-  paymentMethod String?
-  currency      String      @default("INR")
-  notes         String?
-  customerId    String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  invoice       Invoice?
-  customer      Customer?   @relation(fields: [customerId], references: [id])
+  id                 String        @id @default(uuid())
+  orderNumber        String        @unique
+  userId             String?
+  subtotal           Float
+  taxAmount          Float         @default(0)
+  discountAmount     Float         @default(0)
+  shippingAmount     Float         @default(0)
+  totalAmount        Float
+  paymentStatus      PaymentStatus @default(PENDING)
+  orderStatus        OrderStatus   @default(CREATED)
+  paymentGateway     String?
+  paymentReferenceId String?
+  paymentMethod      String?
+  currency           String        @default("INR")
+  notes              String?
+  customerId         String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  customer             Customer?            @relation(fields: [customerId], references: [id])
+  user                 User?                @relation(fields: [userId], references: [id])
+  invoice              Invoice?
+  
+  items                OrderItem[]
+  shippingInfo         ShippingInfo?
+  paymentTransactions  PaymentTransaction[]
+  emailLogs            EmailLog[]
+  referrals            Referral[]
 
   @@map("orders")
 }
@@ -497,6 +520,7 @@ enum ProjectStage {
 
 enum PaymentStatus {
   PENDING
+  PAID
   COMPLETED
   FAILED
   REFUNDED
@@ -570,10 +594,114 @@ enum EmployeeStatus {
 }
 
 enum OrderStatus {
+  CREATED
+  PROCESSING
+  SHIPPED
+  DELIVERED
   PENDING
   CONFIRMED
-  PROCESSING
   COMPLETED
   REFUNDED
   CANCELLED
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  productId  String
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+  
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model ShippingInfo {
+  id             String    @id @default(uuid())
+  orderId        String    @unique
+  courierName    String?
+  trackingId     String?
+  trackingUrl    String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("shipping_info")
+}
+
+model DiscountCode {
+  id                String       @id @default(uuid())
+  code              String       @unique
+  type              DiscountType @default(FLAT)
+  value             Float
+  minOrderAmount    Float?
+  maxDiscountAmount Float?
+  usageLimit        Int?
+  usedCount         Int          @default(0)
+  perUserLimit      Int?
+  expiryDate        DateTime?
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@map("discount_codes")
+}
+
+model Referral {
+  id             String    @id @default(uuid())
+  referrerUserId String
+  referredUserId String
+  referralCode   String
+  orderId        String?
+  rewardIssued   Boolean   @default(false)
+  rewardType     String?
+  rewardValue    Float?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  referrer       User      @relation("ReferralsMade", fields: [referrerUserId], references: [id])
+  referred       User      @relation("ReferralsUsed", fields: [referredUserId], references: [id])
+  order          Order?    @relation(fields: [orderId], references: [id])
+
+  @@map("referrals")
+}
+
+model PaymentTransaction {
+  id                 String   @id @default(uuid())
+  orderId            String
+  gateway            String
+  gatewayOrderId     String?
+  gatewayPaymentId   String?
+  amount             Float
+  status             String
+  signatureVerified  Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payment_transactions")
+}
+
+model EmailLog {
+  id        String   @id @default(uuid())
+  emailType String
+  userId    String?
+  orderId   String?
+  status    String
+  sentAt    DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+  order     Order?   @relation(fields: [orderId], references: [id])
+
+  @@map("email_logs")
+}
+
+enum DiscountType {
+  FLAT
+  PERCENT
 }

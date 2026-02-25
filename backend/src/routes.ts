@@ -22,6 +22,7 @@ import { activityLogRouter } from './modules/activity-log/activityLog.route';
 import { notificationsRouter } from './modules/notifications/notifications.route';
 import { adminRouter } from './modules/admin/admin.route';
 import { searchRouter } from './modules/search/search.route';
+import ecommerceRouter from './modules/ecommerce/ecommerce.route';
 
 export const apiRouter = Router();
 
@@ -40,6 +41,7 @@ apiRouter.get('/health', (_req: Request, res: Response) => {
 
 // ─── Public Routes ──────────────────────────────────────
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/ecommerce', ecommerceRouter);
 
 // ─── Protected Routes (JWT required) ────────────────────
 apiRouter.use('/dashboard', verifyToken, dashboardRouter);

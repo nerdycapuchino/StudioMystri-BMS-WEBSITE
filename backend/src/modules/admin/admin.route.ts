@@ -4,6 +4,7 @@ import { validate } from '../../middleware/validate';
 import { createUserSchema, updateUserSchema, updateSettingsSchema } from './admin.schema';
 import { verifyToken, requireRole } from '../../middleware/auth';
 import { upload } from '../../middleware/upload';
+import { ecommerceAdminRouter } from './ecommerce.admin.route';
 
 export const adminRouter = Router();
 
@@ -25,3 +26,6 @@ adminRouter.post('/users/:id/reset-link', ctrl.generateResetLink);
 // Settings (updates)
 adminRouter.put('/settings', validate(updateSettingsSchema), ctrl.updateSettings);
 adminRouter.post('/settings/logo', upload.single('logo'), ctrl.uploadLogo);
+
+// eCommerce Admin
+adminRouter.use('/ecommerce', ecommerceAdminRouter);

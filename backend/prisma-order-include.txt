@@ -1,0 +1,11 @@
+export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    customer?: boolean | Order$customerArgs<ExtArgs>
+    user?: boolean | Order$userArgs<ExtArgs>
+    invoice?: boolean | Order$invoiceArgs<ExtArgs>
+    items?: boolean | Order$itemsArgs<ExtArgs>
+    shippingInfo?: boolean | Order$shippingInfoArgs<ExtArgs>
+    paymentTransactions?: boolean | Order$paymentTransactionsArgs<ExtArgs>
+    emailLogs?: boolean | Order$emailLogsArgs<ExtArgs>
+    referrals?: boolean | Order$referralsArgs<ExtArgs>
+    _count?: boolean | OrderCountOutputTypeDefaultArgs<ExtArgs>
+  }
