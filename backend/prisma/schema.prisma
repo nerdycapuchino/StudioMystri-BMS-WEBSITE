@@ -90,6 +90,7 @@ model Lead {
 model Product {
   id               String           @id @default(uuid())
   name             String
+  slug             String?          @unique
   sku              String           @unique
   barcode          String?
   category         String
@@ -147,6 +148,7 @@ model Order {
   paymentMethod      String?
   currency           String        @default("INR")
   notes              String?
+  shippingAddress    Json?
   customerId         String?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -489,6 +491,7 @@ enum UserRole {
   SALES
   FINANCE
   HR
+  CUSTOMER
 }
 
 enum LeadStage {

@@ -1,8 +1,17 @@
-import { PrismaClient, PaymentStatus, OrderStatus, Prisma, Customer } from '@prisma/client';
-import crypto from 'crypto';
+import { PrismaClient, PaymentStatus, OrderStatus, Customer } from '@prisma/client';
+import { getRazorpay } from '../../config/razorpay';
 
 const prisma = new PrismaClient();
 
+// ─── Helper: generate slug from name ─────────────────────
+function generateSlug(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
+// ─── Public: List visible products ───────────────────────
 export const getEcommerceProducts = async () => {
     return await prisma.product.findMany({
         where: {
@@ -14,11 +23,15 @@ export const getEcommerceProducts = async () => {
     });
 };
 
+// ─── Public: Get product by slug ─────────────────────────
 export const getEcommerceProductBySlug = async (slug: string) => {
+    // Try slug first, fall back to SKU for backwards compatibility
     return await prisma.product.findFirst({
         where: {
-            sku: slug, // Assuming SKU or SEO slug is used here
-            ecommerceVisible: true,
+            OR: [
+                { slug, ecommerceVisible: true },
+                { sku: slug, ecommerceVisible: true },
+            ],
         },
         include: {
             variants: true,
@@ -26,8 +39,9 @@ export const getEcommerceProductBySlug = async (slug: string) => {
     });
 };
 
+// ─── Public: Create order with Razorpay integration ──────
 export const createEcommerceOrder = async (orderData: any) => {
-    const { items, customerDetails, ...rest } = orderData;
+    const { items, customerDetails, shippingAddress, ...rest } = orderData;
     let orderCustomer: Customer | null = null;
 
     return await prisma.$transaction(async (tx) => {
@@ -63,16 +77,39 @@ export const createEcommerceOrder = async (orderData: any) => {
 
         // 3. Generate Order Number
         const count = await tx.order.count();
-        const orderNumber = `SM-ECO-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+        const orderNumber = `SM-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
 
-        // 4. Create Order
+        // 4. Create Razorpay Order
+        let razorpayOrderId: string | null = null;
+        try {
+            const razorpay = getRazorpay();
+            const totalAmountPaise = Math.round((rest.totalAmount || 0) * 100);
+            const rzpOrder = await razorpay.orders.create({
+                amount: totalAmountPaise,
+                currency: rest.currency || 'INR',
+                receipt: orderNumber,
+                notes: {
+                    orderNumber,
+                    customerEmail: customerDetails?.email || '',
+                },
+            });
+            razorpayOrderId = rzpOrder.id;
+        } catch (err: any) {
+            // If Razorpay is not configured, create order without gateway
+            console.warn('Razorpay order creation skipped:', err.message);
+        }
+
+        // 5. Create Order in DB
         const order = await tx.order.create({
             data: {
                 ...rest,
                 orderNumber,
                 paymentStatus: PaymentStatus.PENDING,
-                orderStatus: OrderStatus.PENDING,
+                orderStatus: OrderStatus.CREATED,
+                paymentGateway: razorpayOrderId ? 'razorpay' : null,
+                paymentReferenceId: razorpayOrderId,
                 customerId: orderCustomer?.id,
+                shippingAddress: shippingAddress || undefined,
                 items: {
                     create: items.map((item: any) => ({
                         productId: item.productId,
@@ -88,10 +125,14 @@ export const createEcommerceOrder = async (orderData: any) => {
             },
         });
 
-        return order;
+        return {
+            ...order,
+            razorpayOrderId,
+        };
     });
 };
 
+// ─── Public: Get order by order number ───────────────────
 export const getEcommerceOrder = async (orderNumber: string) => {
     return await prisma.order.findUnique({
         where: { orderNumber },
@@ -102,10 +143,12 @@ export const getEcommerceOrder = async (orderNumber: string) => {
                 },
             },
             shippingInfo: true,
+            paymentTransactions: true,
         },
     });
 };
 
+// ─── Public: Validate discount code ──────────────────────
 export const validateDiscountCode = async (code: string, orderAmount: number, userId?: string) => {
     const discount = await prisma.discountCode.findUnique({
         where: { code },

@@ -14,6 +14,18 @@ const envSchema = z.object({
     CORS_ORIGIN: z.string().default('http://localhost:3000'),
     UPLOAD_DIR: z.string().default('./uploads'),
     SENTRY_DSN: z.string().optional(),
+
+    // Razorpay
+    RAZORPAY_KEY_ID: z.string().optional(),
+    RAZORPAY_KEY_SECRET: z.string().optional(),
+    RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+
+    // SMTP (Hostinger)
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.string().default('465').transform(Number),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
+    SMTP_FROM: z.string().default('noreply@studiomystri.com'),
 });
 
 const parsed = envSchema.safeParse(process.env);

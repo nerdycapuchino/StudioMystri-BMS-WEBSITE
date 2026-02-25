@@ -1,0 +1,86 @@
+============================================================
+  STUDIO MYSTRI – FUTURE FEATURES ROADMAP
+  (Do not develop until explicitly requested)
+============================================================
+
+1. CUSTOMER EXPERIENCE
+   - Wishlist / Saved Items with persistent storage
+   - Product reviews and ratings system
+   - Recently viewed products carousel
+   - Product comparison tool
+   - Size/dimension guide with AR preview
+   - Social sharing for products (WhatsApp, Instagram)
+   - Push notifications (order updates, new arrivals)
+
+2. ORDER MANAGEMENT
+   - Customer order history page with real-time tracking
+   - Order cancellation / return request flow
+   - Invoice PDF generation and download
+   - Guest checkout (without registration)
+   - Repeat order / reorder functionality
+   - Split shipment support (multiple tracking IDs per order)
+
+3. LOYALTY & ENGAGEMENT
+   - Points-based loyalty program (earn on purchase, redeem on checkout)
+   - Tiered membership (Bronze/Silver/Gold)
+   - Birthday/anniversary auto-discounts
+   - Referral leaderboard with gamification
+   - Flash sales / limited-time deals engine
+
+4. PAYMENT & FINANCE
+   - EMI / Pay Later integration (Razorpay PayLater, Simpl)
+   - Multiple payment method support (wallets, UPI autopay)
+   - Automated GST invoice generation
+   - Partial payment / advance booking for custom furniture
+   - Subscription-based recurring orders (care products, refills)
+
+5. ADMIN & OPERATIONS
+   - Advanced inventory management (low stock alerts, auto-reorder)
+   - Multi-warehouse stock tracking
+   - Vendor/supplier portal for raw materials
+   - Staff performance dashboard
+   - Automated report generation (daily/weekly/monthly)
+   - Batch product import/export (CSV/Excel)
+   - Role-specific dashboards (designer, architect, sales, finance)
+
+6. MARKETING & SEO
+   - Blog/journal CMS with SEO optimization
+   - Dynamic sitemap.xml generation
+   - Abandoned cart recovery (email + retargeting)
+   - Newsletter subscription and campaign management
+   - Product schema markup (structured data for Google)
+   - UTM tracking and campaign analytics
+
+7. COMMUNICATION
+   - WhatsApp Business API integration (order updates + support)
+   - Live chat widget on storefront
+   - SMS notifications (OTP, order status)
+   - In-app notification center (BMS admin)
+   - Customer feedback / NPS surveys
+
+8. INTEGRATIONS
+   - Shiprocket / Delhivery shipping automation
+   - Google Analytics 4 + Facebook Pixel integration
+   - Google Merchant Center product feed
+   - QuickBooks / Tally accounting sync
+   - CRM integration (HubSpot / Zoho)
+
+9. PLATFORM ENHANCEMENTS
+   - Progressive Web App (PWA) with offline support
+   - Multi-language support (Hindi, regional)
+   - Dark mode for storefront
+   - Accessibility (WCAG 2.1 AA compliance)
+   - CDN-backed image optimization pipeline
+   - API versioning and rate limiting per customer
+
+10. SECURITY & COMPLIANCE
+    - Two-factor authentication (OTP/TOTP)
+    - GDPR-compliant data export/deletion
+    - Audit logging for all admin actions
+    - IP-based fraud detection on checkout
+    - PCI DSS readiness for card storage
+
+============================================================
+  NOTE: These are potential enhancements only.
+  Development will begin only when explicitly instructed.
+============================================================

@@ -5,17 +5,22 @@ import { updateOrderStatusSchema, updateShippingSchema, createDiscountSchema } f
 
 export const ecommerceAdminRouter = Router();
 
+// ─── Orders ──────────────────────────────────────────────
 ecommerceAdminRouter.patch(
     '/order/:id/status',
     validate(updateOrderStatusSchema),
     ecommerceAdminController.updateOrderStatus
 );
 
+// ─── Shipping ────────────────────────────────────────────
 ecommerceAdminRouter.patch(
     '/shipping/:orderId',
     validate(updateShippingSchema),
     ecommerceAdminController.updateShippingInfo
 );
+
+// ─── Discounts ───────────────────────────────────────────
+ecommerceAdminRouter.get('/discounts', ecommerceAdminController.listDiscounts);
 
 ecommerceAdminRouter.post(
     '/discount',
@@ -23,7 +28,15 @@ ecommerceAdminRouter.post(
     ecommerceAdminController.createDiscount
 );
 
-ecommerceAdminRouter.get(
-    '/analytics',
-    ecommerceAdminController.getAnalytics
-);
+ecommerceAdminRouter.patch('/discount/:id', ecommerceAdminController.updateDiscount);
+
+ecommerceAdminRouter.delete('/discount/:id', ecommerceAdminController.deleteDiscount);
+
+// ─── Referrals ───────────────────────────────────────────
+ecommerceAdminRouter.get('/referrals', ecommerceAdminController.listReferrals);
+
+// ─── Email Logs ──────────────────────────────────────────
+ecommerceAdminRouter.get('/email-logs', ecommerceAdminController.listEmailLogs);
+
+// ─── Analytics ───────────────────────────────────────────
+ecommerceAdminRouter.get('/analytics', ecommerceAdminController.getAnalytics);
