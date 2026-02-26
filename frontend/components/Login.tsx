@@ -17,7 +17,7 @@ export const Login: React.FC = () => {
    const [error, setError] = useState('');
 
    // Theme toggle
-   const [isDark, setIsDark] = useState(true);
+   const [isDark, setIsDark] = useState(false);
 
    useEffect(() => {
       // Force clear slate: automatically remove stale tokens so users aren't locked out

@@ -1,0 +1,198 @@
+{
+    "SUPER_ADMIN": {
+        "modules": {
+            "auth": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "crm": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "projects": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "inventory": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "finance": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "approve"
+            ],
+            "hr": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "ecommerce": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "teamhub": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ]
+        }
+    },
+    "ADMIN": {
+        "modules": {
+            "crm": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "projects": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "inventory": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "finance": [
+                "read"
+            ],
+            "ecommerce": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "teamhub": [
+                "read",
+                "create",
+                "update",
+                "delete"
+            ],
+            "auth": [
+                "read",
+                "create",
+                "update"
+            ]
+        }
+    },
+    "DESIGNER": {
+        "modules": {
+            "projects": [
+                "read",
+                "create",
+                "update"
+            ],
+            "crm": [
+                "read"
+            ],
+            "teamhub": [
+                "read",
+                "create",
+                "update"
+            ]
+        }
+    },
+    "ARCHITECT": {
+        "modules": {
+            "projects": [
+                "read",
+                "create",
+                "update"
+            ],
+            "inventory": [
+                "read",
+                "create",
+                "update"
+            ],
+            "crm": [
+                "read",
+                "create",
+                "update"
+            ],
+            "teamhub": [
+                "read",
+                "create",
+                "update"
+            ]
+        }
+    },
+    "SALES": {
+        "modules": {
+            "crm": [
+                "read",
+                "create",
+                "update"
+            ],
+            "teamhub": [
+                "read",
+                "create",
+                "update"
+            ]
+        }
+    },
+    "FINANCE": {
+        "modules": {
+            "finance": [
+                "read",
+                "create",
+                "update",
+                "approve"
+            ],
+            "ecommerce": [
+                "read"
+            ],
+            "teamhub": [
+                "read",
+                "create",
+                "update"
+            ]
+        }
+    },
+    "HR": {
+        "modules": {
+            "hr": [
+                "read",
+                "create",
+                "update"
+            ],
+            "teamhub": [
+                "read",
+                "create",
+                "update"
+            ]
+        }
+    },
+    "CUSTOMER": {
+        "modules": {
+            "ecommerce": [
+                "read",
+                "create"
+            ],
+            "orders": [
+                "read"
+            ],
+            "teamhub": [
+                "read"
+            ]
+        }
+    }
+}

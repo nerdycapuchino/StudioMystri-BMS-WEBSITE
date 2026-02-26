@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { verifyToken } from './middleware/auth';
+import { enforceModuleRbac } from './middleware/rbac';
 
 // Module routers
 import { authRouter } from './modules/auth/auth.route';
@@ -44,22 +45,23 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use('/ecommerce', ecommerceRouter);
 
 // ─── Protected Routes (JWT required) ────────────────────
-apiRouter.use('/dashboard', verifyToken, dashboardRouter);
-apiRouter.use('/customers', verifyToken, customersRouter);
-apiRouter.use('/leads', verifyToken, leadsRouter);
-apiRouter.use('/products', verifyToken, productsRouter);
-apiRouter.use('/orders', verifyToken, ordersRouter);
-apiRouter.use('/invoices', verifyToken, invoicesRouter);
-apiRouter.use('/finance', verifyToken, financeRouter);
-apiRouter.use('/inventory', verifyToken, inventoryRouter);
-apiRouter.use('/projects', verifyToken, projectsRouter);
-apiRouter.use('/hr', verifyToken, hrRouter);
-apiRouter.use('/logistics', verifyToken, logisticsRouter);
-apiRouter.use('/tasks', verifyToken, tasksRouter);
-apiRouter.use('/team', verifyToken, teamRouter);
-apiRouter.use('/marketing', verifyToken, marketingRouter);
-apiRouter.use('/erp', verifyToken, erpRouter);
-apiRouter.use('/activity-log', verifyToken, activityLogRouter);
-apiRouter.use('/notifications', verifyToken, notificationsRouter);
-apiRouter.use('/admin', adminRouter);
-apiRouter.use('/search', verifyToken, searchRouter);
+apiRouter.use('/dashboard', verifyToken, dashboardRouter); // Dashboard logic is usually aggregrate, UI handles hiding
+apiRouter.use('/customers', verifyToken, enforceModuleRbac('crm'), customersRouter);
+apiRouter.use('/leads', verifyToken, enforceModuleRbac('crm'), leadsRouter);
+apiRouter.use('/products', verifyToken, enforceModuleRbac('ecommerce'), productsRouter);
+apiRouter.use('/orders', verifyToken, enforceModuleRbac('ecommerce'), ordersRouter);
+apiRouter.use('/invoices', verifyToken, enforceModuleRbac('finance'), invoicesRouter);
+apiRouter.use('/finance', verifyToken, enforceModuleRbac('finance'), financeRouter);
+apiRouter.use('/inventory', verifyToken, enforceModuleRbac('inventory'), inventoryRouter);
+apiRouter.use('/projects', verifyToken, enforceModuleRbac('projects'), projectsRouter);
+apiRouter.use('/hr', verifyToken, enforceModuleRbac('hr'), hrRouter);
+apiRouter.use('/logistics', verifyToken, enforceModuleRbac('inventory'), logisticsRouter);
+apiRouter.use('/tasks', verifyToken, enforceModuleRbac('projects'), tasksRouter);
+apiRouter.use('/team', verifyToken, enforceModuleRbac('teamhub'), teamRouter);
+apiRouter.use('/marketing', verifyToken, enforceModuleRbac('ecommerce'), marketingRouter);
+apiRouter.use('/erp', verifyToken, enforceModuleRbac('projects'), erpRouter);
+apiRouter.use('/activity-log', verifyToken, enforceModuleRbac('auth'), activityLogRouter);
+apiRouter.use('/notifications', verifyToken, notificationsRouter); // Notifications are user-specific, no module block needed
+apiRouter.use('/admin', verifyToken, enforceModuleRbac('auth'), adminRouter);
+apiRouter.use('/search', verifyToken, searchRouter); // Global search, filters inside based on role constraints
+

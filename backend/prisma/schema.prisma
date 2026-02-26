@@ -406,14 +406,27 @@ model Task {
   @@map("tasks")
 }
 
+model Channel {
+  id           String    @id @default(uuid())
+  name         String
+  type         String    @default("public") // "public", "private", "dm"
+  participants String[]  @default([])       // user IDs for private/dm
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  messages     Message[]
+
+  @@map("channels")
+}
+
 model Message {
   id          String   @id @default(uuid())
   content     String
-  channel     String   @default("general")
+  channelId   String   @default("general")
   attachments String[] @default([])
   senderId    String
   createdAt   DateTime @default(now())
   sender      User     @relation(fields: [senderId], references: [id])
+  channel     Channel  @relation(fields: [channelId], references: [id])
 
   @@map("messages")
 }

@@ -1,18 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { can } from '../src/lib/rbac';
 
 export const Sidebar: React.FC = () => {
     const { user } = useAuth();
     const firstName = user?.name?.split(' ')[0] || 'User';
-    const role = user?.role || 'Administrator';
-
-    const ADMIN_ONLY = ['SUPER_ADMIN', 'ADMIN'];
-    const SALES_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SALES'];
-    const FINANCE_ROLES = ['SUPER_ADMIN', 'ADMIN', 'FINANCE'];
-    const HR_ROLES = ['SUPER_ADMIN', 'ADMIN', 'HR'];
-    const OPS_ROLES = ['SUPER_ADMIN', 'ADMIN', 'DESIGNER', 'ARCHITECT'];
-    const POS_ROLES = [...SALES_ROLES, ...FINANCE_ROLES];
+    const role = user?.role || 'CUSTOMER';
 
     return (
         <aside className="flex w-64 flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto shrink-0 transition-colors duration-300">
@@ -33,10 +27,10 @@ export const Sidebar: React.FC = () => {
                     <NavLink
                         to="/dashboard"
                         className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                            `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                 ? 'bg-primary text-white shadow-md shadow-primary/20'
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
+                            } `
                         }
                     >
                         <span className="material-symbols-outlined" data-weight="fill">dashboard</span>
@@ -46,15 +40,15 @@ export const Sidebar: React.FC = () => {
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
                     <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pipeline & Sales</p>
 
-                    {SALES_ROLES.includes(role) && (
+                    {can(role, 'crm', 'read') && (
                         <>
                             <NavLink
                                 to="/crm"
                                 className={({ isActive }) =>
-                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                         ? 'bg-primary text-white shadow-md shadow-primary/20'
                                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`
+                                    } `
                                 }
                             >
                                 <span className="material-symbols-outlined">rocket_launch</span>
@@ -64,10 +58,10 @@ export const Sidebar: React.FC = () => {
                             <NavLink
                                 to="/clients"
                                 className={({ isActive }) =>
-                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                         ? 'bg-primary text-white shadow-md shadow-primary/20'
                                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`
+                                    } `
                                 }
                             >
                                 <span className="material-symbols-outlined">group</span>
@@ -76,14 +70,15 @@ export const Sidebar: React.FC = () => {
                         </>
                     )}
 
-                    {POS_ROLES.includes(role) && (
+                    {/* POS Terminal only needs partial ecommerce/finance read depending on standard logic, matching original POS_ROLES intent */}
+                    {(can(role, 'finance', 'create') || can(role, 'crm', 'read')) && (
                         <NavLink
                             to="/pos"
                             className={({ isActive }) =>
-                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                     ? 'bg-primary text-white shadow-md shadow-primary/20'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                }`
+                                } `
                             }
                         >
                             <span className="material-symbols-outlined">point_of_sale</span>
@@ -91,31 +86,33 @@ export const Sidebar: React.FC = () => {
                         </NavLink>
                     )}
 
-                    <NavLink
-                        to="/orders"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">shopping_cart</span>
-                        <span className="text-sm font-medium">Orders</span>
-                    </NavLink>
+                    {can(role, 'ecommerce', 'read') && (
+                        <NavLink
+                            to="/orders"
+                            className={({ isActive }) =>
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                } `
+                            }
+                        >
+                            <span className="material-symbols-outlined">shopping_cart</span>
+                            <span className="text-sm font-medium">Orders</span>
+                        </NavLink>
+                    )}
 
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
                     <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Execution & Supply</p>
 
-                    {OPS_ROLES.includes(role) && (
+                    {can(role, 'projects', 'read') && (
                         <>
                             <NavLink
                                 to="/projects"
                                 className={({ isActive }) =>
-                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                         ? 'bg-primary text-white shadow-md shadow-primary/20'
                                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`
+                                    } `
                                 }
                             >
                                 <span className="material-symbols-outlined">architecture</span>
@@ -125,10 +122,10 @@ export const Sidebar: React.FC = () => {
                             <NavLink
                                 to="/inventory"
                                 className={({ isActive }) =>
-                                    `group flex items-center justify-between rounded-lg px-3 py-2.5 transition-all ${isActive
+                                    `group flex items - center justify - between rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                         ? 'bg-primary text-white shadow-md shadow-primary/20'
                                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`
+                                    } `
                                 }
                             >
                                 <div className="flex items-center gap-3">
@@ -137,29 +134,31 @@ export const Sidebar: React.FC = () => {
                                 </div>
                                 <span className="bg-red-500/20 text-red-500 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3 LOW</span>
                             </NavLink>
-
-                            <NavLink
-                                to="/logistics"
-                                className={({ isActive }) =>
-                                    `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    }`
-                                }
-                            >
-                                <span className="material-symbols-outlined">local_shipping</span>
-                                <span className="text-sm font-medium">Logistics</span>
-                            </NavLink>
                         </>
+                    )}
+
+                    {can(role, 'inventory', 'read') && (
+                        <NavLink
+                            to="/logistics"
+                            className={({ isActive }) =>
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                } `
+                            }
+                        >
+                            <span className="material-symbols-outlined">local_shipping</span>
+                            <span className="text-sm font-medium">Logistics</span>
+                        </NavLink>
                     )}
 
                     <NavLink
                         to="/scanner"
                         className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                            `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                 ? 'bg-primary text-white shadow-md shadow-primary/20'
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
+                            } `
                         }
                     >
                         <span className="material-symbols-outlined">qr_code_scanner</span>
@@ -169,14 +168,14 @@ export const Sidebar: React.FC = () => {
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
                     <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Organization</p>
 
-                    {FINANCE_ROLES.includes(role) && (
+                    {can(role, 'finance', 'read') && (
                         <NavLink
                             to="/finance"
                             className={({ isActive }) =>
-                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                     ? 'bg-primary text-white shadow-md shadow-primary/20'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                }`
+                                } `
                             }
                         >
                             <span className="material-symbols-outlined">payments</span>
@@ -184,14 +183,14 @@ export const Sidebar: React.FC = () => {
                         </NavLink>
                     )}
 
-                    {ADMIN_ONLY.includes(role) && (
+                    {can(role, 'auth', 'read') && (
                         <NavLink
                             to="/erp"
                             className={({ isActive }) =>
-                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                     ? 'bg-primary text-white shadow-md shadow-primary/20'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                }`
+                                } `
                             }
                         >
                             <span className="material-symbols-outlined">settings_suggest</span>
@@ -199,14 +198,14 @@ export const Sidebar: React.FC = () => {
                         </NavLink>
                     )}
 
-                    {HR_ROLES.includes(role) && (
+                    {can(role, 'hr', 'read') && (
                         <NavLink
                             to="/hr"
                             className={({ isActive }) =>
-                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                     ? 'bg-primary text-white shadow-md shadow-primary/20'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                }`
+                                } `
                             }
                         >
                             <span className="material-symbols-outlined">badge</span>
@@ -214,27 +213,29 @@ export const Sidebar: React.FC = () => {
                         </NavLink>
                     )}
 
-                    <NavLink
-                        to="/team-hub"
-                        className={({ isActive }) =>
-                            `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            }`
-                        }
-                    >
-                        <span className="material-symbols-outlined">forum</span>
-                        <span className="text-sm font-medium">Team Hub</span>
-                    </NavLink>
+                    {can(role, 'teamhub', 'read') && (
+                        <NavLink
+                            to="/team-hub"
+                            className={({ isActive }) =>
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
+                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                } `
+                            }
+                        >
+                            <span className="material-symbols-outlined">forum</span>
+                            <span className="text-sm font-medium">Team Hub</span>
+                        </NavLink>
+                    )}
 
-                    {ADMIN_ONLY.includes(role) && (
+                    {can(role, 'auth', 'update') && (
                         <NavLink
                             to="/settings"
                             className={({ isActive }) =>
-                                `group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${isActive
+                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
                                     ? 'bg-primary text-white shadow-md shadow-primary/20'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                }`
+                                } `
                             }
                         >
                             <span className="material-symbols-outlined">settings</span>

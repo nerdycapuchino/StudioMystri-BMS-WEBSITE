@@ -6,6 +6,7 @@ import { upload } from '../../middleware/upload';
 
 export const teamRouter = Router();
 teamRouter.get('/channels', ctrl.channels);
+teamRouter.post('/channels', ctrl.create);
 teamRouter.get('/messages', ctrl.messages);
 teamRouter.post('/messages', validate(sendMessageSchema), ctrl.send);
 teamRouter.delete('/messages/:id', ctrl.remove);

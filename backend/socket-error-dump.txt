@@ -1,0 +1,31 @@
+
+Invalid `prisma.message.create()` invocation in
+C:\Users\Admin\Documents\GitHub\StudioMystriBMS\backend\src\socket\socketHandlers.ts:35:54
+
+  32 // New message
+  33 socket.on('message:send', async (payload: { channel: string; content: string; attachments?: string[] }) => {
+  34     try {
+→ 35         const message = await prisma.message.create({
+               data: {
+                 senderId: undefined,
+                 content: "Test message from script",
+                 channel: "general",
+                 attachments: [],
+             +   sender: {
+             +     create: UserCreateWithoutMessagesInput | UserUncheckedCreateWithoutMessagesInput,
+             +     connectOrCreate: UserCreateOrConnectWithoutMessagesInput,
+             +     connect: UserWhereUniqueInput
+             +   }
+               },
+               include: {
+                 sender: {
+                   select: {
+                     id: true,
+                     name: true,
+                     avatar: true
+                   }
+                 }
+               }
+             })
+
+Argument `sender` is missing.

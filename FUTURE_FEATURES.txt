@@ -8,8 +8,7 @@
    - Product reviews and ratings system
    - Recently viewed products carousel
    - Product comparison tool
-   - Size/dimension guide with AR preview
-   - Social sharing for products (WhatsApp, Instagram)
+      - Social sharing for products (WhatsApp, Instagram)
    - Push notifications (order updates, new arrivals)
 
 2. ORDER MANAGEMENT
@@ -18,8 +17,7 @@
    - Invoice PDF generation and download
    - Guest checkout (without registration)
    - Repeat order / reorder functionality
-   - Split shipment support (multiple tracking IDs per order)
-
+   
 3. LOYALTY & ENGAGEMENT
    - Points-based loyalty program (earn on purchase, redeem on checkout)
    - Tiered membership (Bronze/Silver/Gold)
@@ -52,21 +50,12 @@
    - UTM tracking and campaign analytics
 
 7. COMMUNICATION
-   - WhatsApp Business API integration (order updates + support)
-   - Live chat widget on storefront
-   - SMS notifications (OTP, order status)
+      - Live chat widget on storefront
    - In-app notification center (BMS admin)
    - Customer feedback / NPS surveys
 
-8. INTEGRATIONS
-   - Shiprocket / Delhivery shipping automation
-   - Google Analytics 4 + Facebook Pixel integration
-   - Google Merchant Center product feed
-   - QuickBooks / Tally accounting sync
-   - CRM integration (HubSpot / Zoho)
 
 9. PLATFORM ENHANCEMENTS
-   - Progressive Web App (PWA) with offline support
    - Multi-language support (Hindi, regional)
    - Dark mode for storefront
    - Accessibility (WCAG 2.1 AA compliance)
@@ -74,7 +63,6 @@
    - API versioning and rate limiting per customer
 
 10. SECURITY & COMPLIANCE
-    - Two-factor authentication (OTP/TOTP)
     - GDPR-compliant data export/deletion
     - Audit logging for all admin actions
     - IP-based fraud detection on checkout

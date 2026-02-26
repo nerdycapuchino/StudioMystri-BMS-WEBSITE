@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { Role } from '../config/rbac';
 import { env } from '../config/env';
 import { createError } from './errorHandler';
 
@@ -10,7 +11,7 @@ declare global {
             user?: {
                 id: string;
                 email: string;
-                role: string;
+                role: Role;
             };
         }
     }
@@ -33,7 +34,7 @@ export const verifyToken = (req: Request, _res: Response, next: NextFunction): v
         const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as {
             id: string;
             email: string;
-            role: string;
+            role: Role;
         };
 
         req.user = {

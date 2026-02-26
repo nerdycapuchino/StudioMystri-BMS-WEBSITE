@@ -1,15 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { getChannels, getMessages, sendMessage, deleteMessage } from '../services/team.service';
+import { getChannels, getMessages, sendMessage, deleteMessage, createChannel } from '../services/team.service';
 
 export const useChannels = () =>
     useQuery({ queryKey: ['team', 'channels'], queryFn: getChannels });
 
-export const useMessages = (channel: string | null, params?: { page?: number; limit?: number }) =>
+export const useMessages = (channelId: string | null, params?: { page?: number; limit?: number }) =>
     useQuery({
-        queryKey: ['team', 'messages', channel, params],
-        queryFn: () => getMessages(channel!, params),
-        enabled: !!channel,
+        queryKey: ['team', 'messages', channelId, params],
+        queryFn: () => getMessages(channelId!, params),
+        enabled: !!channelId,
     });
 
 export const useSendMessage = () => {
@@ -18,6 +18,18 @@ export const useSendMessage = () => {
         mutationFn: sendMessage,
         onSuccess: () => { qc.invalidateQueries({ queryKey: ['team', 'messages'] }); },
         onError: () => toast.error('Failed to send message'),
+    });
+};
+
+export const useCreateChannel = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: createChannel,
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['team', 'channels'] });
+            toast.success('Channel created successfully');
+        },
+        onError: () => toast.error('Failed to create channel'),
     });
 };
 

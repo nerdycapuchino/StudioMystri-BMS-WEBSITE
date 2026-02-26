@@ -1,9 +1,44 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import prisma from '../config/db';
 import { logActivity } from '../utils/activityLogger';
+import fs from "fs";
+import path from "path";
 
 const onlineUsers = new Map<string, { socketId: string; name: string }>();
 const activeCalls = new Map<string, { channel: string; participants: string[] }>();
+
+const policyPath = path.join(__dirname, "../../../rbac-policy.json");
+const policy = JSON.parse(fs.readFileSync(policyPath, "utf-8"));
+
+export async function canAccessChannel(userId: string, role: string, channelId: string): Promise<boolean> {
+    if (!role) return false;
+
+    // Check if channel exists
+    const channel = await prisma.channel.findUnique({ where: { id: channelId } });
+    if (!channel) return false;
+
+    // Public channels: check only general teamhub access
+    if (channel.type === 'public') {
+        const hasTeamhubAccess = policy[role]?.modules?.['teamhub']?.includes('read');
+
+        // Strict mapping for Finance/HR naming conventions (extra guardrail)
+        if (channel.name.toLowerCase().includes('finance') || channel.name.toLowerCase().includes('invoice')) {
+            return role === 'FINANCE' || role === 'SUPER_ADMIN';
+        }
+        if (channel.name.toLowerCase().includes('hr') || channel.name.toLowerCase().includes('employee')) {
+            return role === 'HR' || role === 'SUPER_ADMIN';
+        }
+
+        return !!hasTeamhubAccess;
+    }
+
+    // Private and DM channels: check participant list
+    if (channel.type === 'private' || channel.type === 'dm') {
+        return channel.participants.includes(userId) || role === 'SUPER_ADMIN';
+    }
+
+    return false;
+}
 
 export const registerSocketHandlers = (io: SocketIOServer) => {
     io.on('connection', (socket: Socket) => {
@@ -18,54 +53,104 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
 
         // ── TEAM HUB ──
 
+        // Create a channel
+        socket.on('channel:create', async (payload: { name: string; type: 'public' | 'private' | 'dm'; participants?: string[] }) => {
+            try {
+                const userRole = socket.data.userRole;
+                const canCreate = policy[userRole]?.modules?.['teamhub']?.includes('create');
+                if (!canCreate) {
+                    return socket.emit('error', { message: 'Access denied: Cannot create channels.' });
+                }
+
+                // If DM, ensure participants sorted
+                let participants = payload.participants || [];
+                if (payload.type === 'dm' || payload.type === 'private') {
+                    if (!participants.includes(userId)) participants.push(userId);
+                }
+
+                const channel = await prisma.channel.create({
+                    data: {
+                        name: payload.name,
+                        type: payload.type,
+                        participants: participants
+                    }
+                });
+
+                // Notify participants to join
+                if (payload.type !== 'public') {
+                    participants.forEach(pId => {
+                        io.to(`user:${pId}`).emit('channel:new', channel);
+                    });
+                } else {
+                    io.emit('channel:new', channel);
+                }
+
+                logActivity(prisma, userId, 'TEAM', 'CREATE', channel.id, { name: channel.name }, 'socket');
+            } catch (err) {
+                socket.emit('error', { message: 'Failed to create channel' });
+            }
+        });
+
         // Join a channel room
-        socket.on('channel:join', (channel: string) => {
-            socket.join(`channel:${channel}`);
-            console.log(`${socket.data.userName} joined channel: ${channel}`);
+        socket.on('channel:join', async (channelId: string) => {
+            const userRole = socket.data.userRole;
+
+            const hasAccess = await canAccessChannel(userId, userRole, channelId);
+            if (!hasAccess) {
+                return socket.emit('error', { message: 'Access denied: You do not have permission to view this channel.' });
+            }
+
+            socket.join(`channel:${channelId}`);
+            console.log(`${socket.data.userName} joined channel: ${channelId}`);
         });
 
         // Leave a channel room
-        socket.on('channel:leave', (channel: string) => {
-            socket.leave(`channel:${channel}`);
+        socket.on('channel:leave', (channelId: string) => {
+            socket.leave(`channel:${channelId}`);
         });
 
         // New message
-        socket.on('message:send', async (payload: { channel: string; content: string; attachments?: string[] }) => {
+        socket.on('message:send', async (payload: { channelId: string; content: string; attachments?: string[] }) => {
             try {
+                const hasAccess = await canAccessChannel(userId, socket.data.userRole, payload.channelId);
+                if (!hasAccess) {
+                    return socket.emit('error', { message: 'Access denied: Cannot send message to this channel.' });
+                }
+
                 const message = await prisma.message.create({
                     data: {
                         senderId: userId,
                         content: payload.content,
-                        channel: payload.channel,
+                        channelId: payload.channelId,
                         attachments: payload.attachments || [],
                     },
                     include: { sender: { select: { id: true, name: true, avatar: true } } }
                 });
 
-                io.to(`channel:${payload.channel}`).emit('message:new', message);
+                io.to(`channel:${payload.channelId}`).emit('message:new', message);
 
-                logActivity(prisma, userId, 'TEAM', 'CREATE', message.id, { channel: payload.channel }, 'socket');
+                logActivity(prisma, userId, 'TEAM', 'CREATE', message.id, { channel: payload.channelId }, 'socket');
             } catch (err) {
                 socket.emit('error', { message: 'Failed to send message' });
             }
         });
 
         // Typing indicator
-        socket.on('typing:start', (channel: string) => {
-            socket.to(`channel:${channel}`).emit('typing:update', {
+        socket.on('typing:start', async (channelId: string) => {
+            socket.to(`channel:${channelId}`).emit('typing:update', {
                 userId,
                 userName: socket.data.userName,
                 isTyping: true,
-                channel,
+                channelId,
             });
         });
 
-        socket.on('typing:stop', (channel: string) => {
-            socket.to(`channel:${channel}`).emit('typing:update', {
+        socket.on('typing:stop', (channelId: string) => {
+            socket.to(`channel:${channelId}`).emit('typing:update', {
                 userId,
                 userName: socket.data.userName,
                 isTyping: false,
-                channel,
+                channelId,
             });
         });
 
@@ -74,11 +159,11 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
             try {
                 const msg = await prisma.message.findUnique({ where: { id: messageId } });
                 if (!msg) return socket.emit('error', { message: 'Message not found' });
-                if (msg.senderId !== userId && socket.data.userRole !== 'ADMIN') {
-                    return socket.emit('error', { message: 'Not authorized' });
+                if (msg.senderId !== userId && socket.data.userRole !== 'SUPER_ADMIN') {
+                    return socket.emit('error', { message: 'Not authorized to delete' });
                 }
                 await prisma.message.delete({ where: { id: messageId } });
-                io.to(`channel:${msg.channel}`).emit('message:deleted', { messageId, channel: msg.channel });
+                io.to(`channel:${msg.channelId}`).emit('message:deleted', { messageId, channelId: msg.channelId });
             } catch (err) {
                 socket.emit('error', { message: 'Failed to delete message' });
             }
@@ -86,41 +171,47 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
 
         // ── VIDEO CALLS (WebRTC Signalling) ──
 
-        socket.on('call:start', (payload: { channel: string }) => {
-            if (!activeCalls.has(payload.channel)) {
-                activeCalls.set(payload.channel, { channel: payload.channel, participants: [userId] });
+        socket.on('call:start', async (payload: { channelId: string }) => {
+            const hasAccess = await canAccessChannel(userId, socket.data.userRole, payload.channelId);
+            if (!hasAccess) return;
+
+            if (!activeCalls.has(payload.channelId)) {
+                activeCalls.set(payload.channelId, { channel: payload.channelId, participants: [userId] });
             }
-            socket.to(`channel:${payload.channel}`).emit('call:started', { channel: payload.channel, startedBy: userId });
+            socket.to(`channel:${payload.channelId}`).emit('call:started', { channel: payload.channelId, startedBy: userId });
         });
 
-        socket.on('call:join', (payload: { channel: string }) => {
-            const call = activeCalls.get(payload.channel);
+        socket.on('call:join', async (payload: { channelId: string }) => {
+            const hasAccess = await canAccessChannel(userId, socket.data.userRole, payload.channelId);
+            if (!hasAccess) return;
+
+            const call = activeCalls.get(payload.channelId);
             if (call) {
                 if (!call.participants.includes(userId)) {
                     call.participants.push(userId);
                 }
-                socket.to(`channel:${payload.channel}`).emit('call:user-joined', { userId, channel: payload.channel });
+                socket.to(`channel:${payload.channelId}`).emit('call:user-joined', { userId, channelId: payload.channelId });
             }
         });
 
-        socket.on('webrtc:signal', (payload: { targetId: string; signal: any; channel: string }) => {
+        socket.on('webrtc:signal', (payload: { targetId: string; signal: any; channelId: string }) => {
             // Forward signal to specific user
             io.to(`user:${payload.targetId}`).emit('webrtc:signal', {
                 senderId: userId,
                 signal: payload.signal,
-                channel: payload.channel
+                channelId: payload.channelId
             });
         });
 
-        socket.on('call:end', (payload: { channel: string }) => {
-            const call = activeCalls.get(payload.channel);
+        socket.on('call:end', (payload: { channelId: string }) => {
+            const call = activeCalls.get(payload.channelId);
             if (call) {
                 call.participants = call.participants.filter(p => p !== userId);
                 if (call.participants.length === 0) {
-                    activeCalls.delete(payload.channel);
-                    io.to(`channel:${payload.channel}`).emit('call:ended', { channel: payload.channel });
+                    activeCalls.delete(payload.channelId);
+                    io.to(`channel:${payload.channelId}`).emit('call:ended', { channelId: payload.channelId });
                 } else {
-                    socket.to(`channel:${payload.channel}`).emit('call:user-left', { userId, channel: payload.channel });
+                    socket.to(`channel:${payload.channelId}`).emit('call:user-left', { userId, channelId: payload.channelId });
                 }
             }
         });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useChannels, useMessages } from '../hooks/useTeam';
+import { useChannels, useMessages, useCreateChannel } from '../hooks/useTeam';
 import { uploadFile } from '../services/team.service';
 import { useEmployees } from '../hooks/useHR';
 import { ChatMessage, Channel } from '../types';
@@ -8,6 +8,7 @@ import { ChatMessage, Channel } from '../types';
 import { Plus, Hash, Lock, Search, Paperclip, Send, Bell, Settings, MoreVertical, Menu, Home, Folder, MessageSquare, Users as UsersIcon, X, Mic, Video, Trash2, Download, Smile, AtSign } from 'lucide-react';
 import { getSocket } from '../services/socket';
 import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 export const TeamHub: React.FC = () => {
    const { user: currentUser } = useAuth();
@@ -56,6 +57,8 @@ export const TeamHub: React.FC = () => {
       }
    }, [teamChannels]);
 
+   const createChannelMutation = useCreateChannel();
+
    // Real-time Socket bindings
    useEffect(() => {
       let socket: ReturnType<typeof getSocket>;
@@ -70,7 +73,7 @@ export const TeamHub: React.FC = () => {
       socket.emit('channel:join', selectedChannel.id);
 
       const onNewMessage = (message: any) => {
-         if (message.channel !== selectedChannel.id) return;
+         if (message.channelId !== selectedChannel.id) return;
          qc.setQueryData(['team', 'messages', selectedChannel.id, undefined], (old: any) => ({
             ...old,
             data: [...(old?.data || []), message]
@@ -135,6 +138,10 @@ export const TeamHub: React.FC = () => {
          } else if (signal.ice) {
             await pc.addIceCandidate(new RTCIceCandidate(signal.ice));
          }
+      };
+
+      const onSocketError = (err: any) => {
+         toast.error(err.message || 'Socket error occurred');
       };
 
       // Request initial presence ping
@@ -242,7 +249,7 @@ export const TeamHub: React.FC = () => {
       try {
          const socket = getSocket();
          socket.emit('message:send', {
-            channel: selectedChannel.id,
+            channelId: selectedChannel.id,
             content: newMessage,
             attachments: attachments
          });
@@ -292,18 +299,43 @@ export const TeamHub: React.FC = () => {
       try { getSocket().emit('message:delete', messageId); } catch { /* ignore */ }
    };
 
-   const handleCreateChannel = () => {
+   const handleCreateChannel = async () => {
       if (!newChannelName.trim()) return;
-      // Channel creation logic...
-      setShowChannelModal(false);
-      setNewChannelName('');
+
+      createChannelMutation.mutate({
+         name: newChannelName.trim(),
+         type: newChannelType,
+         participants: [] // Public by default
+      }, {
+         onSuccess: (channel: any) => {
+            setSelectedChannel(channel);
+            setShowChannelModal(false);
+            setNewChannelName('');
+         }
+      });
    };
 
-   const handleStartDM = (targetEmployee: any) => {
-      const dmId = `dm-${[currentUser?.id, targetEmployee.id].sort().join('-')}`;
-      const existing = teamChannels.find(c => c.id === dmId);
+   const handleStartDM = async (targetEmployee: any) => {
+      // Find if DM channel already exists
+      const existing = teamChannels.find(c =>
+         c.type === 'dm' &&
+         c.participantIds?.includes(currentUser?.id || '') &&
+         c.participantIds?.includes(targetEmployee.id)
+      );
+
       if (existing) {
          setSelectedChannel(existing);
+      } else {
+         // Create a new DM channel
+         createChannelMutation.mutate({
+            name: `${currentUser?.name} & ${targetEmployee.name}`,
+            type: 'dm',
+            participants: [currentUser?.id || '', targetEmployee.id]
+         }, {
+            onSuccess: (channel: any) => {
+               setSelectedChannel(channel);
+            }
+         });
       }
       setShowDMModal(false);
       setIsMobileMenuOpen(false);
