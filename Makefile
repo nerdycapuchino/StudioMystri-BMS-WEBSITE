@@ -1,4 +1,4 @@
-.PHONY: dev build migrate seed logs restart
+.PHONY: dev build migrate seed logs restart status deploy-manual auto-deploy-install auto-deploy-check
 
 # Local development
 dev:
@@ -35,3 +35,9 @@ status:
 
 deploy-manual:
 	ssh $(VPS_USER)@$(VPS_HOST) "bash /var/www/studiomystri/scripts/deploy.sh"
+
+auto-deploy-install:
+	ssh $(VPS_USER)@$(VPS_HOST) "bash /var/www/studiomystri/scripts/install-auto-deploy-cron.sh \"$(or $(INTERVAL),*/5 * * * *)\""
+
+auto-deploy-check:
+	ssh $(VPS_USER)@$(VPS_HOST) "tail -n 120 /var/log/studiomystri/auto-deploy.log; echo '---'; crontab -l | grep studiomystri/scripts/auto-deploy.sh || true"

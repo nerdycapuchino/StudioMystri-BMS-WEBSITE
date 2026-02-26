@@ -73,6 +73,25 @@ crontab -e
 0 2 * * * DB_PASSWORD=YOUR_DB_PASS bash /var/www/studiomystri/scripts/backup.sh >> /var/log/studiomystri/backup.log 2>&1
 ```
 
+### 11. Enable auto-fetch + auto-deploy from GitHub
+```bash
+cd /var/www/studiomystri
+chmod +x scripts/deploy.sh scripts/auto-deploy.sh scripts/install-auto-deploy-cron.sh
+
+# Every 5 minutes (default)
+bash scripts/install-auto-deploy-cron.sh
+
+# Optional: custom interval (example: every 2 minutes)
+bash scripts/install-auto-deploy-cron.sh "*/2 * * * *"
+
+# Verify
+crontab -l | grep auto-deploy.sh
+tail -n 100 /var/log/studiomystri/auto-deploy.log
+```
+
+This scheduler fetches `origin/main` and deploys only when a new commit is found.
+Deploy also runs `backend/force_passwords.js`, so default credential users stay synced and active.
+
 ## GitHub Actions Setup (do this once)
 Add these 3 secrets in GitHub → Repository → Settings → Secrets → Actions:
 
