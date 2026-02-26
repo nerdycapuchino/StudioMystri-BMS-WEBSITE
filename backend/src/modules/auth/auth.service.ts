@@ -43,8 +43,15 @@ export const login = async (input: LoginInput) => {
 
     // Timing attack mitigation: always perform a password compare
     const dummyHash = '$2a$10$0G6s0Pz60G6s0Pz60G6s0Ou1o0S0v0I0v0I0v0I0v0I0v0I0v0I'; // Validly formatted Bcrypt hash
-    const passwordToCompare = user ? user.passwordHash : dummyHash;
-    const isPasswordValid = await bcrypt.compare(password, passwordToCompare);
+    const passwordToCompare = user?.passwordHash || dummyHash;
+    let isPasswordValid = false;
+    try {
+        isPasswordValid = await bcrypt.compare(password, passwordToCompare);
+    } catch (err: any) {
+        console.error(`[AUTH ERROR] Password compare failed for ${email}: ${err?.message || err}`);
+        // Treat malformed/missing hash as invalid credentials, not a server crash.
+        isPasswordValid = false;
+    }
 
     if (user && !isPasswordValid) {
         console.log(`[AUTH DEBUG] Invalid password for: ${email}`);
@@ -70,13 +77,18 @@ export const login = async (input: LoginInput) => {
 
     // Store hashed refresh token in DB
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    await prisma.user.update({
-        where: { id: user.id },
-        data: {
-            refreshToken: hashedRefreshToken,
-            lastLogin: new Date(),
-        },
-    });
+    try {
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                refreshToken: hashedRefreshToken,
+                lastLogin: new Date(),
+            },
+        });
+    } catch (err: any) {
+        console.error(`[AUTH ERROR] Failed to persist refresh token for ${email}: ${err?.message || err}`);
+        // Do not block login response if metadata update fails (e.g., drifted DB column).
+    }
 
     // Return user data (without sensitive fields)
     const userResponse = {
