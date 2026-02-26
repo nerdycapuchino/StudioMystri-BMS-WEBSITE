@@ -9,7 +9,7 @@ export const getMembers = () =>
 export const getMessages = (channelId: string, params?: { page?: number; limit?: number }) =>
     api.get('/team/messages', { params: { channelId, ...params } }).then(r => r.data);
 
-export const sendMessage = (data: { content: string; channelId: string }) =>
+export const sendMessage = (data: { content: string; channelId: string; attachments?: string[] }) =>
     api.post('/team/messages', data).then(r => ('data' in r.data ? r.data.data : r.data));
 
 export const createChannel = (data: { name: string; type: 'public' | 'private' | 'dm'; participants: string[] }) =>

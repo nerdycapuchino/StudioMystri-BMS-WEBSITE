@@ -13,6 +13,7 @@ export const useMessages = (channelId: string | null, params?: { page?: number; 
         queryKey: ['team', 'messages', channelId, params],
         queryFn: () => getMessages(channelId!, params),
         enabled: !!channelId,
+        refetchInterval: 5000,
     });
 
 export const useSendMessage = () => {
