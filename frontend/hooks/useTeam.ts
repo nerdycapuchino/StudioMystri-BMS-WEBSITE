@@ -1,9 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { getChannels, getMessages, sendMessage, deleteMessage, createChannel } from '../services/team.service';
+import { getChannels, getMessages, sendMessage, deleteMessage, createChannel, getMembers } from '../services/team.service';
 
 export const useChannels = () =>
     useQuery({ queryKey: ['team', 'channels'], queryFn: getChannels });
+
+export const useMembers = () =>
+    useQuery({ queryKey: ['team', 'members'], queryFn: getMembers });
 
 export const useMessages = (channelId: string | null, params?: { page?: number; limit?: number }) =>
     useQuery({

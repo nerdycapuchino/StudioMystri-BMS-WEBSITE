@@ -8,9 +8,27 @@ import path from 'path';
 const policyPath = path.join(__dirname, "../../../../rbac-policy.json");
 const policy = JSON.parse(fs.readFileSync(policyPath, "utf-8"));
 
+const ensureSystemChannels = async () => {
+    const defaults = ['general', 'finance', 'hr'];
+    for (const name of defaults) {
+        const existing = await prisma.channel.findFirst({ where: { name, type: 'public' } });
+        if (!existing) {
+            await prisma.channel.create({
+                data: { name, type: 'public', participants: [] }
+            });
+        }
+    }
+};
+
+const resolveChannel = async (channelIdentifier: string) => {
+    const byId = await prisma.channel.findUnique({ where: { id: channelIdentifier } });
+    if (byId) return byId;
+    return prisma.channel.findFirst({ where: { name: channelIdentifier } });
+};
+
 const canAccessChannel = async (userId: string, role: string, channelId: string) => {
     if (!role) return false;
-    const channel = await prisma.channel.findUnique({ where: { id: channelId } });
+    const channel = await resolveChannel(channelId);
     if (!channel) return false;
 
     if (channel.type === 'public') {
@@ -32,6 +50,7 @@ const canAccessChannel = async (userId: string, role: string, channelId: string)
 };
 
 export const getChannels = async (userId: string, role: string) => {
+    await ensureSystemChannels();
     // Return channels the user has access to
     const channels = await prisma.channel.findMany({
         orderBy: { name: 'asc' }
@@ -54,6 +73,15 @@ export const getChannels = async (userId: string, role: string) => {
     });
 };
 
+export const getMembers = async () => {
+    const users = await prisma.user.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, email: true, role: true, avatar: true },
+        orderBy: { name: 'asc' }
+    });
+    return users.filter((u) => policy[u.role]?.modules?.['teamhub']?.includes('read'));
+};
+
 export const createChannel = async (data: { name: string, type: 'public' | 'private' | 'dm', participants: string[] }) => {
     return prisma.channel.create({
         data: {
@@ -65,10 +93,14 @@ export const createChannel = async (data: { name: string, type: 'public' | 'priv
 };
 
 export const listMessages = async (channelId: string, userId: string, role: string, query: Record<string, string>) => {
+    await ensureSystemChannels();
+    const channel = await resolveChannel(channelId);
+    if (!channel) throw createError(404, 'Channel not found');
+
     const hasAccess = await canAccessChannel(userId, role, channelId);
     if (!hasAccess) throw createError(403, 'Access denied for this channel');
     const { skip, take, page, limit } = paginate(query);
-    const where = { channelId };
+    const where = { channelId: channel.id };
     const [data, total] = await Promise.all([
         prisma.message.findMany({ where, skip, take, orderBy: { createdAt: 'asc' }, include: { sender: { select: { id: true, name: true, avatar: true } } } }),
         prisma.message.count({ where }),
@@ -77,11 +109,15 @@ export const listMessages = async (channelId: string, userId: string, role: stri
 };
 
 export const sendMessage = async (userId: string, input: SendMessageInput) => {
+    await ensureSystemChannels();
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    const channel = await resolveChannel(input.channelId);
+    if (!channel) throw createError(404, 'Channel not found');
+
     const hasAccess = await canAccessChannel(userId, user?.role || '', input.channelId);
     if (!hasAccess) throw createError(403, 'Access denied for this channel');
     return prisma.message.create({
-        data: { content: input.content, channelId: input.channelId, attachments: input.attachments || [], senderId: userId },
+        data: { content: input.content, channelId: channel.id, attachments: input.attachments || [], senderId: userId },
         include: { sender: { select: { id: true, name: true, avatar: true } } },
     });
 };

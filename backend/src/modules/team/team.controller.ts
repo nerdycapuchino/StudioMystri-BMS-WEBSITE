@@ -7,6 +7,9 @@ import { createError } from '../../middleware/errorHandler';
 export const channels = async (req: Request, res: Response, next: NextFunction) => {
     try { success(res, await svc.getChannels(req.user!.id, req.user!.role)); } catch (e) { next(e); }
 };
+export const members = async (_req: Request, res: Response, next: NextFunction) => {
+    try { success(res, await svc.getMembers()); } catch (e) { next(e); }
+};
 export const create = async (req: Request, res: Response, next: NextFunction) => {
     try { success(res, await svc.createChannel(req.body), 'Channel created', 201); } catch (e) { next(e); }
 };

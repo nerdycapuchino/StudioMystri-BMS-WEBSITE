@@ -3,6 +3,9 @@ import api from './api';
 export const getChannels = () =>
     api.get('/team/channels').then(r => ('data' in r.data ? r.data.data : r.data));
 
+export const getMembers = () =>
+    api.get('/team/members').then(r => ('data' in r.data ? r.data.data : r.data));
+
 export const getMessages = (channelId: string, params?: { page?: number; limit?: number }) =>
     api.get('/team/messages', { params: { channelId, ...params } }).then(r => r.data);
 

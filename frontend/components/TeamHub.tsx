@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useChannels, useMessages, useCreateChannel } from '../hooks/useTeam';
+import { useChannels, useMessages, useCreateChannel, useMembers } from '../hooks/useTeam';
 import { uploadFile } from '../services/team.service';
-import { useEmployees } from '../hooks/useHR';
 import { ChatMessage, Channel } from '../types';
 // Import lucide-react icons that match the Material Symbols used in the template
 import { Plus, Hash, Lock, Search, Paperclip, Send, Bell, Settings, MoreVertical, Menu, Home, Folder, MessageSquare, Users as UsersIcon, X, Mic, Video, Trash2, Download, Smile, AtSign } from 'lucide-react';
@@ -13,17 +12,31 @@ import toast from 'react-hot-toast';
 export const TeamHub: React.FC = () => {
    const { user: currentUser } = useAuth();
    const { data: channelData } = useChannels();
-   const { data: empData } = useEmployees();
+   const { data: membersData } = useMembers();
    const qc = useQueryClient();
 
    const teamChannels: Channel[] = Array.isArray(channelData?.data || channelData) ? (channelData?.data || channelData) as Channel[] : [];
-   const employees: any[] = Array.isArray(empData?.data || empData) ? (empData?.data || empData) as any[] : [];
+   const employees: any[] = Array.isArray(membersData?.data || membersData) ? (membersData?.data || membersData) as any[] : [];
 
-   const initialChannel = teamChannels && teamChannels.length > 0 ? teamChannels[0] : { id: 'general', name: 'general', type: 'public' as const };
+   const initialChannel = teamChannels && teamChannels.length > 0 ? teamChannels[0] : { id: '', name: 'general', type: 'public' as const };
    const [selectedChannel, setSelectedChannel] = useState<Channel>(initialChannel);
 
    const { data: msgData } = useMessages(selectedChannel?.id || null);
-   const teamMessages: ChatMessage[] = Array.isArray(msgData?.data || msgData) ? (msgData?.data || msgData) as ChatMessage[] : [];
+   const rawMessages: any[] = Array.isArray(msgData?.data || msgData) ? (msgData?.data || msgData) as any[] : [];
+   const teamMessages: (ChatMessage & { senderId?: string; senderName: string })[] = rawMessages.map((msg) => {
+      const senderName = typeof msg.sender === 'string' ? msg.sender : (msg.sender?.name || 'Unknown');
+      const senderId = msg.senderId || msg.sender?.id;
+      const timestamp = msg.timestamp || (msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+      const avatar = msg.avatar || (typeof msg.sender === 'object' ? msg.sender?.avatar : '');
+      return {
+         ...msg,
+         sender: senderName,
+         senderName,
+         senderId,
+         timestamp,
+         avatar
+      };
+   });
 
    const [newMessage, setNewMessage] = useState('');
    const [isInCall, setIsInCall] = useState(false);
@@ -53,7 +66,8 @@ export const TeamHub: React.FC = () => {
 
    useEffect(() => {
       if (teamChannels && teamChannels.length > 0 && !teamChannels.find(c => c.id === selectedChannel.id)) {
-         setSelectedChannel(teamChannels[0]);
+         const preferred = teamChannels.find((c) => c.name.toLowerCase() === 'general') || teamChannels[0];
+         setSelectedChannel(preferred);
       }
    }, [teamChannels]);
 
@@ -543,15 +557,16 @@ export const TeamHub: React.FC = () => {
                )}
 
                {currentMessages.map((msg, i) => {
-                  const isSelf = msg.sender === (currentUser?.name || '');
-                  const showAvatar = !isSelf && (i === 0 || currentMessages[i - 1].sender !== msg.sender);
+                  const isSelf = msg.senderId === currentUser?.id || msg.senderName === (currentUser?.name || '');
+                  const showAvatar = !isSelf && (i === 0 || currentMessages[i - 1].senderName !== msg.senderName);
+                  const initials = (msg.senderName || 'U').substring(0, 2).toUpperCase();
 
                   if (isSelf) {
                      return (
                         <div key={msg.id} className="flex gap-3 flex-row-reverse group animate-in slide-in-from-right-4 duration-300">
                            {/* Self Avatar Spacer or Render */}
                            <div className="w-8 h-8 rounded-lg shrink-0 mt-1 flex items-center justify-center bg-primary text-white font-bold text-[10px] uppercase shadow-sm">
-                              {msg.sender.substring(0, 2)}
+                              {initials}
                            </div>
                            <div className="flex flex-col items-end max-w-[85%] md:max-w-2xl">
                               <div className="flex items-baseline gap-2 mb-1 flex-row-reverse">
@@ -572,11 +587,11 @@ export const TeamHub: React.FC = () => {
                      return (
                         <div key={msg.id} className="flex gap-3 group animate-in slide-in-from-left-4 duration-300">
                            <div className={`w-8 h-8 rounded-lg shrink-0 mt-1 flex items-center justify-center font-bold text-[10px] uppercase text-slate-600 bg-slate-200 dark:bg-slate-700 dark:text-slate-300 shadow-sm border border-slate-300 dark:border-slate-600 ${!showAvatar && 'invisible'}`}>
-                              {msg.sender.substring(0, 2)}
+                              {initials}
                            </div>
                            <div className="flex flex-col max-w-[85%] md:max-w-2xl">
                               <div className="flex items-baseline gap-2 mb-1">
-                                 <span className="text-sm font-bold text-slate-900 dark:text-white">{msg.sender}</span>
+                                 <span className="text-sm font-bold text-slate-900 dark:text-white">{msg.senderName}</span>
                                  <span className="text-xs text-slate-400">{msg.timestamp}</span>
                               </div>
                               <div className="bg-white dark:bg-slate-800 p-3 md:p-4 rounded-xl rounded-tl-sm shadow-sm border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm leading-relaxed inline-block break-words max-w-full">
