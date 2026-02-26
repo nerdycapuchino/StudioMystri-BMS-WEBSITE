@@ -13,7 +13,7 @@ adminRouter.get('/settings', ctrl.getSettings);
 
 // All other admin routes require valid token & ADMIN role
 adminRouter.use(verifyToken);
-adminRouter.use(requireRole('ADMIN'));
+adminRouter.use(requireRole('ADMIN', 'SUPER_ADMIN'));
 
 // Users
 adminRouter.get('/users', ctrl.listUsers);

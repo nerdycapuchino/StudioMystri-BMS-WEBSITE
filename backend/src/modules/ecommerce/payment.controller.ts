@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { PrismaClient, PaymentStatus, OrderStatus } from '@prisma/client';
+import { Prisma, PrismaClient, PaymentStatus, OrderStatus } from '@prisma/client';
 import { env } from '../../config/env';
 import { sendOrderConfirmation } from '../../utils/email.service';
 
 const prisma = new PrismaClient();
+const webhookEventModel = (prisma as any).webhookEvent;
 
 /**
  * Razorpay Webhook Handler
@@ -14,6 +15,7 @@ const prisma = new PrismaClient();
  * Idempotent — silently succeeds if order is already PAID.
  */
 export const razorpayWebhook = async (req: Request, res: Response) => {
+    let webhookEventRowId: string | null = null;
     try {
         const webhookSecret = env.RAZORPAY_WEBHOOK_SECRET;
         if (!webhookSecret) {
@@ -40,6 +42,29 @@ export const razorpayWebhook = async (req: Request, res: Response) => {
 
         const event = req.body;
         const eventType = event.event;
+        const headerEventId = req.headers['x-razorpay-event-id'];
+        const fallbackEventId = `${eventType || 'unknown'}:${event.payload?.payment?.entity?.id || 'na'}:${event.payload?.payment?.entity?.order_id || 'na'}`;
+        const eventId = typeof headerEventId === 'string' && headerEventId.trim().length > 0
+            ? headerEventId
+            : fallbackEventId;
+
+        try {
+            const eventRow = await webhookEventModel.create({
+                data: {
+                    gateway: 'razorpay',
+                    eventId,
+                    eventType: eventType || 'unknown',
+                    payload: event,
+                    processed: false,
+                },
+            });
+            webhookEventRowId = eventRow.id;
+        } catch (err: any) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+                return res.status(200).json({ success: true, message: 'Duplicate webhook ignored' });
+            }
+            throw err;
+        }
 
         if (eventType === 'payment.captured') {
             const payment = event.payload?.payment?.entity;
@@ -130,10 +155,23 @@ export const razorpayWebhook = async (req: Request, res: Response) => {
             }
         }
 
+        if (webhookEventRowId) {
+            await webhookEventModel.update({
+                where: { id: webhookEventRowId },
+                data: { processed: true, processedAt: new Date(), error: null },
+            });
+        }
+
         // Always return 200 to Razorpay so it doesn't retry
         res.status(200).json({ success: true });
     } catch (error: any) {
         console.error('Razorpay webhook error:', error);
+        if (webhookEventRowId) {
+            await webhookEventModel.update({
+                where: { id: webhookEventRowId },
+                data: { processed: false, error: error?.message || 'Unknown webhook processing error' },
+            }).catch(() => undefined);
+        }
         // Still return 200 to prevent retries on our side errors
         res.status(200).json({ success: true, message: 'Processed with errors' });
     }
@@ -174,6 +212,9 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+        if (order.paymentGateway !== 'razorpay' || order.paymentReferenceId !== razorpay_order_id) {
+            return res.status(400).json({ success: false, message: 'Payment reference mismatch for order' });
         }
 
         // Idempotent: if already paid, just return success

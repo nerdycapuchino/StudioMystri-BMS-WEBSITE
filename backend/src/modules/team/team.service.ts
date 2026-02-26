@@ -2,6 +2,34 @@ import prisma from '../../config/db';
 import { paginate, paginatedResponse } from '../../utils/pagination';
 import { createError } from '../../middleware/errorHandler';
 import { SendMessageInput } from './team.schema';
+import fs from 'fs';
+import path from 'path';
+
+const policyPath = path.join(__dirname, "../../../../rbac-policy.json");
+const policy = JSON.parse(fs.readFileSync(policyPath, "utf-8"));
+
+const canAccessChannel = async (userId: string, role: string, channelId: string) => {
+    if (!role) return false;
+    const channel = await prisma.channel.findUnique({ where: { id: channelId } });
+    if (!channel) return false;
+
+    if (channel.type === 'public') {
+        const hasTeamhubAccess = policy[role]?.modules?.['teamhub']?.includes('read');
+        if (channel.name.toLowerCase().includes('finance') || channel.name.toLowerCase().includes('invoice')) {
+            return role === 'FINANCE' || role === 'SUPER_ADMIN';
+        }
+        if (channel.name.toLowerCase().includes('hr') || channel.name.toLowerCase().includes('employee')) {
+            return role === 'HR' || role === 'SUPER_ADMIN';
+        }
+        return !!hasTeamhubAccess;
+    }
+
+    if (channel.type === 'dm' || channel.type === 'private') {
+        return channel.participants.includes(userId) || role === 'SUPER_ADMIN';
+    }
+
+    return false;
+};
 
 export const getChannels = async (userId: string, role: string) => {
     // Return channels the user has access to
@@ -11,16 +39,16 @@ export const getChannels = async (userId: string, role: string) => {
 
     // Filter based on RBAC logic (same as socket logic)
     return channels.filter(ch => {
-        if (ch.type === 'public') return true;
-        if (ch.type === 'dm' || ch.type === 'private') {
-            return ch.participants.includes(userId);
-        }
         // Strict mapping for Finance/HR
         if (ch.name.toLowerCase().includes('finance') || ch.name.toLowerCase().includes('invoice')) {
             return role === 'FINANCE' || role === 'SUPER_ADMIN';
         }
         if (ch.name.toLowerCase().includes('hr') || ch.name.toLowerCase().includes('employee')) {
             return role === 'HR' || role === 'SUPER_ADMIN';
+        }
+        if (ch.type === 'public') return true;
+        if (ch.type === 'dm' || ch.type === 'private') {
+            return ch.participants.includes(userId) || role === 'SUPER_ADMIN';
         }
         return true;
     });
@@ -36,7 +64,9 @@ export const createChannel = async (data: { name: string, type: 'public' | 'priv
     });
 };
 
-export const listMessages = async (channelId: string, query: Record<string, string>) => {
+export const listMessages = async (channelId: string, userId: string, role: string, query: Record<string, string>) => {
+    const hasAccess = await canAccessChannel(userId, role, channelId);
+    if (!hasAccess) throw createError(403, 'Access denied for this channel');
     const { skip, take, page, limit } = paginate(query);
     const where = { channelId };
     const [data, total] = await Promise.all([
@@ -47,6 +77,9 @@ export const listMessages = async (channelId: string, query: Record<string, stri
 };
 
 export const sendMessage = async (userId: string, input: SendMessageInput) => {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    const hasAccess = await canAccessChannel(userId, user?.role || '', input.channelId);
+    if (!hasAccess) throw createError(403, 'Access denied for this channel');
     return prisma.message.create({
         data: { content: input.content, channelId: input.channelId, attachments: input.attachments || [], senderId: userId },
         include: { sender: { select: { id: true, name: true, avatar: true } } },

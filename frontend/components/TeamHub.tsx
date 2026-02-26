@@ -82,16 +82,16 @@ export const TeamHub: React.FC = () => {
          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       };
 
-      const onMessageDeleted = ({ messageId, channel }: any) => {
-         if (channel !== selectedChannel.id) return;
+      const onMessageDeleted = ({ messageId, channelId }: any) => {
+         if (channelId !== selectedChannel.id) return;
          qc.setQueryData(['team', 'messages', selectedChannel.id, undefined], (old: any) => ({
             ...old,
             data: (old?.data || []).filter((m: any) => m.id !== messageId)
          }));
       };
 
-      const onTypingUpdate = ({ userName, isTyping, channel }: any) => {
-         if (channel !== selectedChannel.id) return;
+      const onTypingUpdate = ({ userName, isTyping, channelId }: any) => {
+         if (channelId !== selectedChannel.id) return;
          setTypingUsers(prev =>
             isTyping
                ? Array.from(new Set([...prev, userName]))
@@ -104,7 +104,7 @@ export const TeamHub: React.FC = () => {
       };
 
       const onCallStarted = (payload: any) => {
-         if (payload.channel === selectedChannel.id) {
+         if (payload.channelId === selectedChannel.id) {
             setActiveCallInChannel(payload);
          }
       };
@@ -133,7 +133,7 @@ export const TeamHub: React.FC = () => {
             if (signal.sdp.type === 'offer') {
                const answer = await pc.createAnswer();
                await pc.setLocalDescription(answer);
-               socket.emit('webrtc:signal', { targetId: senderId, signal: { sdp: pc.localDescription }, channel: selectedChannel.id });
+               socket.emit('webrtc:signal', { targetId: senderId, signal: { sdp: pc.localDescription }, channelId: selectedChannel.id });
             }
          } else if (signal.ice) {
             await pc.addIceCandidate(new RTCIceCandidate(signal.ice));
@@ -184,7 +184,7 @@ export const TeamHub: React.FC = () => {
 
       pc.onicecandidate = (event) => {
          if (event.candidate) {
-            getSocket().emit('webrtc:signal', { targetId: targetUserId, signal: { ice: event.candidate }, channel: selectedChannel.id });
+            getSocket().emit('webrtc:signal', { targetId: targetUserId, signal: { ice: event.candidate }, channelId: selectedChannel.id });
          }
       };
 
@@ -199,7 +199,7 @@ export const TeamHub: React.FC = () => {
       if (isInitiator) {
          pc.createOffer().then(async offer => {
             await pc.setLocalDescription(offer);
-            getSocket().emit('webrtc:signal', { targetId: targetUserId, signal: { sdp: pc.localDescription }, channel: selectedChannel.id });
+            getSocket().emit('webrtc:signal', { targetId: targetUserId, signal: { sdp: pc.localDescription }, channelId: selectedChannel.id });
          });
       }
 
@@ -211,7 +211,7 @@ export const TeamHub: React.FC = () => {
          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
          streamRef.current = stream;
          setIsInCall(true);
-         getSocket().emit('call:start', { channel: selectedChannel.id });
+         getSocket().emit('call:start', { channelId: selectedChannel.id });
          setTimeout(() => { if (localVideoRef.current) localVideoRef.current.srcObject = stream; }, 100);
       } catch (err) {
          console.error(err);
@@ -224,7 +224,7 @@ export const TeamHub: React.FC = () => {
          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
          streamRef.current = stream;
          setIsInCall(true);
-         getSocket().emit('call:join', { channel: selectedChannel.id });
+         getSocket().emit('call:join', { channelId: selectedChannel.id });
          setTimeout(() => { if (localVideoRef.current) localVideoRef.current.srcObject = stream; }, 100);
       } catch (err) {
          console.error(err);
@@ -240,7 +240,7 @@ export const TeamHub: React.FC = () => {
       peersRef.current.clear();
       setRemoteStreams(new Map());
       setIsInCall(false);
-      try { getSocket().emit('call:end', { channel: selectedChannel.id }); } catch { /* ignore */ }
+      try { getSocket().emit('call:end', { channelId: selectedChannel.id }); } catch { /* ignore */ }
    };
 
    const handleSendMessage = (e?: React.FormEvent) => {

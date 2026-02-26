@@ -171,49 +171,60 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
 
         // ── VIDEO CALLS (WebRTC Signalling) ──
 
-        socket.on('call:start', async (payload: { channelId: string }) => {
-            const hasAccess = await canAccessChannel(userId, socket.data.userRole, payload.channelId);
+        socket.on('call:start', async (payload: { channelId?: string; channel?: string }) => {
+            const channelId = payload.channelId || payload.channel;
+            if (!channelId) return;
+            const hasAccess = await canAccessChannel(userId, socket.data.userRole, channelId);
             if (!hasAccess) return;
 
-            if (!activeCalls.has(payload.channelId)) {
-                activeCalls.set(payload.channelId, { channel: payload.channelId, participants: [userId] });
+            if (!activeCalls.has(channelId)) {
+                activeCalls.set(channelId, { channel: channelId, participants: [userId] });
             }
-            socket.to(`channel:${payload.channelId}`).emit('call:started', { channel: payload.channelId, startedBy: userId });
+            socket.to(`channel:${channelId}`).emit('call:started', { channelId, startedBy: userId });
         });
 
-        socket.on('call:join', async (payload: { channelId: string }) => {
-            const hasAccess = await canAccessChannel(userId, socket.data.userRole, payload.channelId);
+        socket.on('call:join', async (payload: { channelId?: string; channel?: string }) => {
+            const channelId = payload.channelId || payload.channel;
+            if (!channelId) return;
+            const hasAccess = await canAccessChannel(userId, socket.data.userRole, channelId);
             if (!hasAccess) return;
 
-            const call = activeCalls.get(payload.channelId);
+            const call = activeCalls.get(channelId);
             if (call) {
                 if (!call.participants.includes(userId)) {
                     call.participants.push(userId);
                 }
-                socket.to(`channel:${payload.channelId}`).emit('call:user-joined', { userId, channelId: payload.channelId });
+                socket.to(`channel:${channelId}`).emit('call:user-joined', { userId, channelId });
             }
         });
 
-        socket.on('webrtc:signal', (payload: { targetId: string; signal: any; channelId: string }) => {
+        socket.on('webrtc:signal', (payload: { targetId: string; signal: any; channelId?: string; channel?: string }) => {
+            const channelId = payload.channelId || payload.channel;
             // Forward signal to specific user
             io.to(`user:${payload.targetId}`).emit('webrtc:signal', {
                 senderId: userId,
                 signal: payload.signal,
-                channelId: payload.channelId
+                channelId
             });
         });
 
-        socket.on('call:end', (payload: { channelId: string }) => {
-            const call = activeCalls.get(payload.channelId);
+        socket.on('call:end', (payload: { channelId?: string; channel?: string }) => {
+            const channelId = payload.channelId || payload.channel;
+            if (!channelId) return;
+            const call = activeCalls.get(channelId);
             if (call) {
                 call.participants = call.participants.filter(p => p !== userId);
                 if (call.participants.length === 0) {
-                    activeCalls.delete(payload.channelId);
-                    io.to(`channel:${payload.channelId}`).emit('call:ended', { channelId: payload.channelId });
+                    activeCalls.delete(channelId);
+                    io.to(`channel:${channelId}`).emit('call:ended', { channelId });
                 } else {
-                    socket.to(`channel:${payload.channelId}`).emit('call:user-left', { userId, channelId: payload.channelId });
+                    socket.to(`channel:${channelId}`).emit('call:user-left', { userId, channelId });
                 }
             }
+        });
+
+        socket.on('presence:ping', () => {
+            socket.emit('presence:update', Array.from(onlineUsers.keys()));
         });
 
         // ── NOTIFICATIONS ──

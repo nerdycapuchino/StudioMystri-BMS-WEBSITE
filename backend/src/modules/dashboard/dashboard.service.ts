@@ -85,21 +85,20 @@ export const getRecentActivity = async () => {
 };
 
 export const getTopProducts = async () => {
-    const orders = await prisma.order.findMany({
-        select: { items: true },
-        where: { status: 'COMPLETED' },
+    const orderItems = await prisma.orderItem.findMany({
+        where: { order: { orderStatus: 'COMPLETED' } },
+        select: {
+            productId: true,
+            quantity: true,
+            product: { select: { name: true } },
+        },
     });
 
     const productSales: Record<string, { name: string; quantity: number }> = {};
-    for (const order of orders) {
-        const items = order.items as any[];
-        if (!Array.isArray(items)) continue;
-        for (const item of items) {
-            const id = item.productId || item.id;
-            if (!id) continue;
-            if (!productSales[id]) productSales[id] = { name: item.name || 'Unknown', quantity: 0 };
-            productSales[id].quantity += item.quantity || 1;
-        }
+    for (const item of orderItems) {
+        const id = item.productId;
+        if (!productSales[id]) productSales[id] = { name: item.product?.name || 'Unknown', quantity: 0 };
+        productSales[id].quantity += item.quantity || 1;
     }
 
     return Object.entries(productSales)

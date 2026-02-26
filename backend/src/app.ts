@@ -56,8 +56,7 @@ app.use(
             ) {
                 callback(null, true);
             } else {
-                // For production, strictly enforce allowedOrigins
-                callback(null, true); // TEMPORARILY allow all for smooth development
+                callback(new Error('Not allowed by CORS'));
             }
         },
         credentials: true,
