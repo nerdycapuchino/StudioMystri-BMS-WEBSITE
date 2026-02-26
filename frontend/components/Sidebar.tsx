@@ -3,15 +3,54 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { can } from '../src/lib/rbac';
 
+type NavItem = {
+    to: string;
+    icon: string;
+    label: string;
+    show: boolean;
+    badge?: string;
+};
+
+const navClass = ({ isActive }: { isActive: boolean }) =>
+    [
+        'group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all',
+        isActive
+            ? 'bg-primary text-white shadow-md shadow-primary/20'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
+    ].join(' ');
+
+const sectionTitleClass = 'px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1';
+
 export const Sidebar: React.FC = () => {
     const { user } = useAuth();
     const firstName = user?.name?.split(' ')[0] || 'User';
     const role = user?.role || 'CUSTOMER';
 
+    const pipelineItems: NavItem[] = [
+        { to: '/crm', icon: 'rocket_launch', label: 'CRM Pipeline', show: can(role, 'crm', 'read') },
+        { to: '/clients', icon: 'group', label: 'Clients', show: can(role, 'crm', 'read') },
+        { to: '/pos', icon: 'point_of_sale', label: 'POS Terminal', show: can(role, 'finance', 'create') || can(role, 'crm', 'read') },
+        { to: '/orders', icon: 'shopping_cart', label: 'Orders', show: can(role, 'ecommerce', 'read') },
+    ];
+
+    const executionItems: NavItem[] = [
+        { to: '/projects', icon: 'architecture', label: 'Projects', show: can(role, 'projects', 'read') },
+        { to: '/inventory', icon: 'inventory_2', label: 'Warehouse', show: can(role, 'projects', 'read'), badge: '3 LOW' },
+        { to: '/logistics', icon: 'local_shipping', label: 'Logistics', show: can(role, 'inventory', 'read') },
+        { to: '/scanner', icon: 'qr_code_scanner', label: 'Universal Scanner', show: true },
+    ];
+
+    const orgItems: NavItem[] = [
+        { to: '/finance', icon: 'payments', label: 'Finance & Invoicing', show: can(role, 'finance', 'read') },
+        { to: '/erp', icon: 'settings_suggest', label: 'ERP Core', show: can(role, 'auth', 'read') },
+        { to: '/hr', icon: 'badge', label: 'HR Management', show: can(role, 'hr', 'read') },
+        { to: '/team-hub', icon: 'forum', label: 'Team Hub', show: can(role, 'teamhub', 'read') },
+        { to: '/settings', icon: 'settings', label: 'System Settings', show: can(role, 'auth', 'update') },
+    ];
+
     return (
-        <aside className="flex w-64 flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto shrink-0 transition-colors duration-300">
+        <aside className="flex w-64 flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto shrink-0">
             <div>
-                {/* Header */}
                 <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/30">
                         <span className="material-symbols-outlined">architecture</span>
@@ -22,230 +61,44 @@ export const Sidebar: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Nav Links */}
                 <nav className="flex flex-col gap-1.5 px-4 mt-6">
-                    <NavLink
-                        to="/dashboard"
-                        className={({ isActive }) =>
-                            `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            } `
-                        }
-                    >
+                    <NavLink to="/dashboard" className={navClass}>
                         <span className="material-symbols-outlined" data-weight="fill">dashboard</span>
                         <span className="text-sm font-medium">Dashboard</span>
                     </NavLink>
 
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
-                    <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Pipeline & Sales</p>
-
-                    {can(role, 'crm', 'read') && (
-                        <>
-                            <NavLink
-                                to="/crm"
-                                className={({ isActive }) =>
-                                    `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    } `
-                                }
-                            >
-                                <span className="material-symbols-outlined">rocket_launch</span>
-                                <span className="text-sm font-medium">CRM Pipeline</span>
-                            </NavLink>
-
-                            <NavLink
-                                to="/clients"
-                                className={({ isActive }) =>
-                                    `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    } `
-                                }
-                            >
-                                <span className="material-symbols-outlined">group</span>
-                                <span className="text-sm font-medium">Clients</span>
-                            </NavLink>
-                        </>
-                    )}
-
-                    {/* POS Terminal only needs partial ecommerce/finance read depending on standard logic, matching original POS_ROLES intent */}
-                    {(can(role, 'finance', 'create') || can(role, 'crm', 'read')) && (
-                        <NavLink
-                            to="/pos"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">point_of_sale</span>
-                            <span className="text-sm font-medium">POS Terminal</span>
+                    <p className={sectionTitleClass}>Pipeline & Sales</p>
+                    {pipelineItems.filter((item) => item.show).map((item) => (
+                        <NavLink key={item.to} to={item.to} className={navClass}>
+                            <span className="material-symbols-outlined">{item.icon}</span>
+                            <span className="text-sm font-medium">{item.label}</span>
                         </NavLink>
-                    )}
-
-                    {can(role, 'ecommerce', 'read') && (
-                        <NavLink
-                            to="/orders"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">shopping_cart</span>
-                            <span className="text-sm font-medium">Orders</span>
-                        </NavLink>
-                    )}
+                    ))}
 
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
-                    <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Execution & Supply</p>
-
-                    {can(role, 'projects', 'read') && (
-                        <>
-                            <NavLink
-                                to="/projects"
-                                className={({ isActive }) =>
-                                    `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    } `
-                                }
-                            >
-                                <span className="material-symbols-outlined">architecture</span>
-                                <span className="text-sm font-medium">Projects</span>
-                            </NavLink>
-
-                            <NavLink
-                                to="/inventory"
-                                className={({ isActive }) =>
-                                    `group flex items - center justify - between rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                    } `
-                                }
-                            >
-                                <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined">inventory_2</span>
-                                    <span className="text-sm font-medium">Warehouse</span>
-                                </div>
-                                <span className="bg-red-500/20 text-red-500 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3 LOW</span>
-                            </NavLink>
-                        </>
-                    )}
-
-                    {can(role, 'inventory', 'read') && (
-                        <NavLink
-                            to="/logistics"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">local_shipping</span>
-                            <span className="text-sm font-medium">Logistics</span>
+                    <p className={sectionTitleClass}>Execution & Supply</p>
+                    {executionItems.filter((item) => item.show).map((item) => (
+                        <NavLink key={item.to} to={item.to} className={navClass}>
+                            <span className="material-symbols-outlined">{item.icon}</span>
+                            <div className="flex items-center justify-between w-full">
+                                <span className="text-sm font-medium">{item.label}</span>
+                                {item.badge && <span className="bg-red-500/20 text-red-500 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.badge}</span>}
+                            </div>
                         </NavLink>
-                    )}
-
-                    <NavLink
-                        to="/scanner"
-                        className={({ isActive }) =>
-                            `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                            } `
-                        }
-                    >
-                        <span className="material-symbols-outlined">qr_code_scanner</span>
-                        <span className="text-sm font-medium">Universal Scanner</span>
-                    </NavLink>
+                    ))}
 
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
-                    <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Organization</p>
-
-                    {can(role, 'finance', 'read') && (
-                        <NavLink
-                            to="/finance"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">payments</span>
-                            <span className="text-sm font-medium">Finance & Invoicing</span>
+                    <p className={sectionTitleClass}>Organization</p>
+                    {orgItems.filter((item) => item.show).map((item) => (
+                        <NavLink key={item.to} to={item.to} className={navClass}>
+                            <span className="material-symbols-outlined">{item.icon}</span>
+                            <span className="text-sm font-medium">{item.label}</span>
                         </NavLink>
-                    )}
-
-                    {can(role, 'auth', 'read') && (
-                        <NavLink
-                            to="/erp"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">settings_suggest</span>
-                            <span className="text-sm font-medium">ERP Core</span>
-                        </NavLink>
-                    )}
-
-                    {can(role, 'hr', 'read') && (
-                        <NavLink
-                            to="/hr"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">badge</span>
-                            <span className="text-sm font-medium">HR Management</span>
-                        </NavLink>
-                    )}
-
-                    {can(role, 'teamhub', 'read') && (
-                        <NavLink
-                            to="/team-hub"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">forum</span>
-                            <span className="text-sm font-medium">Team Hub</span>
-                        </NavLink>
-                    )}
-
-                    {can(role, 'auth', 'update') && (
-                        <NavLink
-                            to="/settings"
-                            className={({ isActive }) =>
-                                `group flex items - center gap - 3 rounded - lg px - 3 py - 2.5 transition - all ${isActive
-                                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                                } `
-                            }
-                        >
-                            <span className="material-symbols-outlined">settings</span>
-                            <span className="text-sm font-medium">System Settings</span>
-                        </NavLink>
-                    )}
+                    ))}
                 </nav>
             </div>
 
-            {/* Bottom System Status */}
             <div className="p-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-3 mb-2">
