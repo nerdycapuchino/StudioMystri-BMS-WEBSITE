@@ -34,6 +34,17 @@ interface QueueItem {
 let isRefreshing = false;
 let failedQueue: QueueItem[] = [];
 
+const shouldSkipRefreshFlow = (url?: string): boolean => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    return (
+        lowerUrl.includes('/auth/login') ||
+        lowerUrl.includes('/auth/refresh') ||
+        lowerUrl.includes('/auth/logout') ||
+        lowerUrl.includes('/auth/reset-password')
+    );
+};
+
 const processQueue = (error: unknown, token: string | null = null) => {
     failedQueue.forEach((prom) => {
         if (token) prom.resolve(token);
@@ -46,8 +57,9 @@ api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const skipRefresh = shouldSkipRefreshFlow(originalRequest?.url);
 
-        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !skipRefresh) {
             if (isRefreshing) {
                 return new Promise<string>((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
