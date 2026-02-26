@@ -110,7 +110,7 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
         });
 
         // New message
-        socket.on('message:send', async (payload: { channelId: string; content?: string; type?: 'TEXT' | 'FILE' | 'IMAGE'; fileUrl?: string; fileName?: string; fileSize?: number; mentions?: string[]; attachments?: string[] }) => {
+        socket.on('message:send', async (payload: { channelId: string; content: string; attachments?: string[] }) => {
             try {
                 const hasAccess = await canAccessChannel(userId, socket.data.userRole, payload.channelId);
                 if (!hasAccess) {
@@ -120,12 +120,7 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
                 const message = await prisma.message.create({
                     data: {
                         senderId: userId,
-                        content: payload.content || '',
-                        type: payload.type || 'TEXT',
-                        fileUrl: payload.fileUrl,
-                        fileName: payload.fileName,
-                        fileSize: payload.fileSize,
-                        mentions: payload.mentions || [],
+                        content: payload.content,
                         channelId: payload.channelId,
                         attachments: payload.attachments || [],
                     },
@@ -134,19 +129,7 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
 
                 io.to(`channel:${payload.channelId}`).emit('message:new', message);
 
-                logActivity(prisma, userId, 'TEAM', 'CREATE', message.id, { channel: payload.channelId, type: message.type }, 'socket');
-
-                // Trigger Mentions Notifications
-                if (payload.mentions && payload.mentions.length > 0) {
-                    const channel = await prisma.channel.findUnique({ where: { id: payload.channelId } });
-                    for (const mentionedId of payload.mentions) {
-                        pushNotification(io, mentionedId, {
-                            title: 'New Mention',
-                            message: `${socket.data.userName} mentioned you in ${channel?.name || 'a channel'}`,
-                            type: 'MENTION'
-                        });
-                    }
-                }
+                logActivity(prisma, userId, 'TEAM', 'CREATE', message.id, { channel: payload.channelId }, 'socket');
             } catch (err) {
                 socket.emit('error', { message: 'Failed to send message' });
             }
@@ -156,7 +139,7 @@ export const registerSocketHandlers = (io: SocketIOServer) => {
         socket.on('typing:start', async (channelId: string) => {
             socket.to(`channel:${channelId}`).emit('typing:update', {
                 userId,
-                userName: socket.data.userName, // Broadcasts standard display name
+                userName: socket.data.userName,
                 isTyping: true,
                 channelId,
             });

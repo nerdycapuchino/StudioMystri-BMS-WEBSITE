@@ -80,14 +80,11 @@
     --glass-border: rgba(255, 255, 255, 0.05);
   }
 
-  html, body, #root {
-    height: 100%;
-  }
-
   body {
     font-family: 'Public Sans', 'Inter', sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
+    min-height: 100vh;
   }
 
   html.dark body {

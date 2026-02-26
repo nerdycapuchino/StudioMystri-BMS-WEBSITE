@@ -419,19 +419,14 @@ model Channel {
 }
 
 model Message {
-  id          String      @id @default(uuid())
-  content     String?
-  type        MessageType @default(TEXT)
-  fileUrl     String?
-  fileName    String?
-  fileSize    Int?
-  mentions    String[]    @default([])
-  channelId   String      @default("general")
-  attachments Json?
+  id          String   @id @default(uuid())
+  content     String
+  channelId   String   @default("general")
+  attachments String[] @default([])
   senderId    String
-  createdAt   DateTime    @default(now())
-  sender      User        @relation(fields: [senderId], references: [id])
-  channel     Channel     @relation(fields: [channelId], references: [id])
+  createdAt   DateTime @default(now())
+  sender      User     @relation(fields: [senderId], references: [id])
+  channel     Channel  @relation(fields: [channelId], references: [id])
 
   @@map("messages")
 }
@@ -725,12 +720,6 @@ model EmailLog {
 enum DiscountType {
   FLAT
   PERCENT
-}
-
-enum MessageType {
-  TEXT
-  FILE
-  IMAGE
 }
 
 // ─── COMPLIANCE & TAXATION MODELS ───────────────────────────────────────────

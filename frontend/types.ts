@@ -350,16 +350,9 @@ export interface ChatMessage {
   id: string;
   channelId: string;
   sender: string;
-  senderId?: string;
   content: string;
   timestamp: string;
   avatar: string;
-  type?: 'TEXT' | 'FILE' | 'IMAGE';
-  fileUrl?: string;
-  fileName?: string;
-  fileSize?: number;
-  mentions?: string[];
-  attachments?: string[];
 }
 
 export interface Channel {

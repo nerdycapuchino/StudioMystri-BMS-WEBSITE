@@ -8,8 +8,6 @@ import { Plus, Hash, Lock, Search, Paperclip, Send, Bell, Settings, MoreVertical
 import { getSocket } from '../services/socket';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
 
 export const TeamHub: React.FC = () => {
    const { user: currentUser } = useAuth();
@@ -60,48 +58,11 @@ export const TeamHub: React.FC = () => {
    const [newChannelName, setNewChannelName] = useState('');
    const [newChannelType, setNewChannelType] = useState<'public' | 'private'>('public');
 
-   const playBeep = () => {
-      try {
-         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-         const osc = ctx.createOscillator();
-         const gain = ctx.createGain();
-         osc.connect(gain);
-         gain.connect(ctx.destination);
-         osc.type = 'sine';
-         osc.frequency.setValueAtTime(880, ctx.currentTime);
-         gain.gain.setValueAtTime(0.1, ctx.currentTime);
-         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-         osc.start();
-         osc.stop(ctx.currentTime + 0.1);
-      } catch { /* ignore audio context failure */ }
-   };
-
    // Mobile Sidebar State
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
    const [attachments, setAttachments] = useState<string[]>([]);
    const [isUploading, setIsUploading] = useState(false);
    const fileInputRef = useRef<HTMLInputElement>(null);
-   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-   const emojiPickerRef = useRef<HTMLDivElement>(null);
-
-   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
-   const [mentionSearch, setMentionSearch] = useState('');
-   const [cursorPosition, setCursorPosition] = useState<number | null>(null);
-   const mentionRef = useRef<HTMLDivElement>(null);
-
-   useEffect(() => {
-      const handleClickOutside = (e: MouseEvent) => {
-         if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
-            setShowEmojiPicker(false);
-         }
-         if (mentionRef.current && !mentionRef.current.contains(e.target as Node)) {
-            setShowMentionDropdown(false);
-         }
-      };
-      if (showEmojiPicker || showMentionDropdown) document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-   }, [showEmojiPicker, showMentionDropdown]);
 
    useEffect(() => {
       if (teamChannels && teamChannels.length > 0 && !teamChannels.find(c => c.id === selectedChannel.id)) {
@@ -126,25 +87,12 @@ export const TeamHub: React.FC = () => {
       socket.emit('channel:join', selectedChannel.id);
 
       const onNewMessage = (message: any) => {
-         if (message.channelId !== selectedChannel.id) {
-            playBeep();
-            return;
-         }
-
-         // Only add to cache if not already placed via optimistic update
-         qc.setQueryData(['team', 'messages', selectedChannel.id, undefined], (old: any) => {
-            const data = old?.data || [];
-            if (data.find((m: any) => m.id === message.id)) return old; // Already handled optimistically
-
-            // Remove temp message if it matches sender and content
-            const filtered = data.filter((m: any) => !(m.id.startsWith('temp-') && m.content === message.content && m.senderId === message.senderId));
-            return {
-               ...old,
-               data: [...filtered, message]
-            };
-         });
-
-         // Ensure auto scroll to bottom for new messages
+         if (message.channelId !== selectedChannel.id) return;
+         qc.setQueryData(['team', 'messages', selectedChannel.id, undefined], (old: any) => ({
+            ...old,
+            data: [...(old?.data || []), message]
+         }));
+         // Scroll on new message
          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       };
 
@@ -309,97 +257,19 @@ export const TeamHub: React.FC = () => {
       try { getSocket().emit('call:end', { channelId: selectedChannel.id }); } catch { /* ignore */ }
    };
 
-   const handleEmojiSelect = (emoji: any) => {
-      const cursor = textAreaRef.current?.selectionStart || newMessage.length;
-      const text = newMessage.slice(0, cursor) + emoji.native + newMessage.slice(cursor);
-      setNewMessage(text);
-      setShowEmojiPicker(false);
-      setTimeout(() => {
-         if (textAreaRef.current) {
-            textAreaRef.current.selectionStart = cursor + emoji.native.length;
-            textAreaRef.current.selectionEnd = cursor + emoji.native.length;
-            textAreaRef.current.focus();
-         }
-      }, 10);
-   };
-
-   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value;
-      setNewMessage(value);
-
-      const cursor = e.target.selectionStart;
-      const textBeforeCursor = value.slice(0, cursor);
-      const match = textBeforeCursor.match(/@(\w*)$/);
-
-      if (match) {
-         setShowMentionDropdown(true);
-         setMentionSearch(match[1]);
-         setCursorPosition(cursor);
-      } else {
-         setShowMentionDropdown(false);
-      }
-   };
-
-   const handleMentionSelect = (user: any) => {
-      if (cursorPosition === null) return;
-      const textBeforeCursor = newMessage.slice(0, cursorPosition);
-      const textAfterCursor = newMessage.slice(cursorPosition);
-
-      const match = textBeforeCursor.match(/@(\w*)$/);
-      if (!match) return;
-
-      const newPrefix = textBeforeCursor.slice(0, match.index) + `@${user.name} `;
-      setNewMessage(newPrefix + textAfterCursor);
-      setShowMentionDropdown(false);
-
-      setTimeout(() => {
-         if (textAreaRef.current) {
-            const newCursorPos = newPrefix.length;
-            textAreaRef.current.selectionStart = newCursorPos;
-            textAreaRef.current.selectionEnd = newCursorPos;
-            textAreaRef.current.focus();
-         }
-      }, 10);
-   };
-
    const handleSendMessage = (e?: React.FormEvent) => {
       if (e) e.preventDefault();
       if ((!newMessage.trim() && attachments.length === 0) || !currentUser) return;
-
-      const mentionedIds = employees
-         .filter(emp => newMessage.includes(`@${emp.name}`))
-         .map(emp => emp.id);
-
-      const tempId = `temp-${Date.now()}`;
-
-      // Optimistic update
-      qc.setQueryData(['team', 'messages', selectedChannel.id, undefined], (old: any) => ({
-         ...old,
-         data: [...(old?.data || []), {
-            id: tempId,
-            channelId: selectedChannel.id,
-            content: newMessage,
-            senderId: currentUser.id,
-            senderName: currentUser.name,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            attachments: attachments,
-            type: attachments.length > 0 ? 'FILE' : 'TEXT'
-         }]
-      }));
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-
       try {
          const socket = getSocket();
          socket.emit('message:send', {
             channelId: selectedChannel.id,
             content: newMessage,
-            attachments: attachments,
-            mentions: mentionedIds
+            attachments: attachments
          });
       } catch { /* socket not ready */ }
       setNewMessage('');
       setAttachments([]);
-      setShowMentionDropdown(false);
    };
 
    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -435,7 +305,7 @@ export const TeamHub: React.FC = () => {
          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
          typingTimeoutRef.current = setTimeout(() => {
             try { socket.emit('typing:stop', selectedChannel.id); } catch { /* ignore */ }
-         }, 3000);
+         }, 2000);
       } catch { /* socket not ready */ }
    };
 
@@ -521,7 +391,7 @@ export const TeamHub: React.FC = () => {
    };
 
    return (
-      <div className="flex flex-col md:flex-row h-screen w-full bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display overflow-hidden relative">
+      <div className="flex flex-col md:flex-row h-full w-full bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display overflow-hidden relative">
 
          {/* Mobile Header */}
          <div className="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
@@ -624,7 +494,7 @@ export const TeamHub: React.FC = () => {
          )}
 
          {/* Main Content Area */}
-         <main className="flex-1 flex flex-col h-screen min-h-0 relative min-w-0 bg-background-light dark:bg-background-dark">
+         <main className="flex-1 flex flex-col h-full relative min-w-0 bg-background-light dark:bg-background-dark">
 
             {/* Chat Header */}
             <header className="flex items-center justify-between px-4 md:px-6 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
@@ -638,20 +508,18 @@ export const TeamHub: React.FC = () => {
 
                <div className="flex items-center gap-2 md:gap-4 shrink-0">
                   {/* Participants Avatar Group (Hidden on tiny screens) */}
-                  {selectedChannel.type !== 'dm' && (
-                     <div className="hidden sm:flex -space-x-2 mr-2">
-                        {employees.slice(0, 3).map((emp, i) => (
-                           <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">
-                              {emp.name.substring(0, 2)}
-                           </div>
-                        ))}
-                        {employees.length > 3 && (
-                           <div className="flex items-center justify-center w-8 h-8 text-xs font-medium text-white bg-slate-400 border-2 border-white dark:border-slate-900 rounded-full hover:bg-slate-500 z-10">
-                              +{employees.length - 3}
-                           </div>
-                        )}
-                     </div>
-                  )}
+                  <div className="hidden sm:flex -space-x-2 mr-2">
+                     {employees.slice(0, 3).map((emp, i) => (
+                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">
+                           {emp.name.substring(0, 2)}
+                        </div>
+                     ))}
+                     {employees.length > 3 && (
+                        <div className="flex items-center justify-center w-8 h-8 text-xs font-medium text-white bg-slate-400 border-2 border-white dark:border-slate-900 rounded-full hover:bg-slate-500 z-10">
+                           +{employees.length - 3}
+                        </div>
+                     )}
+                  </div>
 
                   <div className="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
 
@@ -678,7 +546,7 @@ export const TeamHub: React.FC = () => {
             </header>
 
             {/* Messages Stream */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6 space-y-6 flex flex-col custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 flex flex-col custom-scrollbar">
 
                {currentMessages.length === 0 && (
                   <div className="flex-1 flex flex-col items-center justify-center opacity-40 py-10">
@@ -706,27 +574,7 @@ export const TeamHub: React.FC = () => {
                                  <span className="text-xs text-slate-400">{msg.timestamp}</span>
                               </div>
                               <div className="bg-primary/10 dark:bg-primary/20 p-3 md:p-4 rounded-xl rounded-tr-sm text-slate-800 dark:text-slate-100 text-sm leading-relaxed relative border border-primary/20 dark:border-primary/10 inline-block text-left break-words max-w-full">
-                                 {msg.content && <div>{msg.content}</div>}
-                                 {msg.attachments && msg.attachments.length > 0 && (
-                                    <div className="mt-2 space-y-2">
-                                       {msg.attachments.map((url: string, idx: number) => {
-                                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-                                          const name = msg.fileName || url.split('/').pop() || 'attachment';
-                                          if (isImage) {
-                                             return <img key={idx} src={url} alt={name} className="max-w-xs md:max-w-md rounded-lg shadow-sm border border-slate-200/50 dark:border-slate-700/50" />;
-                                          }
-                                          return (
-                                             <a key={idx} href={url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg border border-primary/20 hover:bg-white dark:hover:bg-slate-800 transition-colors max-w-sm">
-                                                <div className="p-2 bg-primary/20 rounded-lg text-primary"><Download className="w-4 h-4" /></div>
-                                                <div className="flex-1 min-w-0">
-                                                   <p className="text-sm font-semibold truncate">{name}</p>
-                                                   <p className="text-xs text-slate-500">Download file</p>
-                                                </div>
-                                             </a>
-                                          );
-                                       })}
-                                    </div>
-                                 )}
+                                 {msg.content}
                                  <button type="button" onClick={() => handleDeleteMessage(msg.id)} className="absolute opacity-0 group-hover:opacity-100 -left-10 top-1/2 -translate-y-1/2 p-2 hover:text-red-500 text-slate-400 transition-all rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                                     <Trash2 className="w-4 h-4" />
                                  </button>
@@ -747,27 +595,7 @@ export const TeamHub: React.FC = () => {
                                  <span className="text-xs text-slate-400">{msg.timestamp}</span>
                               </div>
                               <div className="bg-white dark:bg-slate-800 p-3 md:p-4 rounded-xl rounded-tl-sm shadow-sm border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm leading-relaxed inline-block break-words max-w-full">
-                                 {msg.content && <div>{msg.content}</div>}
-                                 {msg.attachments && msg.attachments.length > 0 && (
-                                    <div className="mt-2 space-y-2">
-                                       {msg.attachments.map((url: string, idx: number) => {
-                                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-                                          const name = msg.fileName || url.split('/').pop() || 'attachment';
-                                          if (isImage) {
-                                             return <img key={idx} src={url} alt={name} className="max-w-xs md:max-w-md rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" />;
-                                          }
-                                          return (
-                                             <a key={idx} href={url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors max-w-sm">
-                                                <div className="p-2 bg-slate-200 dark:bg-slate-600 rounded-lg text-slate-600 dark:text-slate-300"><Download className="w-4 h-4" /></div>
-                                                <div className="flex-1 min-w-0">
-                                                   <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">{name}</p>
-                                                   <p className="text-xs text-slate-500">Download file</p>
-                                                </div>
-                                             </a>
-                                          );
-                                       })}
-                                    </div>
-                                 )}
+                                 {msg.content}
                               </div>
                            </div>
                         </div>
@@ -791,25 +619,12 @@ export const TeamHub: React.FC = () => {
                <div className="max-w-5xl mx-auto">
                   <div className="relative flex flex-col bg-background-light dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
                      <textarea
-                        ref={textAreaRef}
                         value={newMessage}
-                        onChange={handleTextChange}
+                        onChange={e => setNewMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
                         className="w-full bg-transparent border-none focus:ring-0 p-3 pt-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 resize-none min-h-[60px] outline-none"
                         placeholder={`Message ${selectedChannel.type === 'dm' ? '@' : '#'}${selectedChannel.name}...`}
                      />
-                     {showMentionDropdown && (
-                        <div ref={mentionRef} className="absolute bottom-full left-4 mb-2 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 max-h-48 overflow-y-auto z-50">
-                           {employees
-                              .filter(e => (selectedChannel.type === 'public' || selectedChannel.participantIds?.includes(e.id)) && e.name.toLowerCase().includes(mentionSearch.toLowerCase()))
-                              .map(emp => (
-                                 <button key={emp.id} onClick={() => handleMentionSelect(emp)} className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors">
-                                    <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold uppercase">{emp.name.substring(0, 2)}</div>
-                                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{emp.name}</span>
-                                 </button>
-                              ))}
-                        </div>
-                     )}
                      {attachments.length > 0 && (
                         <div className="flex flex-wrap gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700/50">
                            {attachments.map((url, i) => (
@@ -840,20 +655,10 @@ export const TeamHub: React.FC = () => {
                               className="hidden"
                               onChange={handleFileUpload}
                            />
-                           <div className="relative flex" ref={emojiPickerRef}>
-                              <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block" title="Emoji">
-                                 <Smile className="w-4 h-4" />
-                              </button>
-                              {showEmojiPicker && (
-                                 <div className="absolute bottom-12 left-0 z-50 shadow-2xl rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-                                    <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="auto" />
-                                 </div>
-                              )}
-                           </div>
-                           <button
-                              onClick={() => handleTextChange({ target: { value: newMessage + '@', selectionStart: newMessage.length + 1 } } as any)}
-                              className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block" title="Mention"
-                           >
+                           <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block" title="Emoji">
+                              <Smile className="w-4 h-4" />
+                           </button>
+                           <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors hidden sm:block" title="Mention">
                               <AtSign className="w-4 h-4" />
                            </button>
                         </div>
