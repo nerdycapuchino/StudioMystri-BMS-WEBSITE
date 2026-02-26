@@ -26,6 +26,18 @@ export const send = async (req: Request, res: Response, next: NextFunction) => {
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
     try { await svc.deleteMessage(req.params.id, req.user!.id, req.user!.role); success(res, null, 'Message deleted'); } catch (e) { next(e); }
 };
+export const clearConversation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const deleted = await svc.clearConversation(req.params.channelId, req.user!.id, req.user!.role);
+        success(res, { deleted }, 'Conversation cleared');
+    } catch (e) { next(e); }
+};
+export const reportConversation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        await svc.reportConversation(req.user!.id, req.user!.role, req.body);
+        success(res, null, 'Conversation reported');
+    } catch (e) { next(e); }
+};
 export const uploadAttachment = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.file) throw new Error('No file uploaded');

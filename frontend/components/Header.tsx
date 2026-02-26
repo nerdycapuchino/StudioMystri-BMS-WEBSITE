@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSearch } from '../hooks/useSearch';
 import { useNavigate } from 'react-router-dom';
+import { useMarkAllRead, useNotifications, useUnreadCount } from '../hooks/useNotifications';
 
 export const Header: React.FC = () => {
     const { logout } = useAuth();
     const [query, setQuery] = useState('');
+    const [showNotifications, setShowNotifications] = useState(false);
     const { data: results, isFetching: isSearching } = useSearch(query);
+    const { data: notifications } = useNotifications({ page: 1, limit: 8 });
+    const { data: unreadCount = 0 } = useUnreadCount();
+    const markAllRead = useMarkAllRead();
     const navigate = useNavigate();
 
     const handleSelectResult = (path: string) => {
@@ -76,10 +81,37 @@ export const Header: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition group">
+                <button
+                    type="button"
+                    onClick={() => {
+                        setShowNotifications((prev) => !prev);
+                        if (unreadCount > 0) markAllRead.mutate();
+                    }}
+                    className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition group"
+                    aria-label="Notifications"
+                >
                     <span className="material-symbols-outlined group-hover:scale-110 transition-transform">notifications</span>
-                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"></span>
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
                 </button>
+                {showNotifications && (
+                    <div className="absolute right-28 top-14 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 text-sm font-semibold">Notifications</div>
+                        <div className="max-h-80 overflow-y-auto">
+                            {(notifications as any)?.data?.length ? (notifications as any).data.map((n: any) => (
+                                <div key={n.id} className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                                    <div className="text-sm font-semibold text-slate-900 dark:text-white">{n.title}</div>
+                                    <div className="text-xs text-slate-500 mt-1">{n.message}</div>
+                                </div>
+                            )) : (
+                                <div className="px-4 py-6 text-sm text-slate-500">No notifications.</div>
+                            )}
+                        </div>
+                    </div>
+                )}
                 <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
                 <button
                     onClick={() => logout()}

@@ -22,3 +22,21 @@ export const uploadFile = (formData: FormData) =>
     api.post('/team/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }).then(r => r.data);
+
+export const uploadFileWithProgress = (
+    formData: FormData,
+    onProgress?: (percent: number) => void
+) =>
+    api.post('/team/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (evt) => {
+            if (!evt.total || !onProgress) return;
+            onProgress(Math.round((evt.loaded * 100) / evt.total));
+        }
+    }).then(r => r.data);
+
+export const clearConversation = (channelId: string) =>
+    api.delete(`/team/conversations/${channelId}`).then(r => r.data);
+
+export const reportConversation = (data: { channelId: string; reason: string; details?: string }) =>
+    api.post('/team/conversations/report', data).then(r => r.data);

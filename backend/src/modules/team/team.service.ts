@@ -1,7 +1,7 @@
 import prisma from '../../config/db';
 import { paginate, paginatedResponse } from '../../utils/pagination';
 import { createError } from '../../middleware/errorHandler';
-import { SendMessageInput } from './team.schema';
+import { ReportConversationInput, SendMessageInput } from './team.schema';
 import fs from 'fs';
 import path from 'path';
 
@@ -127,4 +127,44 @@ export const deleteMessage = async (id: string, userId: string, userRole: string
     if (!msg) throw createError(404, 'Message not found');
     if (msg.senderId !== userId && userRole !== 'SUPER_ADMIN') throw createError(403, 'Permission denied');
     return prisma.message.delete({ where: { id } });
+};
+
+export const clearConversation = async (channelId: string, userId: string, role: string) => {
+    const channel = await resolveChannel(channelId);
+    if (!channel) throw createError(404, 'Channel not found');
+    const hasAccess = await canAccessChannel(userId, role, channelId);
+    if (!hasAccess) throw createError(403, 'Access denied for this channel');
+
+    // Non-admins can only clear their own sent messages.
+    const where = role === 'SUPER_ADMIN' || role === 'ADMIN'
+        ? { channelId: channel.id }
+        : { channelId: channel.id, senderId: userId };
+
+    const result = await prisma.message.deleteMany({ where });
+    return result.count;
+};
+
+export const reportConversation = async (userId: string, role: string, input: ReportConversationInput) => {
+    const channel = await resolveChannel(input.channelId);
+    if (!channel) throw createError(404, 'Channel not found');
+    const hasAccess = await canAccessChannel(userId, role, input.channelId);
+    if (!hasAccess) throw createError(403, 'Access denied for this channel');
+
+    const admins = await prisma.user.findMany({
+        where: { role: 'SUPER_ADMIN', isActive: true },
+        select: { id: true }
+    });
+
+    await Promise.all(admins
+        .filter((a) => a.id !== userId)
+        .map((a) =>
+            prisma.notification.create({
+                data: {
+                    userId: a.id,
+                    type: 'TEAM_REPORT',
+                    title: `Conversation reported: #${channel.name}`,
+                    message: `${input.reason}${input.details ? ` - ${input.details}` : ''}`
+                }
+            })
+        ));
 };
