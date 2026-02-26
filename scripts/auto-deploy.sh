@@ -4,6 +4,7 @@ set -euo pipefail
 APP_DIR="/var/www/studiomystri"
 LOCK_FILE="/tmp/studiomystri-auto-deploy.lock"
 LOG_FILE="/var/log/studiomystri/auto-deploy.log"
+FAILED_MARKER="/var/log/studiomystri/last-deploy-failed"
 
 mkdir -p /var/log/studiomystri
 
@@ -21,6 +22,12 @@ mkdir -p /var/log/studiomystri
     REMOTE_REV="$(git rev-parse origin/main)"
 
     if [ "$LOCAL_REV" = "$REMOTE_REV" ]; then
+        if [ -f "$FAILED_MARKER" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Previous deploy failed. Retrying current revision $LOCAL_REV."
+            bash "$APP_DIR/scripts/deploy.sh"
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] ===== AUTO-DEPLOY RETRY SUCCESS ====="
+            exit 0
+        fi
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] No changes detected. Skipping deploy."
         exit 0
     fi
