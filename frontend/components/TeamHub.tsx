@@ -857,12 +857,12 @@ export const TeamHub: React.FC = () => {
   const overflowCount = Math.max(0, callTiles.length - visibleTiles.length);
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background-light dark:bg-background-dark">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-background-light dark:bg-background-dark">
       <audio ref={audioRef} src="https://actions.google.com/sounds/v1/cartoon/pop.ogg" preload="auto" />
 
       <aside
         className={`${showMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          } absolute md:relative z-20 w-64 sm:w-72 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out shadow-xl md:shadow-none`}
+          } fixed md:relative inset-y-0 left-0 z-30 w-[280px] md:w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none`}
       >
         <div className="p-3 border-b border-slate-200 dark:border-slate-800">
           <div className="text-sm font-semibold">{user?.name || 'User'}</div>
@@ -911,47 +911,47 @@ export const TeamHub: React.FC = () => {
           </button>
         </div>
       </aside>
-      {showMobile && <div className="fixed inset-0 z-10 bg-black/40 md:hidden" onClick={() => setShowMobile(false)} />}
+      {showMobile && <div className="fixed inset-0 z-20 bg-black/40 md:hidden" onClick={() => setShowMobile(false)} />}
 
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <div className="flex items-center gap-2 min-w-0">
-            <button onClick={() => setShowMobile((v) => !v)} className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-              <Menu className="w-4 h-4" />
+      <main className="flex-1 flex flex-col min-w-0 w-full">
+        <header className="flex items-center justify-between px-2 sm:px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+            <button onClick={() => setShowMobile((v) => !v)} className="md:hidden p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0">
+              <Menu className="w-5 h-5" />
             </button>
             {selected.type === 'private' ? (
-              <Lock className="w-4 h-4 text-slate-400" />
+              <Lock className="w-4 h-4 text-slate-400 shrink-0 hidden sm:block" />
             ) : selected.type === 'public' ? (
-              <Hash className="w-4 h-4 text-slate-400" />
+              <Hash className="w-4 h-4 text-slate-400 shrink-0 hidden sm:block" />
             ) : (
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
             )}
-            <h2 className="font-semibold truncate">{selected.name}</h2>
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${callState === 'Connected'
-                ? 'bg-green-100 text-green-700'
-                : callState === 'Connecting'
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'bg-slate-100 text-slate-600'
-                }`}
-            >
-              {callState}
-            </span>
+            <h2 className="font-semibold truncate text-sm sm:text-base">{selected.name}</h2>
+            {callState !== 'Disconnected' && (
+              <span
+                className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full shrink-0 ${callState === 'Connected'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-amber-100 text-amber-700'
+                  }`}
+              >
+                {callState}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {isGroup && (
-              <div className="hidden sm:flex -space-x-2 mr-1">
+              <div className="hidden lg:flex -space-x-2 mr-1">
                 {members.slice(0, 3).map((m) => (
                   <div
                     key={m.id}
-                    className="w-7 h-7 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 text-[10px] flex items-center justify-center"
+                    className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 text-[10px] flex items-center justify-center"
                   >
                     {initials(m.name)}
                   </div>
                 ))}
               </div>
             )}
-            <button onClick={() => startCall('start')} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Start call">
+            <button onClick={() => startCall('start')} className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Start call">
               <Video className="w-4 h-4" />
             </button>
             {activeCall && !inCall && (
@@ -959,7 +959,7 @@ export const TeamHub: React.FC = () => {
                 Join
               </button>
             )}
-            <button onClick={copyInviteLink} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Copy invite link">
+            <button onClick={copyInviteLink} className="hidden sm:block p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Copy invite link">
               <Download className="w-4 h-4" />
             </button>
             <div className="relative" ref={notifRef}>
@@ -968,7 +968,7 @@ export const TeamHub: React.FC = () => {
                   setShowNotif((v) => !v);
                   if (unread > 0) markAllRead.mutate();
                 }}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 relative"
               >
                 <Bell className="w-4 h-4" />
                 {unread > 0 && (
@@ -978,7 +978,7 @@ export const TeamHub: React.FC = () => {
                 )}
               </button>
               {showNotif && (
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl z-30">
+                <div className="fixed sm:absolute right-2 sm:right-0 left-2 sm:left-auto top-14 sm:top-auto sm:mt-2 sm:w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl z-30 max-h-[70vh] overflow-hidden flex flex-col">
                   <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                     <span className="text-sm font-semibold">Notifications</span>
                     <button onClick={toggleSound} className="text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800">
@@ -1001,7 +1001,7 @@ export const TeamHub: React.FC = () => {
               )}
             </div>
             <div className="relative" ref={menuRef}>
-              <button onClick={() => setShowMenu((v) => !v)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              <button onClick={() => setShowMenu((v) => !v)} className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
                 <MoreVertical className="w-4 h-4" />
               </button>
               {showMenu && (
@@ -1087,14 +1087,15 @@ export const TeamHub: React.FC = () => {
           {typing.length > 0 && <p className="text-xs text-slate-500 italic">{typing.join(', ')} typing...</p>}
         </div>
 
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="p-2 sm:p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
           <form onSubmit={send} className="border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800">
             <textarea
               ref={textRef}
               value={text}
               onChange={(e) => onType(e.target.value)}
               onKeyDown={onKeyDown}
-              className="w-full p-3 bg-transparent outline-none text-sm resize-none min-h-[64px]"
+              rows={1}
+              className="w-full p-2 sm:p-3 bg-transparent outline-none text-sm resize-none min-h-[40px] sm:min-h-[56px] max-h-[120px]"
               placeholder={`Message ${selected.type === 'dm' ? '@' : '#'}${selected.name}...`}
             />
             {files.length > 0 && (
@@ -1111,22 +1112,22 @@ export const TeamHub: React.FC = () => {
                 ))}
               </div>
             )}
-            <div className="flex items-center justify-between px-2 py-2 border-t border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-1">
-                <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700">
+            <div className="flex items-center justify-between px-1.5 sm:px-2 py-1.5 sm:py-2 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <button type="button" onClick={() => fileRef.current?.click()} className="p-1.5 sm:p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700">
                   <Paperclip className="w-4 h-4" />
                 </button>
                 <input ref={fileRef} type="file" className="hidden" onChange={upload} />
                 <div className="relative" ref={emojiRef}>
-                  <button type="button" onClick={() => setShowEmoji((v) => !v)} className="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700">
+                  <button type="button" onClick={() => setShowEmoji((v) => !v)} className="p-1.5 sm:p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700">
                     <Smile className="w-4 h-4" />
                   </button>
                   {showEmoji && (
-                    <div className="absolute bottom-12 left-0 z-40">
+                    <div className="fixed sm:absolute bottom-16 sm:bottom-12 left-2 sm:left-0 right-2 sm:right-auto z-40">
                       <EmojiPicker
                         onEmojiClick={onEmoji}
-                        width={320}
-                        height={380}
+                        width="100%"
+                        height={340}
                         searchPlaceholder="Search emojis"
                         theme={document.documentElement.classList.contains('dark') ? Theme.DARK : Theme.LIGHT}
                       />
@@ -1173,9 +1174,10 @@ export const TeamHub: React.FC = () => {
               <button
                 type="submit"
                 disabled={sending || (!text.trim() && !files.some((f) => f.url))}
-                className="px-4 py-2 rounded-lg bg-primary text-white text-sm disabled:opacity-50 flex items-center gap-1"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-primary text-white text-sm disabled:opacity-50 flex items-center gap-1"
               >
-                {sending ? 'Sending...' : 'Send'} <Send className="w-4 h-4" />
+                <Send className="w-4 h-4" />
+                <span className="hidden sm:inline">{sending ? 'Sending...' : 'Send'}</span>
               </button>
             </div>
           </form>
