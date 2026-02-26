@@ -721,3 +721,246 @@ enum DiscountType {
   FLAT
   PERCENT
 }
+
+// ─── COMPLIANCE & TAXATION MODELS ───────────────────────────────────────────
+
+// Immutable Audit Log - GST Section 35 & Income Tax Section 44AA compliance
+// This table is append-only; no UPDATE or DELETE is permitted by design.
+model ImmutableAuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  userRole   String?
+  action     String
+  entity     String
+  entityId   String?
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("immutable_audit_logs")
+}
+
+// GST Filing Lock - prevents editing invoices after GST filing
+model GSTFilingLock {
+  id           String   @id @default(uuid())
+  period       String   // e.g. "2025-01" (YYYY-MM)
+  filingType   String   // "GSTR-1", "GSTR-3B", "GSTR-9"
+  lockedAt     DateTime @default(now())
+  lockedByUserId String?
+  isLocked     Boolean  @default(true)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([period, filingType])
+  @@map("gst_filing_locks")
+}
+
+// Ledger Entry - double-entry financial record (Income Tax Section 44AA)
+model LedgerEntry {
+  id                    String   @id @default(uuid())
+  entryDate             DateTime @default(now())
+  type                  LedgerEntryType
+  category              String
+  description           String
+  debitAmount           Float    @default(0)
+  creditAmount          Float    @default(0)
+  balanceAfter          Float    @default(0)
+  orderId               String?
+  invoiceId             String?
+  paymentTransactionId  String?
+  razorpaySettlementId  String?
+  gstComponent          Float?   // GST portion of this entry
+  hsn                   String?  // HSN code
+  isReconciled          Boolean  @default(false)
+  reconciledAt          DateTime?
+  createdByUserId       String?
+  createdAt             DateTime @default(now())
+
+  @@index([entryDate])
+  @@index([orderId])
+  @@index([isReconciled])
+  @@map("ledger_entries")
+}
+
+// Stock Register - GST Section 35 mandatory
+model StockRegisterEntry {
+  id              String   @id @default(uuid())
+  date            DateTime @default(now())
+  itemId          String
+  itemName        String
+  sku             String?
+  movementType    StockMovementType
+  openingQty      Float    @default(0)
+  inQty           Float    @default(0)
+  outQty          Float    @default(0)
+  closingQty      Float    @default(0)
+  wastageQty      Float    @default(0)
+  returnQty       Float    @default(0)
+  valuationMethod ValuationMethod @default(FIFO)
+  unitCost        Float    @default(0)
+  totalValue      Float    @default(0)
+  reference       String?  // order/invoice/purchase ref
+  remarks         String?
+  createdAt       DateTime @default(now())
+
+  @@index([itemId, date])
+  @@index([date])
+  @@map("stock_register_entries")
+}
+
+// Razorpay Settlement Record
+model RazorpaySettlement {
+  id               String   @id @default(uuid())
+  settlementId     String   @unique // Razorpay settlement_id
+  utr              String?  // UTR number
+  amount           Float
+  fees             Float    @default(0)
+  tax              Float    @default(0)
+  settlementDate   DateTime
+  status           String   @default("processed")
+  isReconciled     Boolean  @default(false)
+  reconciledAt     DateTime?
+  ledgerEntryId    String?  // linked LedgerEntry
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([settlementDate])
+  @@index([isReconciled])
+  @@map("razorpay_settlements")
+}
+
+// Daily Reconciliation Run
+model ReconciliationRun {
+  id                      String   @id @default(uuid())
+  runDate                 DateTime @default(now())
+  razorpayLedgerMatch     Float?   // % match 0-100
+  bankLedgerMatch         Float?   // % match 0-100
+  invoiceGstrMatch        Float?   // % match 0-100
+  razorpayMismatchCount   Int      @default(0)
+  bankMismatchCount       Int      @default(0)
+  invoiceMismatchCount    Int      @default(0)
+  status                  ReconciliationStatus @default(PENDING)
+  alertSent               Boolean  @default(false)
+  details                 Json?
+  createdAt               DateTime @default(now())
+
+  @@index([runDate])
+  @@map("reconciliation_runs")
+}
+
+// Compliance Dashboard snapshot
+model ComplianceSnapshot {
+  id                  String   @id @default(uuid())
+  period              String   // "2025-01"
+  totalTaxableSales   Float    @default(0)
+  totalGSTCollected   Float    @default(0)
+  totalITCClaimed     Float    @default(0)
+  netTaxPayable       Float    @default(0)
+  gstr1Filed          Boolean  @default(false)
+  gstr3bFiled         Boolean  @default(false)
+  gstr9Filed          Boolean  @default(false)
+  b2bInvoiceCount     Int      @default(0)
+  b2cInvoiceCount     Int      @default(0)
+  creditNotesIssued   Int      @default(0)
+  cancelledInvoices   Int      @default(0)
+  lockedInvoices      Int      @default(0)
+  openingStock        Float    @default(0)
+  closingStock        Float    @default(0)
+  stockVariance       Float    @default(0)
+  negativeStockAlert  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([period])
+  @@map("compliance_snapshots")
+}
+
+// GST Report export log
+model GSTReportExport {
+  id           String   @id @default(uuid())
+  reportType   String   // "GSTR-1", "GSTR-3B", "GSTR-9", "HSN-summary", "ITC-summary"
+  period       String   // "2025-01" or "2024-25" for annual
+  generatedBy  String?  // userId
+  fileUrl      String?
+  status       String   @default("generated")
+  createdAt    DateTime @default(now())
+
+  @@index([reportType, period])
+  @@map("gst_report_exports")
+}
+
+// Product HSN mapping (mandatory for GST)
+model ProductHSN {
+  id          String   @id @default(uuid())
+  productId   String   @unique
+  hsn         String
+  gstRate     Float    // 0, 5, 12, 18, 28
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("product_hsn")
+}
+
+// Webhook idempotency guard (QC Credentials 6.2)
+model WebhookEvent {
+  id           String   @id @default(uuid())
+  gateway      String   // "razorpay"
+  eventId      String   // gateway-provided unique event ID
+  eventType    String
+  payload      Json
+  processed    Boolean  @default(false)
+  processedAt  DateTime?
+  error        String?
+  createdAt    DateTime @default(now())
+
+  @@unique([gateway, eventId]) // idempotency key
+  @@map("webhook_events")
+}
+
+// ─── COMPLIANCE ENUMS ────────────────────────────────────────────────────────
+
+enum LedgerEntryType {
+  SALE
+  PURCHASE
+  PAYMENT_RECEIVED
+  PAYMENT_MADE
+  GST_OUTPUT
+  GST_INPUT
+  ITC_REVERSAL
+  REFUND
+  CREDIT_NOTE
+  DEBIT_NOTE
+  SETTLEMENT
+  ADJUSTMENT
+}
+
+enum StockMovementType {
+  OPENING
+  PURCHASE
+  SALE
+  RETURN_IN
+  RETURN_OUT
+  WASTAGE
+  ADJUSTMENT
+  PRODUCTION_IN
+  PRODUCTION_OUT
+}
+
+enum ValuationMethod {
+  FIFO
+  WEIGHTED_AVERAGE
+}
+
+enum ReconciliationStatus {
+  PENDING
+  PASSED
+  MISMATCH
+  ALERT_SENT
+}
