@@ -12,6 +12,11 @@ type NavItem = {
     badge?: string;
 };
 
+type SidebarProps = {
+    mobileOpen: boolean;
+    onClose: () => void;
+};
+
 const sectionTitleClass = 'px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1';
 const STORAGE_KEY = 'sidebar_collapsed';
 
@@ -24,12 +29,13 @@ const navClass = ({ isActive }: { isActive: boolean }, collapsed: boolean) =>
             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
     ].join(' ');
 
-const renderItem = (item: NavItem, collapsed: boolean) => (
+const renderItem = (item: NavItem, collapsed: boolean, onClose: () => void) => (
     <NavLink
         key={item.to}
         to={item.to}
         className={(state) => navClass(state, collapsed)}
         title={collapsed ? item.label : undefined}
+        onClick={onClose}
     >
         <span className="material-symbols-outlined">{item.icon}</span>
         {!collapsed && (
@@ -41,7 +47,7 @@ const renderItem = (item: NavItem, collapsed: boolean) => (
     </NavLink>
 );
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onClose }) => {
     const { user } = useAuth();
     const role = user?.role || 'CUSTOMER';
     const [collapsed, setCollapsed] = useState(false);
@@ -58,6 +64,9 @@ export const Sidebar: React.FC = () => {
             return next;
         });
     };
+
+    // On mobile, sidebar is never collapsed — always show full labels
+    const isCollapsed = collapsed && !mobileOpen;
 
     const pipelineItems: NavItem[] = [
         { to: '/crm', icon: 'rocket_launch', label: 'CRM Pipeline', show: can(role, 'crm', 'read') },
@@ -82,13 +91,26 @@ export const Sidebar: React.FC = () => {
     ];
 
     return (
-        <aside className={`flex flex-col justify-between border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto shrink-0 transition-[width] duration-300 ${collapsed ? 'w-20' : 'w-64'}`}>
+        <aside
+            className={`
+                ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+                md:translate-x-0
+                fixed md:relative inset-y-0 left-0 z-50
+                flex flex-col justify-between
+                border-r border-slate-200 dark:border-slate-800
+                bg-white dark:bg-slate-900
+                overflow-y-auto shrink-0
+                transition-transform duration-300 ease-in-out
+                shadow-2xl md:shadow-none
+                ${isCollapsed ? 'w-20' : 'w-[280px] md:w-64'}
+            `}
+        >
             <div>
-                <div className={`flex items-center px-4 py-6 border-b border-slate-100 dark:border-slate-800 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                <div className={`flex items-center px-4 py-6 border-b border-slate-100 dark:border-slate-800 ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
                     <div className="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/30">
                         <span className="material-symbols-outlined">architecture</span>
                     </div>
-                    {!collapsed && (
+                    {!isCollapsed && (
                         <div className="flex flex-col overflow-hidden">
                             <h1 className="text-base font-semibold leading-none text-slate-900 dark:text-white tracking-tight truncate">Studio Mystri</h1>
                             <p className="mt-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Management System</p>
@@ -96,23 +118,23 @@ export const Sidebar: React.FC = () => {
                     )}
                 </div>
 
-                <nav className={`flex flex-col gap-1.5 mt-6 ${collapsed ? 'px-2' : 'px-4'}`}>
-                    <NavLink to="/dashboard" className={(state) => navClass(state, collapsed)} title={collapsed ? 'Dashboard' : undefined}>
+                <nav className={`flex flex-col gap-1.5 mt-6 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+                    <NavLink to="/dashboard" className={(state) => navClass(state, isCollapsed)} title={isCollapsed ? 'Dashboard' : undefined} onClick={onClose}>
                         <span className="material-symbols-outlined" data-weight="fill">dashboard</span>
-                        {!collapsed && <span className="text-sm font-medium">Dashboard</span>}
+                        {!isCollapsed && <span className="text-sm font-medium">Dashboard</span>}
                     </NavLink>
 
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
-                    {!collapsed && <p className={sectionTitleClass}>Pipeline & Sales</p>}
-                    {pipelineItems.filter((item) => item.show).map((item) => renderItem(item, collapsed))}
+                    {!isCollapsed && <p className={sectionTitleClass}>Pipeline & Sales</p>}
+                    {pipelineItems.filter((item) => item.show).map((item) => renderItem(item, isCollapsed, onClose))}
 
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
-                    {!collapsed && <p className={sectionTitleClass}>Execution & Supply</p>}
-                    {executionItems.filter((item) => item.show).map((item) => renderItem(item, collapsed))}
+                    {!isCollapsed && <p className={sectionTitleClass}>Execution & Supply</p>}
+                    {executionItems.filter((item) => item.show).map((item) => renderItem(item, isCollapsed, onClose))}
 
                     <div className="my-2 border-t border-slate-200 dark:border-slate-800 mx-2"></div>
-                    {!collapsed && <p className={sectionTitleClass}>Organization</p>}
-                    {orgItems.filter((item) => item.show).map((item) => renderItem(item, collapsed))}
+                    {!isCollapsed && <p className={sectionTitleClass}>Organization</p>}
+                    {orgItems.filter((item) => item.show).map((item) => renderItem(item, isCollapsed, onClose))}
                 </nav>
             </div>
 
@@ -120,11 +142,11 @@ export const Sidebar: React.FC = () => {
                 <button
                     type="button"
                     onClick={toggleCollapsed}
-                    className={`w-full flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors ${collapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'}`}
-                    title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    className={`hidden md:flex w-full items-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'}`}
+                    title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
-                    {!collapsed && <span className="text-xs font-bold uppercase tracking-wide">Collapse</span>}
-                    {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    {!isCollapsed && <span className="text-xs font-bold uppercase tracking-wide">Collapse</span>}
+                    {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                 </button>
             </div>
         </aside>

@@ -857,7 +857,7 @@ export const TeamHub: React.FC = () => {
   const overflowCount = Math.max(0, callTiles.length - visibleTiles.length);
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden bg-background-light dark:bg-background-dark">
+    <div className="flex h-full w-full overflow-hidden bg-background-light dark:bg-background-dark">
       <audio ref={audioRef} src="https://actions.google.com/sounds/v1/cartoon/pop.ogg" preload="auto" />
 
       <aside

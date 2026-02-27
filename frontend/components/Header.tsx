@@ -4,7 +4,11 @@ import { useSearch } from '../hooks/useSearch';
 import { useNavigate } from 'react-router-dom';
 import { useMarkAllRead, useNotifications, useUnreadCount } from '../hooks/useNotifications';
 
-export const Header: React.FC = () => {
+type HeaderProps = {
+    onMenuToggle: () => void;
+};
+
+export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     const { logout } = useAuth();
     const [query, setQuery] = useState('');
     const [showNotifications, setShowNotifications] = useState(false);
@@ -20,8 +24,19 @@ export const Header: React.FC = () => {
     }
 
     return (
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 px-8 backdrop-blur-md z-40 sticky top-0 transition-colors duration-300">
-            <div className="flex w-full max-w-lg items-center relative group">
+        <header className="flex h-14 sm:h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 px-3 sm:px-4 md:px-8 backdrop-blur-md z-30 sticky top-0 transition-colors duration-300 shrink-0">
+            {/* Mobile hamburger */}
+            <button
+                type="button"
+                onClick={onMenuToggle}
+                className="md:hidden p-2 -ml-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors mr-2"
+                aria-label="Toggle menu"
+            >
+                <span className="material-symbols-outlined text-[22px]">menu</span>
+            </button>
+
+            {/* Search */}
+            <div className="flex flex-1 max-w-lg items-center relative group">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <span className="material-symbols-outlined text-slate-400 text-[20px] group-focus-within:text-primary transition-colors">search</span>
                 </div>
@@ -29,11 +44,11 @@ export const Header: React.FC = () => {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search modules, projects, or staff..."
+                    placeholder="Search..."
                     className="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 pl-10 pr-12 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary placeholder:text-slate-400 transition-all"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <kbd className="inline-flex items-center rounded border border-slate-300 dark:border-slate-600 px-2 py-0.5 font-sans text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Ctrl K</kbd>
+                    <kbd className="hidden sm:inline-flex items-center rounded border border-slate-300 dark:border-slate-600 px-2 py-0.5 font-sans text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Ctrl K</kbd>
                 </div>
 
                 {/* Search Results Dropdown Overlay */}
@@ -80,7 +95,8 @@ export const Header: React.FC = () => {
                 )}
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Right-side actions */}
+            <div className="flex items-center gap-1 sm:gap-4 ml-2">
                 <button
                     type="button"
                     onClick={() => {
@@ -90,7 +106,7 @@ export const Header: React.FC = () => {
                     className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition group"
                     aria-label="Notifications"
                 >
-                    <span className="material-symbols-outlined group-hover:scale-110 transition-transform">notifications</span>
+                    <span className="material-symbols-outlined group-hover:scale-110 transition-transform text-[20px] sm:text-[24px]">notifications</span>
                     {unreadCount > 0 && (
                         <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
                             {unreadCount > 9 ? '9+' : unreadCount}
@@ -98,7 +114,7 @@ export const Header: React.FC = () => {
                     )}
                 </button>
                 {showNotifications && (
-                    <div className="absolute right-28 top-14 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <div className="fixed sm:absolute right-2 sm:right-4 top-14 sm:top-14 w-[calc(100vw-16px)] sm:w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden">
                         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 text-sm font-semibold">Notifications</div>
                         <div className="max-h-80 overflow-y-auto">
                             {(notifications as any)?.data?.length ? (notifications as any).data.map((n: any) => (
@@ -112,13 +128,13 @@ export const Header: React.FC = () => {
                         </div>
                     </div>
                 )}
-                <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                <div className="hidden sm:block h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
                 <button
                     onClick={() => logout()}
-                    className="flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-800 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-slate-800 dark:hover:bg-slate-700 transition transform active:scale-95"
+                    className="flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-800 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-slate-800 dark:hover:bg-slate-700 transition transform active:scale-95"
                 >
                     <span className="material-symbols-outlined text-[18px]">logout</span>
-                    <span>Systems Exit</span>
+                    <span className="hidden sm:inline">Systems Exit</span>
                 </button>
             </div>
         </header>
