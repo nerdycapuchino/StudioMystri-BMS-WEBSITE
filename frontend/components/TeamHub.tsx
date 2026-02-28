@@ -1002,7 +1002,7 @@ export const TeamHub: React.FC = () => {
             <button
               onClick={async () => {
                 try {
-                  const meeting = await createMeeting({ title: `${selected.name} Meeting`, isGuestAllowed: true });
+                  const meeting = await createMeeting({ title: `${selected.name} Meeting`, allowGuests: true });
                   const link = `${window.location.origin}/meet/${meeting.meetingCode}`;
                   setMeetingLinkUrl(link);
                   await navigator.clipboard.writeText(link);

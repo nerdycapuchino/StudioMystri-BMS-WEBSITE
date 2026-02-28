@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useCreateInvoice } from '../hooks/useInvoices';
 import { useProducts } from '../hooks/useProducts';
 import { useCompanySettings } from '../hooks/useAdmin';
-import { Plus, Trash2, Eye, Download, X, Search, FileText, Printer, Architecture, Save, PictureAsPdf, LocationOn, SquareFoot, Add, DeleteOutline, Draw } from 'lucide-react';
+import { Plus, Trash2, Eye, Download, X, Search, FileText, Printer, Building2, Save, MapPin, Ruler, PenTool } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface InvoiceLineItem {
@@ -20,7 +20,7 @@ export const InvoiceGenerator: React.FC = () => {
     const createInvoice = useCreateInvoice();
 
     const products: any[] = Array.isArray(prodData?.data || prodData) ? (prodData?.data || prodData) as any[] : [];
-    const companySettings: any = (settingsData?.data || settingsData) || { name: 'Studio Mystri', address: '123 Studio Way', phone: '+1 234 567 8900', email: 'hello@studiomystri.com', gstNumber: '', logoUrl: '' };
+    const companySettings: any = ((settingsData as any)?.data || settingsData) || { name: 'Studio Mystri', address: '123 Studio Way', phone: '+1 234 567 8900', email: 'hello@studiomystri.com', gstNumber: '', logoUrl: '' };
 
     const formatCurrency = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n || 0);
 
@@ -141,7 +141,7 @@ export const InvoiceGenerator: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 text-slate-900 dark:text-white">
                         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm shadow-primary/30">
-                            <Architecture className="w-5 h-5" />
+                            <Building2 className="w-5 h-5" />
                         </div>
                         <h1 className="text-lg font-bold tracking-tight">Quotation Builder</h1>
                     </div>
@@ -272,7 +272,7 @@ export const InvoiceGenerator: React.FC = () => {
                                         placeholder="Project Title"
                                     />
                                     <div className="flex gap-2">
-                                        <LocationOn className="text-slate-400 w-4 h-4 mt-1.5 shrink-0" />
+                                        <MapPin className="text-slate-400 w-4 h-4 mt-1.5 shrink-0" />
                                         <input
                                             type="text"
                                             value={projectLocation}
@@ -282,7 +282,7 @@ export const InvoiceGenerator: React.FC = () => {
                                         />
                                     </div>
                                     <div className="flex gap-2">
-                                        <SquareFoot className="text-slate-400 w-4 h-4 mt-1.5 shrink-0" />
+                                        <Ruler className="text-slate-400 w-4 h-4 mt-1.5 shrink-0" />
                                         <input
                                             type="text"
                                             value={projectScope}
@@ -303,7 +303,7 @@ export const InvoiceGenerator: React.FC = () => {
                             <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
                                 <div className="flex items-center gap-2">
                                     <span className="p-1 rounded-lg bg-blue-50 text-primary dark:bg-primary/20">
-                                        <Draw className="w-4 h-4" />
+                                        <PenTool className="w-4 h-4" />
                                     </span>
                                     <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">1. Invoice Items</h3>
                                 </div>
@@ -473,7 +473,7 @@ export const InvoiceGenerator: React.FC = () => {
                                             {p.images && p.images[0] ? (
                                                 <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                <Architecture className="w-4 h-4 text-slate-400" />
+                                                <Building2 className="w-4 h-4 text-slate-400" />
                                             )}
                                         </div>
                                         <div className="min-w-0">
@@ -484,7 +484,7 @@ export const InvoiceGenerator: React.FC = () => {
                                     <div className="flex items-center gap-3">
                                         <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{formatCurrency(p.price || p.cost || 0)}</span>
                                         <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-primary/20 text-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Add className="w-4 h-4" />
+                                            <Plus className="w-4 h-4" />
                                         </div>
                                     </div>
                                 </button>

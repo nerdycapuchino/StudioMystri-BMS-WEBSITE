@@ -132,6 +132,7 @@ export interface InventoryItem {
   quantity: number;
   unit: string;
   reorderPoint?: number;
+  reorderLevel?: number;
   cost: number;
   location?: string;
   supplierId?: string;

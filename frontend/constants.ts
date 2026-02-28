@@ -3,14 +3,14 @@
 import { Product, Lead, InventoryItem, Project, Customer, Shipment, User, IntegrationStatus, Activity, Invoice, Employee, Notification, Order, SystemLog, Campaign } from './types';
 
 export const MOCK_PRODUCTS: Product[] = [
-  { 
+  {
     id: '1', name: 'Eames Lounge Chair Replica', sku: 'FUR-001', price: 1450, category: 'Furniture', stock: 12, image: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=400&q=80',
     variants: [
       { id: 'v1', name: 'Black Leather', price: 1450, stock: 5, sku: 'FUR-001-BLK' },
       { id: 'v2', name: 'Tan Leather', price: 1550, stock: 7, sku: 'FUR-001-TAN' }
     ]
   },
-  { 
+  {
     id: '2', name: 'Minimalist Oak Dining Table', sku: 'FUR-002', price: 2200, category: 'Furniture', stock: 4, image: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&w=400&q=80',
     variants: [
       { id: 'v3', name: '6 Seater', price: 2200, stock: 2, sku: 'FUR-002-6' },
@@ -24,8 +24,8 @@ export const MOCK_PRODUCTS: Product[] = [
 ];
 
 export const MOCK_CUSTOMERS: Customer[] = [
-  { id: '1', name: 'Aarav Mehta', phone: '9876543210', email: 'aarav.m@gmail.com', lastPurchase: '2023-11-01', totalSpend: 4500, history: [], address: '12, Palm Grove, Juhu, Mumbai', gstNumber: '27ABCDE1234F1Z5' },
-  { id: '2', name: 'Sanya Gupta', phone: '9988776655', email: 'sanya.design@studio.com', lastPurchase: '2023-10-15', totalSpend: 12000, history: [], address: '45, Green Park, Delhi' },
+  { id: '1', name: 'Aarav Mehta', phone: '9876543210', email: 'aarav.m@gmail.com', totalSpend: 4500, address: '12, Palm Grove, Juhu, Mumbai', gstNumber: '27ABCDE1234F1Z5' } as any,
+  { id: '2', name: 'Sanya Gupta', phone: '9988776655', email: 'sanya.design@studio.com', totalSpend: 12000, address: '45, Green Park, Delhi' } as any,
 ];
 
 export const MOCK_LEADS: Lead[] = [
@@ -34,20 +34,20 @@ export const MOCK_LEADS: Lead[] = [
 ];
 
 export const MOCK_INVENTORY: InventoryItem[] = [
-  { id: '1', name: 'Teak Wood (Grade A)', type: 'Raw Material', quantity: 45, unit: 'sqft', reorderLevel: 50, cost: 24, location: 'Warehouse A - Bin 12', supplier: 'Timber Mart' },
-  { id: '2', name: 'Italian Marble Slab', type: 'Raw Material', quantity: 12, unit: 'slabs', reorderLevel: 5, cost: 450, location: 'Warehouse B - Zone 1', supplier: 'Stone World' },
+  { id: '1', name: 'Teak Wood (Grade A)', category: 'RAW', quantity: 45, unit: 'sqft', reorderLevel: 50, cost: 24, location: 'Warehouse A - Bin 12', supplierId: 'Timber Mart' } as any,
+  { id: '2', name: 'Italian Marble Slab', category: 'RAW', quantity: 12, unit: 'slabs', reorderLevel: 5, cost: 450, location: 'Warehouse B - Zone 1', supplierId: 'Stone World' } as any,
 ];
 
 export const MOCK_PROJECTS: Project[] = [
-  { 
-    id: '1', 
-    name: 'Oberoi Sky City Apt', 
-    client: 'Mr. & Mrs. Oberoi', 
-    stages: ['Concept', 'Design', 'Material Procurement', 'Civil Work', 'Execution', 'Handover'], 
-    currentStage: 'Execution', 
-    progress: 75, 
-    dueDate: '2024-12-20', 
-    budget: 5500000, 
+  {
+    id: '1',
+    name: 'Oberoi Sky City Apt',
+    client: 'Mr. & Mrs. Oberoi',
+    stages: ['Concept', 'Design', 'Material Procurement', 'Civil Work', 'Execution', 'Handover'],
+    currentStage: 'Execution',
+    progress: 75,
+    dueDate: '2024-12-20',
+    budget: 5500000,
     files: ['floor_plan_v2.pdf', 'kitchen_render.jpg', 'electrical_layout.dwg'],
     dimensions: '4BHK - 2400 sqft',
     description: 'Modern minimalist renovation focusing on natural wood and marble finishes.',
@@ -57,15 +57,15 @@ export const MOCK_PROJECTS: Project[] = [
       'https://images.unsplash.com/photo-1616486341353-c5833211e993?auto=format&fit=crop&w=800'
     ]
   },
-  { 
-    id: '2', 
-    name: 'FinTech HQ Reception', 
-    client: 'Razorpay', 
-    stages: ['Concept', 'Design', 'Client Approval', 'Construction', 'Finishing'], 
-    currentStage: 'Design', 
-    progress: 40, 
-    dueDate: '2025-02-15', 
-    budget: 1500000, 
+  {
+    id: '2',
+    name: 'FinTech HQ Reception',
+    client: 'Razorpay',
+    stages: ['Concept', 'Design', 'Client Approval', 'Construction', 'Finishing'],
+    currentStage: 'Design',
+    progress: 40,
+    dueDate: '2025-02-15',
+    budget: 1500000,
     files: ['concept_moodboard.png', 'lighting_plan.pdf'],
     dimensions: 'Reception Area - 800 sqft',
     description: 'Tech-forward lobby design with custom parametric wooden ceiling.',
@@ -104,9 +104,9 @@ export const MOCK_INVOICES: Invoice[] = [
 ];
 
 export const MOCK_EMPLOYEES: Employee[] = [
-  { id: '1', name: 'Vikram Malhotra', role: 'Principal Architect', roleId: 'admin', email: 'vikram@studiomystri.com', phone: '9998887776', salary: 150000, joinDate: '2020-01-15', status: 'Active', attendance: 'Present', leavePolicy: 30, leavesRemaining: 15, dob: '1985-05-15', currentAddress: 'Mumbai', emergencyContact: 'Wife: 9999999999', qualifications: 'M.Arch', documents: [] },
-  { id: '2', name: 'Ananya Singh', role: 'Senior Designer', roleId: 'admin', email: 'ananya@studiomystri.com', phone: '8887776665', salary: 95000, joinDate: '2021-03-10', status: 'Active', attendance: 'Present', leavePolicy: 24, leavesRemaining: 20, dob: '1992-08-20', currentAddress: 'Delhi', emergencyContact: 'Father: 8888888888', qualifications: 'B.Des', documents: [] },
-  { id: '3', name: 'Kabir Khan', role: 'Sales Manager', roleId: 'sales', email: 'kabir@studiomystri.com', phone: '7776665554', salary: 85000, joinDate: '2022-06-01', status: 'Active', attendance: 'Present', leavePolicy: 20, leavesRemaining: 18, dob: '1995-02-10', currentAddress: 'Bangalore', emergencyContact: 'Mother: 7777777777', qualifications: 'MBA Sales', documents: [] },
+  { id: '1', name: 'Vikram Malhotra', role: 'Principal Architect', roleId: 'admin', email: 'vikram@studiomystri.com', phone: '9998887776', salary: 150000, joinDate: '2020-01-15', status: 'Active', attendance: 'Present', leavePolicy: 30, leavesRemaining: 15, dob: '1985-05-15', currentAddress: 'Mumbai', emergencyContact: 'Wife: 9999999999', qualifications: 'M.Arch', documents: [], department: 'Architecture' } as any,
+  { id: '2', name: 'Ananya Singh', role: 'Senior Designer', roleId: 'admin', email: 'ananya@studiomystri.com', phone: '8887776665', salary: 95000, joinDate: '2021-03-10', status: 'Active', attendance: 'Present', leavePolicy: 24, leavesRemaining: 20, dob: '1992-08-20', currentAddress: 'Delhi', emergencyContact: 'Father: 8888888888', qualifications: 'B.Des', documents: [], department: 'Design' } as any,
+  { id: '3', name: 'Kabir Khan', role: 'Sales Manager', roleId: 'sales', email: 'kabir@studiomystri.com', phone: '7776665554', salary: 85000, joinDate: '2022-06-01', status: 'Active', attendance: 'Present', leavePolicy: 20, leavesRemaining: 18, dob: '1995-02-10', currentAddress: 'Bangalore', emergencyContact: 'Mother: 7777777777', qualifications: 'MBA Sales', documents: [], department: 'Sales' } as any,
 ];
 
 export const MOCK_NOTIFICATIONS: Notification[] = [

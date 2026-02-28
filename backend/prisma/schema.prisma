@@ -117,7 +117,7 @@ model ClientMergeLog {
 
 model Lead {
   id                      String    @id @default(uuid())
-  leadCode                String    @unique
+  leadCode                String?   @unique
   companyName              String
   pocName                  String
   email                    String?
