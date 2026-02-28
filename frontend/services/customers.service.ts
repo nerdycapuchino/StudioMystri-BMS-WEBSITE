@@ -58,3 +58,6 @@ export const mergeClients = (primaryId: string, mergedClientId: string): Promise
 
 export const getChannelHistory = (clientId: string) =>
     api.get(`/customers/${clientId}/channel-history`).then(r => ('data' in r.data ? r.data.data : r.data));
+
+export const getFinancials = (clientId: string) =>
+    api.get(`/customers/${clientId}/financials`).then(r => ('data' in r.data ? r.data.data : r.data));

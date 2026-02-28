@@ -30,8 +30,16 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
 
 export const updateStage = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const data = await leadService.updateStage(req.params.id, req.body.stage);
-        logActivity(prisma, req.user?.id, 'LEADS', 'STATUS_CHANGE', data.id, { stage: data.stage }, req.ip);
+        const data = await leadService.updateStage(req.params.id, req.body.stage, req.user?.id);
+        logActivity(prisma, req.user?.id, 'LEADS', 'STATUS_CHANGE', (data as any).id, { stage: (data as any).stage }, req.ip);
+
+        // Emit socket event for client sync if applicable
+        const io = req.app.get('io');
+        if (io && (data as any)._clientSync) {
+            const sync = (data as any)._clientSync;
+            io.emit(sync.event, { clientId: sync.client.id, leadId: req.params.id, companyName: sync.client.name });
+        }
+
         success(res, data, 'Lead stage updated');
     } catch (e) { next(e); }
 };

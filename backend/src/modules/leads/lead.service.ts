@@ -3,6 +3,8 @@ import { paginate, paginatedResponse, parseSort } from '../../utils/pagination';
 import { createError } from '../../middleware/errorHandler';
 import { CreateLeadInput, UpdateLeadInput } from './lead.schema';
 import { LeadStage } from '@prisma/client';
+import * as customerService from '../customers/customer.service';
+import { logger } from '../../config/logger';
 
 const SORTABLE = ['companyName', 'value', 'stage', 'createdAt'];
 
@@ -44,7 +46,7 @@ export const create = async (data: CreateLeadInput) => {
         data: {
             ...data,
             expectedClose: data.expectedClose ? new Date(data.expectedClose) : undefined,
-        },
+        } as any,
     });
 };
 
@@ -55,13 +57,58 @@ export const update = async (id: string, data: UpdateLeadInput) => {
         data: {
             ...data,
             expectedClose: data.expectedClose ? new Date(data.expectedClose) : undefined,
-        },
+        } as any,
     });
 };
 
-export const updateStage = async (id: string, stage: LeadStage) => {
-    await getById(id);
-    return prisma.lead.update({ where: { id }, data: { stage } });
+// ── STAGE UPDATE WITH CLOSED_WON HOOK (Phase 3) ─────────
+export const updateStage = async (id: string, stage: LeadStage, changedById?: string) => {
+    const lead = await getById(id);
+    const previousStage = lead.stage;
+
+    // Update lead stage
+    const updatedLead = await prisma.lead.update({ where: { id }, data: { stage } });
+
+    // Log stage change in history
+    if (changedById) {
+        try {
+            await prisma.leadStageHistory.create({
+                data: {
+                    leadId: id,
+                    fromStage: previousStage,
+                    toStage: stage,
+                    changedById,
+                },
+            });
+        } catch (e) {
+            logger.warn('Failed to log stage history', e);
+        }
+    }
+
+    // ── CLOSED_WON HOOK: Lead → Client Sync ──
+    if (stage === 'CLOSED_WON' && previousStage !== 'CLOSED_WON') {
+        try {
+            const result = await customerService.createFromLead({
+                id: lead.id,
+                companyName: lead.companyName,
+                pocName: lead.pocName,
+                email: lead.email,
+                phone: lead.phone,
+                gstin: lead.gstin,
+                source: lead.source,
+                type: lead.type,
+                value: lead.value,
+            });
+            logger.info(`Lead ${id} → Client sync: ${result.event} (clientId: ${result.client.id})`);
+            return { ...updatedLead, _clientSync: result };
+        } catch (e) {
+            // Lead stage change succeeds even if client creation fails
+            logger.error(`Lead ${id} → Client sync FAILED`, e);
+            return { ...updatedLead, _clientSyncError: (e as Error).message };
+        }
+    }
+
+    return updatedLead;
 };
 
 export const remove = async (id: string) => {
@@ -78,9 +125,9 @@ export const convertToProject = async (id: string) => {
         let customer = await tx.customer.findFirst({
             where: {
                 OR: [
-                    { email: lead.email || undefined },
-                    { phone: lead.phone || undefined }
-                ]
+                    ...(lead.email ? [{ email: lead.email }] : []),
+                    ...(lead.phone ? [{ phone: lead.phone }] : []),
+                ].filter(Boolean),
             }
         });
 
@@ -88,9 +135,14 @@ export const convertToProject = async (id: string) => {
             customer = await tx.customer.create({
                 data: {
                     name: lead.companyName,
+                    contactName: lead.pocName || undefined,
                     email: lead.email,
                     phone: lead.phone,
                     gstin: lead.gstin,
+                    gstNumber: lead.gstin,
+                    createdFromLeadId: lead.id,
+                    firstTouchSource: lead.source || lead.type,
+                    conversionSource: `Lead:${lead.type}`,
                 }
             });
         }
@@ -108,10 +160,10 @@ export const convertToProject = async (id: string) => {
             }
         });
 
-        // 3. Update Lead
+        // 3. Update Lead to CLOSED_WON (fixed from legacy 'WON')
         await tx.lead.update({
             where: { id },
-            data: { stage: 'WON' }
+            data: { stage: 'CLOSED_WON' }
         });
 
         return project;

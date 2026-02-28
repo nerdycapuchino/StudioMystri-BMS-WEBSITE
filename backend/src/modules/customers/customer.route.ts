@@ -13,6 +13,7 @@ customersRouter.get('/stats', ctrl.stats);
 // Single customer
 customersRouter.get('/:id', ctrl.getById);
 customersRouter.get('/:id/channel-history', ctrl.channelHistory);
+customersRouter.get('/:id/financials', ctrl.financials);
 
 // Create / Update / Delete
 customersRouter.post('/', validate(createCustomerSchema), ctrl.create);

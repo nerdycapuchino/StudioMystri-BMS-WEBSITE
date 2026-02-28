@@ -21,6 +21,7 @@ const Warehouse = lazy(() => import('./components/Warehouse').then(m => ({ defau
 const Finance = lazy(() => import('./components/Finance').then(m => ({ default: m.Finance })));
 const HR = lazy(() => import('./components/HR').then(m => ({ default: m.HR })));
 const Customers = lazy(() => import('./components/Customers').then(m => ({ default: m.Customers })));
+const ClientDetail = lazy(() => import('./components/ClientDetail').then(m => ({ default: m.ClientDetail })));
 const TeamHub = lazy(() => import('./components/TeamHub').then(m => ({ default: m.TeamHub })));
 const ERP = lazy(() => import('./components/ERP').then(m => ({ default: m.ERP })));
 const Orders = lazy(() => import('./components/Orders').then(m => ({ default: m.Orders })));
@@ -126,6 +127,7 @@ const router = createBrowserRouter([
       { path: '/pos', element: <RoleGuard allowedRoles={[...SALES_ROLES, ...FINANCE_ROLES]}><POS /></RoleGuard> },
       { path: '/orders', element: <Orders /> },
       { path: '/clients', element: <RoleGuard allowedRoles={SALES_ROLES}><Customers /></RoleGuard> },
+      { path: '/clients/:id', element: <RoleGuard allowedRoles={SALES_ROLES}><ClientDetail /></RoleGuard> },
       { path: '/crm', element: <RoleGuard allowedRoles={SALES_ROLES}><CRM /></RoleGuard> },
       { path: '/projects', element: <RoleGuard allowedRoles={OPS_ROLES}><Projects /></RoleGuard> },
       { path: '/inventory', element: <RoleGuard allowedRoles={OPS_ROLES}><Warehouse /></RoleGuard> },

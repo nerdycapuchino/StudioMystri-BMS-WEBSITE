@@ -100,12 +100,36 @@ export const create = async (data: CreateCustomerInput) => {
 };
 
 // ── UPDATE ───────────────────────────────────────────────
+const PROTECTED_SOURCE_FIELDS = ['primarySource', 'firstTouchSource', 'conversionSource'];
+const FINANCE_EDITABLE_FIELDS = ['creditLimit', 'paymentTerms', 'outstandingBalance', 'notes'];
+
 export const update = async (id: string, data: UpdateCustomerInput, userRole?: string) => {
     const existing = await getById(id);
+    const inputKeys = Object.keys(data || {});
 
-    // RBAC: SALES cannot change primarySource
-    if (userRole === 'SALES' && data && 'primarySource' in (data as any)) {
-        throw createError(403, 'Sales role cannot modify primary source');
+    // RBAC: SALES cannot change source/conversion fields
+    if (userRole === 'SALES') {
+        const blocked = inputKeys.filter(k => PROTECTED_SOURCE_FIELDS.includes(k));
+        if (blocked.length > 0) {
+            throw createError(403, `Sales role cannot modify: ${blocked.join(', ')}`);
+        }
+    }
+
+    // RBAC: FINANCE can only edit financial fields
+    if (userRole === 'FINANCE') {
+        const disallowed = inputKeys.filter(k => !FINANCE_EDITABLE_FIELDS.includes(k));
+        if (disallowed.length > 0) {
+            throw createError(403, `Finance role can only edit: ${FINANCE_EDITABLE_FIELDS.join(', ')}`);
+        }
+    }
+
+    // Lock attribution fields if client was created from lead
+    if (existing.createdFromLeadId) {
+        for (const field of ['primarySource', 'firstTouchSource', 'conversionSource'] as const) {
+            if (field in (data as any) && (data as any)[field] !== (existing as any)[field]) {
+                throw createError(403, `Field '${field}' is locked after lead conversion`);
+            }
+        }
     }
 
     const prismaData = toPrismaData(data as Record<string, unknown>);
@@ -248,4 +272,140 @@ export const getChannelHistory = async (clientId: string) => {
         where: { clientId },
         orderBy: { timestamp: 'desc' },
     });
+};
+
+// ── CREATE FROM LEAD (Phase 3) ───────────────────────────
+export const createFromLead = async (lead: {
+    id: string; companyName: string; pocName: string; email: string | null;
+    phone: string | null; gstin: string | null; source: string | null;
+    type: string; value: number;
+}) => {
+    // 1. Check for existing client by normalized email
+    let existingClient = null;
+    if (lead.email) {
+        existingClient = await prisma.customer.findFirst({
+            where: { email: { equals: lead.email.trim().toLowerCase(), mode: 'insensitive' }, isDeleted: false },
+        });
+    }
+    // Also check by phone if no email match
+    if (!existingClient && lead.phone) {
+        const normalizedPhone = lead.phone.replace(/[\s\-()]/g, '');
+        existingClient = await prisma.customer.findFirst({
+            where: { phone: { contains: normalizedPhone.slice(-10) }, isDeleted: false },
+        });
+    }
+
+    if (existingClient) {
+        // Link to existing — set createdFromLeadId if not already set
+        await prisma.customer.update({
+            where: { id: existingClient.id },
+            data: {
+                createdFromLeadId: existingClient.createdFromLeadId || lead.id,
+                lastTouchSource: lead.source || lead.type,
+            },
+        });
+        return { client: existingClient, event: 'client.linked_to_existing' as const };
+    }
+
+    // 2. Create new client with full attribution
+    const clientCode = await generateClientCode();
+    const sourceMap: Record<string, string> = { INBOUND: 'BMS_MANUAL', OUTBOUND: 'BMS_MANUAL', REFERRAL: 'BMS_MANUAL' };
+    const primarySource = (sourceMap[lead.type] || 'BMS_MANUAL') as any;
+
+    const newClient = await prisma.customer.create({
+        data: {
+            clientCode,
+            name: lead.companyName,
+            contactName: lead.pocName || undefined,
+            email: lead.email || undefined,
+            phone: lead.phone || undefined,
+            gstNumber: lead.gstin || undefined,
+            gstin: lead.gstin || undefined,
+            primarySource,
+            firstTouchSource: lead.source || lead.type,
+            lastTouchSource: lead.source || lead.type,
+            conversionSource: `Lead:${lead.type}`,
+            createdFromLeadId: lead.id,
+            status: 'Active',
+        },
+    });
+
+    return { client: newClient, event: 'client.created_from_lead' as const };
+};
+
+// ── FINANCIAL INTELLIGENCE (Phase 4) ─────────────────────
+export const getFinancials = async (clientId: string) => {
+    const customer = await getById(clientId);
+
+    // LTV = sum of PAID invoices
+    const paidInvoices = await prisma.invoice.aggregate({
+        where: { customerId: clientId, status: 'PAID' },
+        _sum: { total: true },
+        _count: true,
+    });
+
+    // Outstanding = sum of SENT/OVERDUE invoices
+    const outstandingInvoices = await prisma.invoice.aggregate({
+        where: { customerId: clientId, status: { in: ['SENT', 'OVERDUE'] } },
+        _sum: { total: true },
+        _count: true,
+    });
+
+    // Revenue by channel
+    const revenueByChannel = customer.primarySource || 'BMS_MANUAL';
+
+    // Average order value
+    const totalOrders = customer.totalOrders || 0;
+    const avgOrderValue = totalOrders > 0 ? (customer.totalSpent || 0) / totalOrders : 0;
+
+    // Payment Behavior Score (0-100)
+    const ltv = paidInvoices._sum?.total || 0;
+    const outstanding = outstandingInvoices._sum?.total || 0;
+    const outstandingRatio = ltv > 0 ? outstanding / ltv : 0;
+    let paymentScore = 100;
+    if (outstandingRatio > 0.5) paymentScore -= 40;
+    else if (outstandingRatio > 0.2) paymentScore -= 20;
+    if (totalOrders === 0) paymentScore = -1; // N/A
+
+    return {
+        ltv,
+        outstanding,
+        revenueByChannel,
+        avgOrderValue: Math.round(avgOrderValue),
+        totalOrders,
+        paidInvoiceCount: paidInvoices._count,
+        outstandingInvoiceCount: outstandingInvoices._count,
+        paymentBehaviorScore: paymentScore,
+        currency: 'INR',
+    };
+};
+
+// ── RECOMPUTE REVENUE (Phase 4) ──────────────────────────
+export const recomputeRevenue = async (customerId: string) => {
+    const [paidAgg, outstandingAgg, orderCount] = await Promise.all([
+        prisma.invoice.aggregate({
+            where: { customerId, status: 'PAID' },
+            _sum: { total: true },
+        }),
+        prisma.invoice.aggregate({
+            where: { customerId, status: { in: ['SENT', 'OVERDUE'] } },
+            _sum: { total: true },
+        }),
+        prisma.order.count({ where: { customerId } }),
+    ]);
+
+    await prisma.customer.update({
+        where: { id: customerId },
+        data: {
+            totalSpent: paidAgg._sum?.total || 0,
+            outstandingBalance: outstandingAgg._sum?.total || 0,
+            totalOrders: orderCount,
+        },
+    });
+
+    return {
+        totalSpent: paidAgg._sum?.total || 0,
+        outstandingBalance: outstandingAgg._sum?.total || 0,
+        totalOrders: orderCount,
+    };
 };
