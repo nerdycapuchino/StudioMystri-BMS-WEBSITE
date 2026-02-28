@@ -15,6 +15,12 @@ export interface CustomerParams {
     status?: string;
     tier?: string;
     primarySource?: string;
+    minLtv?: number;
+    maxLtv?: number;
+    minOutstanding?: number;
+    maxOutstanding?: number;
+    startDate?: string;
+    endDate?: string;
     sortBy?: string;
     order?: 'asc' | 'desc';
 }

@@ -59,9 +59,32 @@ export const list = async (query: Record<string, string>) => {
             { clientCode: { contains: query.search, mode: 'insensitive' } },
         ];
     }
-    if (query.status && query.status !== 'All') where.status = query.status;
-    if (query.tier) where.tier = query.tier;
-    if (query.primarySource) where.primarySource = query.primarySource;
+    if (query.status && query.status !== 'All') {
+        const statuses = query.status.split(',');
+        where.status = statuses.length > 1 ? { in: statuses } : statuses[0];
+    }
+    if (query.tier && query.tier !== 'All') {
+        const tiers = query.tier.split(',');
+        where.tier = tiers.length > 1 ? { in: tiers } : tiers[0];
+    }
+    if (query.primarySource && query.primarySource !== 'All') {
+        const sources = query.primarySource.split(',');
+        where.primarySource = sources.length > 1 ? { in: sources } : sources[0];
+    }
+
+    // Ranges
+    if (query.minLtv) where.totalSpent = { ...((where.totalSpent as any) || {}), gte: parseFloat(query.minLtv) };
+    if (query.maxLtv) where.totalSpent = { ...((where.totalSpent as any) || {}), lte: parseFloat(query.maxLtv) };
+    if (query.minOutstanding) where.outstandingBalance = { ...((where.outstandingBalance as any) || {}), gte: parseFloat(query.minOutstanding) };
+    if (query.maxOutstanding) where.outstandingBalance = { ...((where.outstandingBalance as any) || {}), lte: parseFloat(query.maxOutstanding) };
+
+    // Dates
+    if (query.startDate) where.createdAt = { ...((where.createdAt as any) || {}), gte: new Date(query.startDate) };
+    if (query.endDate) {
+        const end = new Date(query.endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt = { ...((where.createdAt as any) || {}), lte: end };
+    }
 
     const [data, total] = await Promise.all([
         prisma.customer.findMany({ where, skip, take, orderBy }),

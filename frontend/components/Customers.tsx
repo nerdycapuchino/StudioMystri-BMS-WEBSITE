@@ -53,9 +53,18 @@ export const Customers: React.FC = () => {
    const customers: Customer[] = Array.isArray(custData?.data || custData) ? (custData?.data || custData) as Customer[] : [];
 
    const [searchQuery, setSearchQuery] = useState('');
-   const [statusFilter, setStatusFilter] = useState('All');
-   const [sourceFilter, setSourceFilter] = useState('All');
-   const [tierFilter, setTierFilter] = useState('All');
+
+   // Advanced Filters State
+   const [showFilters, setShowFilters] = useState(false);
+   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
+   const [tierFilter, setTierFilter] = useState<string[]>([]);
+   const [minLtv, setMinLtv] = useState<string>('');
+   const [maxLtv, setMaxLtv] = useState<string>('');
+   const [minOutstanding, setMinOutstanding] = useState<string>('');
+   const [maxOutstanding, setMaxOutstanding] = useState<string>('');
+   const [startDate, setStartDate] = useState<string>('');
+   const [endDate, setEndDate] = useState<string>('');
 
    // Drawer state
    const [drawerOpen, setDrawerOpen] = useState(false);
@@ -73,11 +82,31 @@ export const Customers: React.FC = () => {
    const filteredCustomers = customers.filter(c => {
       const matchesSearch = !searchQuery || [c.name, c.email, c.phone, c.contactName, c.clientCode, c.gstNumber]
          .some(v => v?.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
-      const matchesSource = sourceFilter === 'All' || c.primarySource === sourceFilter;
-      const matchesTier = tierFilter === 'All' || c.tier === tierFilter;
-      return matchesSearch && matchesStatus && matchesSource && matchesTier;
+
+      const matchesStatus = statusFilter.length === 0 || statusFilter.includes(c.status);
+      const matchesSource = sourceFilter.length === 0 || sourceFilter.includes(c.primarySource);
+      const matchesTier = tierFilter.length === 0 || (c.tier && tierFilter.includes(c.tier));
+
+      const ltv = c.totalSpent || c.totalSpend || 0;
+      const matchesMinLtv = !minLtv || ltv >= parseFloat(minLtv);
+      const matchesMaxLtv = !maxLtv || ltv <= parseFloat(maxLtv);
+
+      const out = c.outstandingBalance || 0;
+      const matchesMinOut = !minOutstanding || out >= parseFloat(minOutstanding);
+      const matchesMaxOut = !maxOutstanding || out <= parseFloat(maxOutstanding);
+
+      const cDate = c.createdAt ? new Date(c.createdAt) : new Date();
+      const matchesStart = !startDate || cDate >= new Date(startDate);
+      const matchesEnd = !endDate || cDate <= new Date(endDate + 'T23:59:59');
+
+      return matchesSearch && matchesStatus && matchesSource && matchesTier &&
+         matchesMinLtv && matchesMaxLtv && matchesMinOut && matchesMaxOut &&
+         matchesStart && matchesEnd;
    });
+
+   const toggleFilter = (setter: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
+      setter(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
+   };
 
    // Escape to close drawer
    useEffect(() => {
@@ -197,25 +226,80 @@ export const Customers: React.FC = () => {
                </div>
 
                {/* ── FILTERS ── */}
-               <div className="flex flex-wrap gap-3 items-center bg-white dark:bg-[#1a2632] p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <div className="relative flex-1 min-w-[200px] group">
-                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">search</span>
+               <div className="flex flex-col gap-3 bg-white dark:bg-[#1a2632] p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                  <div className="flex gap-3 items-center">
+                     <div className="relative flex-1 min-w-[200px] group">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                           <span className="material-symbols-outlined text-[20px]">search</span>
+                        </div>
+                        <input className="block w-full pl-10 pr-3 py-2 border-none rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                           placeholder="Search clients, codes, GST..."
+                           value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                      </div>
-                     <input className="block w-full pl-10 pr-3 py-2 border-none rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                        placeholder="Search clients, codes, GST..."
-                        value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+
+                     <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-1.5 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${showFilters ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-transparent border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                        <span className="material-symbols-outlined text-[18px]">tune</span>
+                        Filters {(statusFilter.length + sourceFilter.length + tierFilter.length + (minLtv ? 1 : 0) + (maxLtv ? 1 : 0) + (minOutstanding ? 1 : 0) + (maxOutstanding ? 1 : 0) + (startDate ? 1 : 0) + (endDate ? 1 : 0)) > 0 && `(${(statusFilter.length + sourceFilter.length + tierFilter.length + (minLtv ? 1 : 0) + (maxLtv ? 1 : 0) + (minOutstanding ? 1 : 0) + (maxOutstanding ? 1 : 0) + (startDate ? 1 : 0) + (endDate ? 1 : 0))})`}
+                     </button>
                   </div>
-                  {[
-                     { value: statusFilter, setter: setStatusFilter, options: ['All', 'Active', 'Lead', 'Inactive', 'Past Client'], label: 'Status' },
-                     { value: sourceFilter, setter: setSourceFilter, options: ['All', 'POS', 'ECOMMERCE', 'BMS_MANUAL', 'API', 'IMPORT'], label: 'Source' },
-                     { value: tierFilter, setter: setTierFilter, options: ['All', 'PLATINUM', 'GOLD', 'SILVER'], label: 'Tier' },
-                  ].map(f => (
-                     <select key={f.label} value={f.value} onChange={e => f.setter(e.target.value)}
-                        className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20">
-                        {f.options.map(o => <option key={o} value={o}>{o === 'All' ? `${f.label}: All` : o}</option>)}
-                     </select>
-                  ))}
+
+                  {showFilters && (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 border-t border-slate-100 dark:border-slate-700/50 mt-1">
+
+                        {/* Multi-selects */}
+                        <div className="col-span-1 md:col-span-2 flex flex-wrap gap-6">
+                           {[
+                              { label: 'Status', state: statusFilter, setter: setStatusFilter, options: ['Active', 'Lead', 'Inactive', 'Past Client'] },
+                              { label: 'Tier', state: tierFilter, setter: setTierFilter, options: ['PLATINUM', 'GOLD', 'SILVER'] },
+                              { label: 'Source', state: sourceFilter, setter: setSourceFilter, options: ['POS', 'ECOMMERCE', 'BMS_MANUAL', 'API', 'IMPORT'] },
+                           ].map(f => (
+                              <div key={f.label} className="flex flex-col gap-2">
+                                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{f.label}</span>
+                                 <div className="flex flex-wrap gap-1.5">
+                                    {f.options.map(o => (
+                                       <button key={o} onClick={() => toggleFilter(f.setter, o)}
+                                          className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${f.state.includes(o) ? 'bg-primary text-white border-primary' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}>
+                                          {o}
+                                       </button>
+                                    ))}
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+
+                        {/* Ranges */}
+                        <div className="flex flex-col gap-2">
+                           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">LTV Range (₹)</span>
+                           <div className="flex items-center gap-2">
+                              <input type="number" placeholder="Min" className="w-full px-3 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none" value={minLtv} onChange={e => setMinLtv(e.target.value)} />
+                              <span className="text-slate-400">-</span>
+                              <input type="number" placeholder="Max" className="w-full px-3 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none" value={maxLtv} onChange={e => setMaxLtv(e.target.value)} />
+                           </div>
+                           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-2">Outstanding (₹)</span>
+                           <div className="flex items-center gap-2">
+                              <input type="number" placeholder="Min" className="w-full px-3 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none" value={minOutstanding} onChange={e => setMinOutstanding(e.target.value)} />
+                              <span className="text-slate-400">-</span>
+                              <input type="number" placeholder="Max" className="w-full px-3 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none" value={maxOutstanding} onChange={e => setMaxOutstanding(e.target.value)} />
+                           </div>
+                        </div>
+
+                        {/* Dates & Quick Clear */}
+                        <div className="flex flex-col gap-2">
+                           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Created Between</span>
+                           <input type="date" className="w-full px-3 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 outline-none block" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                           <input type="date" className="w-full px-3 py-1.5 text-sm rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 outline-none block mt-1" value={endDate} onChange={e => setEndDate(e.target.value)} />
+
+                           <button onClick={() => {
+                              setStatusFilter([]); setSourceFilter([]); setTierFilter([]);
+                              setMinLtv(''); setMaxLtv(''); setMinOutstanding(''); setMaxOutstanding('');
+                              setStartDate(''); setEndDate('');
+                           }} className="mt-3 w-full text-xs font-medium text-rose-500 border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/10 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded py-1.5 transition-colors">
+                              Clear All Filters
+                           </button>
+                        </div>
+
+                     </div>
+                  )}
                </div>
             </div>
          </div>
