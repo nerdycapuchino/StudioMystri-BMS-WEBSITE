@@ -100,7 +100,7 @@ export const listMessages = async (channelId: string, userId: string, role: stri
     const hasAccess = await canAccessChannel(userId, role, channelId);
     if (!hasAccess) throw createError(403, 'Access denied for this channel');
     const { skip, take, page, limit } = paginate(query);
-    const where = { channelId: channel.id };
+    const where = { channelId: channel.id, isDeleted: false };
     const [data, total] = await Promise.all([
         prisma.message.findMany({ where, skip, take, orderBy: { createdAt: 'asc' }, include: { sender: { select: { id: true, name: true, avatar: true } } } }),
         prisma.message.count({ where }),
@@ -126,7 +126,10 @@ export const deleteMessage = async (id: string, userId: string, userRole: string
     const msg = await prisma.message.findUnique({ where: { id } });
     if (!msg) throw createError(404, 'Message not found');
     if (msg.senderId !== userId && userRole !== 'SUPER_ADMIN') throw createError(403, 'Permission denied');
-    return prisma.message.delete({ where: { id } });
+    return prisma.message.update({
+        where: { id },
+        data: { isDeleted: true, deletedAt: new Date(), deletedBy: userId },
+    });
 };
 
 export const clearConversation = async (channelId: string, userId: string, role: string) => {
@@ -135,12 +138,15 @@ export const clearConversation = async (channelId: string, userId: string, role:
     const hasAccess = await canAccessChannel(userId, role, channelId);
     if (!hasAccess) throw createError(403, 'Access denied for this channel');
 
-    // Non-admins can only clear their own sent messages.
+    // Non-admins can only soft-delete their own sent messages.
     const where = role === 'SUPER_ADMIN' || role === 'ADMIN'
-        ? { channelId: channel.id }
-        : { channelId: channel.id, senderId: userId };
+        ? { channelId: channel.id, isDeleted: false }
+        : { channelId: channel.id, senderId: userId, isDeleted: false };
 
-    const result = await prisma.message.deleteMany({ where });
+    const result = await prisma.message.updateMany({
+        where,
+        data: { isDeleted: true, deletedAt: new Date(), deletedBy: userId },
+    });
     return result.count;
 };
 

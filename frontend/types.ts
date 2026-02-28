@@ -61,23 +61,45 @@ export interface PurchaseHistoryItem {
   source: 'POS' | 'Website';
 }
 
+export type PrimarySource = 'POS' | 'ECOMMERCE' | 'BMS_MANUAL' | 'API' | 'IMPORT';
+
 export interface Customer {
   id: string;
-  name: string; // Company Name
-  contactName?: string; // Primary Contact Person
-  industry?: string;
-  phone: string;
-  email: string;
+  clientCode?: string;
+  name: string;                       // Company Name
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
   gstNumber?: string;
-  lastPurchase?: string;
-  totalSpend: number; // LTV
+  primarySource?: PrimarySource;
+  secondarySource?: string;
+  firstTouchSource?: string;
+  lastTouchSource?: string;
+  conversionSource?: string;
+  createdFromLeadId?: string;
+  tier?: 'PLATINUM' | 'GOLD' | 'SILVER' | string;
   address?: string;
   shippingAddress?: string;
+  gstin?: string;
+  totalOrders?: number;
+  totalSpent?: number;
+  outstandingBalance?: number;
+  creditLimit?: number;
+  paymentTerms?: string;
+  tags?: string[];
   notes?: string;
-  status?: 'Active' | 'Inactive' | 'Lead' | 'Past Client';
+  status?: 'Active' | 'Inactive' | 'Lead' | 'Past Client' | string;
+  isMerged?: boolean;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  // Computed / joined
+  industry?: string;               // backward compat
+  totalSpend?: number;              // alias for totalSpent
   projectCount?: number;
   activeProjectCount?: number;
-  history: PurchaseHistoryItem[];
+  history?: PurchaseHistoryItem[];
 }
 
 export interface Lead {

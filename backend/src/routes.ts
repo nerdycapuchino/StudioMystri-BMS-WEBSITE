@@ -17,6 +17,7 @@ import { hrRouter } from './modules/hr/hr.route';
 import { logisticsRouter } from './modules/logistics/logistics.route';
 import { tasksRouter } from './modules/tasks/task.route';
 import { teamRouter } from './modules/team/team.route';
+import { meetingRouter } from './modules/team/meeting.route';
 import { marketingRouter } from './modules/marketing/marketing.route';
 import { erpRouter } from './modules/erp/erp.route';
 import { activityLogRouter } from './modules/activity-log/activityLog.route';
@@ -45,9 +46,10 @@ apiRouter.get('/health', (_req: Request, res: Response) => {
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/ecommerce', ecommerceRouter);
 apiRouter.get('/admin/settings', adminController.getSettings);
+apiRouter.use('/team/meetings', meetingRouter); // Meeting routes handle their own auth (public + protected)
 
 // ─── Protected Routes (JWT required) ────────────────────
-apiRouter.use('/dashboard', verifyToken, dashboardRouter); // Dashboard logic is usually aggregrate, UI handles hiding
+apiRouter.use('/dashboard', verifyToken, dashboardRouter);
 apiRouter.use('/customers', verifyToken, enforceModuleRbac('crm'), customersRouter);
 apiRouter.use('/leads', verifyToken, enforceModuleRbac('crm'), leadsRouter);
 apiRouter.use('/products', verifyToken, enforceModuleRbac('ecommerce'), productsRouter);
@@ -63,7 +65,6 @@ apiRouter.use('/team', verifyToken, enforceModuleRbac('teamhub'), teamRouter);
 apiRouter.use('/marketing', verifyToken, enforceModuleRbac('ecommerce'), marketingRouter);
 apiRouter.use('/erp', verifyToken, enforceModuleRbac('projects'), erpRouter);
 apiRouter.use('/activity-log', verifyToken, enforceModuleRbac('auth'), activityLogRouter);
-apiRouter.use('/notifications', verifyToken, notificationsRouter); // Notifications are user-specific, no module block needed
+apiRouter.use('/notifications', verifyToken, notificationsRouter);
 apiRouter.use('/admin', verifyToken, enforceModuleRbac('auth'), adminRouter);
-apiRouter.use('/search', verifyToken, searchRouter); // Global search, filters inside based on role constraints
-
+apiRouter.use('/search', verifyToken, searchRouter);

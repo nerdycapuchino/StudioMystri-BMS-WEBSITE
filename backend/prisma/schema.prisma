@@ -24,6 +24,8 @@ model User {
   activityLogs     ActivityLog[]
   employee         Employee?
   assignedLeads    Lead[]         @relation("AssignedLeads")
+  ownedLeads       Lead[]         @relation("OwnedLeads")
+  stageChanges     LeadStageHistory[] @relation("StageChanges")
   messages         Message[]
   notifications    Notification[]
   assignedTasks    Task[]         @relation("AssignedTasks")
@@ -31,60 +33,140 @@ model User {
   referralsUsed    Referral[]     @relation("ReferralsUsed")
   orders           Order[]
   emailLogs        EmailLog[]
+  meetingsCreated  Meeting[]      @relation("MeetingsCreated")
 
   @@map("users")
 }
 
 model Customer {
-  id              String     @id @default(uuid())
-  name            String
-  email           String?
-  phone           String?
-  company         String?
-  address         String?
-  shippingAddress String?
-  gstin           String?
-  totalOrders     Int        @default(0)
-  totalSpent      Float      @default(0)
-  tags            String[]   @default([])
-  notes           String?
-  status          String     @default("Active")
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  invoices        Invoice[]
-  orders          Order[]
-  projects        Project[]
-  shipments       Shipment[]
+  id                String          @id @default(uuid())
+  clientCode        String?         @unique
+  name              String                              // companyName
+  contactName       String?
+  email             String?
+  phone             String?
+  company           String?                             // kept for backward compat
+  gstNumber         String?
+  primarySource     PrimarySource   @default(BMS_MANUAL)
+  secondarySource   String?
+  firstTouchSource  String?
+  lastTouchSource   String?
+  conversionSource  String?
+  createdFromLeadId String?
+  tier              String?                             // PLATINUM, GOLD, SILVER
+  address           String?
+  shippingAddress   String?
+  gstin             String?                             // legacy, use gstNumber
+  totalOrders       Int             @default(0)
+  totalSpent        Float           @default(0)
+  outstandingBalance Float          @default(0)
+  creditLimit       Float?
+  paymentTerms      String?
+  tags              String[]        @default([])
+  notes             String?
+  status            String          @default("Active")
+  isMerged          Boolean         @default(false)
+  isDeleted         Boolean         @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  invoices          Invoice[]
+  orders            Order[]
+  projects          Project[]
+  shipments         Shipment[]
+  channelHistory    ClientChannelHistory[]
+  mergesAsPrimary   ClientMergeLog[]  @relation("PrimaryMerges")
+  mergesAsMerged    ClientMergeLog[]  @relation("MergedClients")
 
+  @@index([clientCode])
+  @@index([primarySource])
+  @@index([tier])
+  @@index([isDeleted])
   @@map("customers")
 }
 
-model Lead {
-  id            String    @id @default(uuid())
-  companyName   String
-  pocName       String
-  email         String?
-  phone         String?
-  website       String?
-  gstin         String?
-  stage         LeadStage @default(NEW)
-  type          LeadType  @default(INBOUND)
-  source        String?
-  value         Float     @default(0)
-  probability   Int?      @default(50)
-  requirements  String?
-  brief         String?
-  notes         String?
-  files         String[]  @default([])
-  lastContact   DateTime?
-  dateReceived  DateTime?
-  expectedClose DateTime?
-  assignedToId  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  assignedTo    User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
+model ClientChannelHistory {
+  id            String   @id @default(uuid())
+  clientId      String
+  source        String
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  storeLocation String?
+  salesRep      String?
+  timestamp     DateTime @default(now())
+  client        Customer @relation(fields: [clientId], references: [id])
 
+  @@index([clientId])
+  @@map("client_channel_history")
+}
+
+model ClientMergeLog {
+  id              String   @id @default(uuid())
+  primaryClientId String
+  mergedClientId  String
+  mergedById      String
+  mergedAt        DateTime @default(now())
+  primaryClient   Customer @relation("PrimaryMerges", fields: [primaryClientId], references: [id])
+  mergedClient    Customer @relation("MergedClients", fields: [mergedClientId], references: [id])
+
+  @@index([primaryClientId])
+  @@map("client_merge_logs")
+}
+
+model Lead {
+  id                      String    @id @default(uuid())
+  leadCode                String    @unique
+  companyName              String
+  pocName                  String
+  email                    String?
+  phone                    String?
+  website                  String?
+  gstin                    String?
+  stage                    LeadStage @default(NEW_LEAD)
+  type                     LeadType  @default(INBOUND)
+  source                   String?
+  value                    Float     @default(0)
+  probability              Int?      @default(50)
+  requirements             String?
+  brief                    String?
+  notes                    String?
+  lossReason               String?
+  budgetConfirmed          Boolean?
+  timelineUrgency          String?   // LOW, MEDIUM, HIGH
+  decisionMakerIdentified  Boolean?
+  files                    String[]  @default([])
+  lastContact              DateTime?
+  dateReceived             DateTime?
+  expectedClose            DateTime?
+  assignedToId             String?
+  ownerId                  String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  assignedTo               User?     @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  owner                    User?     @relation("OwnedLeads", fields: [ownerId], references: [id])
+  stageHistory             LeadStageHistory[]
+
+  @@index([leadCode])
+  @@index([stage])
+  @@index([assignedToId])
   @@map("leads")
+}
+
+model LeadStageHistory {
+  id          String    @id @default(uuid())
+  leadId      String
+  fromStage   LeadStage
+  toStage     LeadStage
+  changedById String
+  note        String?
+  changedAt   DateTime  @default(now())
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  changedBy   User      @relation("StageChanges", fields: [changedById], references: [id])
+
+  @@index([leadId])
+  @@map("lead_stage_history")
 }
 
 model Product {
@@ -419,15 +501,19 @@ model Channel {
 }
 
 model Message {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   content     String
-  channelId   String   @default("general")
-  attachments String[] @default([])
+  channelId   String    @default("general")
+  attachments String[]  @default([])
   senderId    String
-  createdAt   DateTime @default(now())
-  sender      User     @relation(fields: [senderId], references: [id])
-  channel     Channel  @relation(fields: [channelId], references: [id])
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?
+  createdAt   DateTime  @default(now())
+  sender      User      @relation(fields: [senderId], references: [id])
+  channel     Channel   @relation(fields: [channelId], references: [id])
 
+  @@index([channelId, isDeleted])
   @@map("messages")
 }
 
@@ -507,13 +593,40 @@ enum UserRole {
   CUSTOMER
 }
 
+enum PrimarySource {
+  POS
+  ECOMMERCE
+  BMS_MANUAL
+  API
+  IMPORT
+}
+
 enum LeadStage {
-  NEW
+  // Inbound Pipeline (14 stages)
+  NEW_LEAD
   CONTACTED
   QUALIFIED
+  DISCOVERY_SCHEDULED
+  DISCOVERY_COMPLETED
+  PROPOSAL_DRAFTING
+  PROPOSAL_SENT
   NEGOTIATION
-  WON
-  LOST
+  VERBAL_CONFIRMATION
+  AGREEMENT_SENT
+  AGREEMENT_SIGNED
+  ADVANCE_PAYMENT_RECEIVED
+  CLOSED_WON
+  CLOSED_LOST
+  // Outbound Pipeline (9 stages)
+  PROSPECT_IDENTIFIED
+  RESEARCH_COMPLETED
+  OUTREACH_ATTEMPTED
+  FOLLOW_UP_1
+  FOLLOW_UP_2
+  FOLLOW_UP_3
+  INTERESTED
+  OUTBOUND_QUALIFIED
+  MOVE_TO_INBOUND
 }
 
 enum LeadType {
@@ -922,6 +1035,59 @@ model WebhookEvent {
 
   @@unique([gateway, eventId]) // idempotency key
   @@map("webhook_events")
+}
+
+// ─── MEETING / VIDEO CALL MODELS ─────────────────────────────────────────────
+
+enum MeetingStatus {
+  SCHEDULED
+  ACTIVE
+  ENDED
+}
+
+enum ParticipantStatus {
+  WAITING
+  JOINED
+  REJECTED
+  LEFT
+}
+
+model Meeting {
+  id              String               @id @default(uuid())
+  meetingCode     String               @unique
+  title           String?
+  createdById     String
+  status          MeetingStatus        @default(ACTIVE)
+  isScheduled     Boolean              @default(false)
+  startsAt        DateTime?
+  isLocked        Boolean              @default(false)
+  allowGuests     Boolean              @default(false)
+  meetingVersion  Int                  @default(1)
+  createdAt       DateTime             @default(now())
+  endedAt         DateTime?
+  createdBy       User                 @relation("MeetingsCreated", fields: [createdById], references: [id])
+  participants    MeetingParticipant[]
+
+  @@index([meetingCode])
+  @@index([status])
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  id          String            @id @default(uuid())
+  meetingId   String
+  userId      String?
+  guestName   String?
+  guestEmail  String?
+  role        String            @default("PARTICIPANT") // HOST, PARTICIPANT, GUEST
+  status      ParticipantStatus @default(JOINED)
+  joinedAt    DateTime          @default(now())
+  leftAt      DateTime?
+  meeting     Meeting           @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId])
+  @@index([meetingId, status])
+  @@map("meeting_participants")
 }
 
 // ─── COMPLIANCE ENUMS ────────────────────────────────────────────────────────

@@ -25,6 +25,8 @@ const TeamHub = lazy(() => import('./components/TeamHub').then(m => ({ default: 
 const ERP = lazy(() => import('./components/ERP').then(m => ({ default: m.ERP })));
 const Orders = lazy(() => import('./components/Orders').then(m => ({ default: m.Orders })));
 const Scanner = lazy(() => import('./components/Scanner').then(m => ({ default: m.Scanner })));
+const MeetJoin = lazy(() => import('./components/MeetJoin').then(m => ({ default: m.MeetJoin })));
+const MeetRoom = lazy(() => import('./components/MeetRoom').then(m => ({ default: m.MeetRoom })));
 
 // Route Guard to protect authorized pages
 const AuthGuard: React.FC = () => {
@@ -96,6 +98,22 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <ResetPassword />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/meet/:meetingCode',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <MeetJoin />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/meet/:meetingCode/room',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <MeetRoom />
       </Suspense>
     ),
   },

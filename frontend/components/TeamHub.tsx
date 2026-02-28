@@ -3,8 +3,11 @@ import {
   AtSign,
   Bell,
   CameraOff,
+  Check,
+  Copy,
   Download,
   Hash,
+  Link2,
   Lock,
   Menu,
   Mic,
@@ -30,6 +33,7 @@ import { useChannels, useCreateChannel, useMembers, useMessages } from '../hooks
 import { useMarkAllRead, useNotifications, useUnreadCount } from '../hooks/useNotifications';
 import {
   clearConversation,
+  createMeeting,
   deleteMessage as deleteMessageApi,
   reportConversation,
   sendMessage as sendMessageApi,
@@ -175,6 +179,8 @@ export const TeamHub: React.FC = () => {
   const [pinnedPeer, setPinnedPeer] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<FacingMode>('user');
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenSharingUser, setScreenSharingUser] = useState<string | null>(null);
+  const [meetingLinkUrl, setMeetingLinkUrl] = useState<string | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
@@ -454,6 +460,7 @@ export const TeamHub: React.FC = () => {
 
   const toggleScreenShare = async () => {
     if (!streamRef.current) return;
+    const socket = getSocket();
 
     if (isScreenSharing) {
       try {
@@ -466,6 +473,7 @@ export const TeamHub: React.FC = () => {
         replaceOutgoingVideoTrack(camTrack);
         setIsScreenSharing(false);
         setCamOff(false);
+        socket.emit('screen:stop', { channelId: selected.id });
       } catch {
         toast.error('Unable to restore camera');
       }
@@ -478,13 +486,22 @@ export const TeamHub: React.FC = () => {
       if (!displayTrack) return;
 
       displayTrack.onended = () => {
+        // User clicked browser's "Stop sharing" button
         setIsScreenSharing(false);
+        socket.emit('screen:stop', { channelId: selected.id });
+        // Restore camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facingMode } }, audio: false })
+          .then(cam => {
+            const camTrack = cam.getVideoTracks()[0];
+            if (camTrack) replaceOutgoingVideoTrack(camTrack);
+          }).catch(() => { });
       };
       replaceOutgoingVideoTrack(displayTrack);
       setIsScreenSharing(true);
       setCamOff(false);
+      socket.emit('screen:start', { channelId: selected.id });
     } catch {
-      toast.error('Screen share was blocked');
+      toast.error('Screen share was denied or not supported');
     }
   };
 
@@ -503,10 +520,31 @@ export const TeamHub: React.FC = () => {
       }
     };
 
-    const onDeleted = ({ channelId }: { channelId: string }) => {
+    const onDeleted = ({ messageId, channelId }: { messageId: string; channelId: string }) => {
       if (channelId === selected.id) {
         qc.invalidateQueries({ queryKey: ['team', 'messages', selected.id] });
       }
+    };
+
+    // Chat/conversation deleted — redirect to default channel
+    const onChatDeleted = ({ channelId }: { channelId: string }) => {
+      if (channelId === selected.id) {
+        qc.invalidateQueries({ queryKey: ['team', 'channels'] });
+        qc.invalidateQueries({ queryKey: ['team', 'messages'] });
+        // Redirect to general channel
+        const generalChannel = channels.find(c => c.name === 'general' && c.type === 'public');
+        if (generalChannel) setSelected(generalChannel);
+        toast('This conversation was deleted', { icon: '🗑️' });
+      }
+    };
+
+    // Screen sharing events from other participants
+    const onScreenStarted = ({ userId: sharingUserId, userName }: { userId: string; userName: string }) => {
+      setScreenSharingUser(sharingUserId);
+      if (sharingUserId !== user?.id) toast(`${userName} started screen sharing`, { icon: '🖥️' });
+    };
+    const onScreenStopped = ({ userId: sharingUserId }: { userId: string }) => {
+      if (screenSharingUser === sharingUserId) setScreenSharingUser(null);
     };
 
     const onTyping = ({
@@ -591,6 +629,7 @@ export const TeamHub: React.FC = () => {
 
     socket.on('message:new', onNew);
     socket.on('message:deleted', onDeleted);
+    socket.on('chat:deleted', onChatDeleted);
     socket.on('typing:update', onTyping);
     socket.on('presence:update', onPresence);
     socket.on('call:started', onCallStart);
@@ -598,12 +637,15 @@ export const TeamHub: React.FC = () => {
     socket.on('call:user-joined', onCallJoined);
     socket.on('call:user-left', onCallLeft);
     socket.on('webrtc:signal', onSignal);
+    socket.on('screen:started', onScreenStarted);
+    socket.on('screen:stopped', onScreenStopped);
     socket.on('notification:new', onNotification);
     socket.on('error', onSocketError);
 
     return () => {
       socket.off('message:new', onNew);
       socket.off('message:deleted', onDeleted);
+      socket.off('chat:deleted', onChatDeleted);
       socket.off('typing:update', onTyping);
       socket.off('presence:update', onPresence);
       socket.off('call:started', onCallStart);
@@ -611,11 +653,13 @@ export const TeamHub: React.FC = () => {
       socket.off('call:user-joined', onCallJoined);
       socket.off('call:user-left', onCallLeft);
       socket.off('webrtc:signal', onSignal);
+      socket.off('screen:started', onScreenStarted);
+      socket.off('screen:stopped', onScreenStopped);
       socket.off('notification:new', onNotification);
       socket.off('error', onSocketError);
       socket.emit('channel:leave', selected.id);
     };
-  }, [selected.id, qc, sound, armed, user?.id]);
+  }, [selected.id, qc, sound, armed, user?.id, channels, screenSharingUser]);
 
   const insertAtCursor = (val: string) => {
     const textarea = textRef.current;
@@ -953,6 +997,24 @@ export const TeamHub: React.FC = () => {
             )}
             <button onClick={() => startCall('start')} className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="Start call">
               <Video className="w-4 h-4" />
+            </button>
+            {/* Meeting link button */}
+            <button
+              onClick={async () => {
+                try {
+                  const meeting = await createMeeting({ title: `${selected.name} Meeting`, isGuestAllowed: true });
+                  const link = `${window.location.origin}/meet/${meeting.meetingCode}`;
+                  setMeetingLinkUrl(link);
+                  await navigator.clipboard.writeText(link);
+                  toast.success('Meeting link copied to clipboard!');
+                } catch {
+                  toast.error('Failed to create meeting link');
+                }
+              }}
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              title="Create meeting link"
+            >
+              <Link2 className="w-4 h-4" />
             </button>
             {activeCall && !inCall && (
               <button onClick={() => startCall('join')} className="px-2 py-1 text-xs rounded bg-emerald-500 text-white">
