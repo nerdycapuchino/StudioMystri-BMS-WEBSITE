@@ -19,7 +19,7 @@ export const getStats = async () => {
         prisma.inventoryItem.count({ where: { quantity: { lte: prisma.inventoryItem.fields.reorderPoint as any } } })
             .catch(() => 0), // Fallback: raw query below
         prisma.invoice.count({ where: { status: { in: ['SENT', 'OVERDUE'] } } }),
-        prisma.lead.count({ where: { stage: { notIn: ['WON', 'LOST'] } } }),
+        prisma.lead.count({ where: { stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } } }),
         prisma.customer.count(),
     ]);
 
