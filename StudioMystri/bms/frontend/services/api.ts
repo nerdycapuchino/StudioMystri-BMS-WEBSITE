@@ -4,6 +4,10 @@ import { getAccessToken, setAccessToken, clearAccessToken } from './tokenStore';
 const getApiBase = () => {
     if ((import.meta as any).env.VITE_API_URL) return (import.meta as any).env.VITE_API_URL;
     if (typeof window !== 'undefined') {
+        // On HTTPS deployments, always use same-origin API to avoid mixed-content blocking.
+        if (window.location.protocol === 'https:') {
+            return `${window.location.origin}/api/v1`;
+        }
         const hostname = window.location.hostname;
         return `http://${hostname}:5000/api/v1`;
     }
@@ -103,3 +107,5 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+

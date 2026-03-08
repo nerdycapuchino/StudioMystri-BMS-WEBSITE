@@ -26,6 +26,10 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 const getApiBase = () => {
     if ((import.meta as any).env.VITE_API_URL) return (import.meta as any).env.VITE_API_URL;
     if (typeof window !== 'undefined') {
+        // On HTTPS deployments, always use same-origin API to avoid mixed-content blocking.
+        if (window.location.protocol === 'https:') {
+            return `${window.location.origin}/api/v1`;
+        }
         const hostname = window.location.hostname;
         return `http://${hostname}:5000/api/v1`;
     }
@@ -101,3 +105,5 @@ export const useAuth = (): AuthState => {
     if (!context) throw new Error('useAuth must be used within an AuthProvider');
     return context;
 };
+
+

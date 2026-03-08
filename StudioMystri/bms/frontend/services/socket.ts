@@ -8,8 +8,16 @@ export const getSocket = (): Socket => {
     if (!socket) {
         try {
             const getApiBaseSocket = () => {
-                if ((import.meta as any).env.VITE_API_URL) return (import.meta as any).env.VITE_API_URL.replace('/api/v1', '');
-                if (typeof window !== 'undefined') return `http://${window.location.hostname}:5000`;
+                if ((import.meta as any).env.VITE_API_URL) {
+                    return (import.meta as any).env.VITE_API_URL.replace('/api/v1', '');
+                }
+                if (typeof window !== 'undefined') {
+                    // On HTTPS deployments, use same-origin so socket upgrades to wss.
+                    if (window.location.protocol === 'https:') {
+                        return window.location.origin;
+                    }
+                    return `http://${window.location.hostname}:5000`;
+                }
                 return 'http://localhost:5000';
             };
 
@@ -48,4 +56,6 @@ export const disconnectSocket = () => {
     try { socket?.disconnect(); } catch { /* ignore */ }
     socket = null;
 };
+
+
 
