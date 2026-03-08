@@ -122,14 +122,14 @@ export const convertToProject = async (id: string) => {
         if (!lead) throw createError(404, 'Lead not found');
 
         // 1. Ensure Customer exists
-        let customer = await tx.customer.findFirst({
-            where: {
-                OR: [
-                    ...(lead.email ? [{ email: lead.email }] : []),
-                    ...(lead.phone ? [{ phone: lead.phone }] : []),
-                ].filter(Boolean),
-            }
-        });
+        const orConditions = [
+            ...(lead.email ? [{ email: lead.email }] : []),
+            ...(lead.phone ? [{ phone: lead.phone }] : []),
+        ];
+
+        let customer = orConditions.length > 0 ? await tx.customer.findFirst({
+            where: { OR: orConditions }
+        }) : null;
 
         if (!customer) {
             customer = await tx.customer.create({
