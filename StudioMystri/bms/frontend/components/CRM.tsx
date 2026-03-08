@@ -81,13 +81,14 @@ export const CRM: React.FC = () => {
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget as HTMLFormElement);
+        const valueStr = formData.get('value') as string;
         const newLead: Partial<Lead> = {
             companyName: formData.get('companyName') as string,
             pocName: formData.get('pocName') as string,
-            value: parseFloat(formData.get('value') as string),
-            type: formData.get('type') as Lead['type'],
+            value: valueStr ? parseFloat(valueStr) : 0,
+            type: (formData.get('type') as string).toUpperCase() as Lead['type'],
             source: isCustomSource ? (formData.get('customSource') as string) : (formData.get('source') as string),
-            gstNumber: formData.get('gstNumber') as string,
+            gstin: formData.get('gstNumber') as string,
             requirements: formData.get('requirements') as string,
             status: 'New',
             lastContact: new Date().toLocaleDateString(),
@@ -95,7 +96,7 @@ export const CRM: React.FC = () => {
             files: []
         };
 
-        if (!newLead.pocName || !newLead.value) return;
+        if (!newLead.pocName || !newLead.companyName) return;
         createLead.mutate(newLead as Lead, {
             onSuccess: () => {
                 setShowAdd(false);
@@ -110,13 +111,14 @@ export const CRM: React.FC = () => {
         if (!selectedLead) return;
 
         const formData = new FormData(e.currentTarget as HTMLFormElement);
+        const valueStr = formData.get('value') as string;
         const updatedLeadData: Partial<Lead> = {
             companyName: formData.get('companyName') as string,
             pocName: formData.get('pocName') as string,
-            value: parseFloat(formData.get('value') as string),
-            type: formData.get('type') as Lead['type'],
+            value: valueStr ? parseFloat(valueStr) : 0,
+            type: (formData.get('type') as string).toUpperCase() as Lead['type'],
             source: isCustomSource ? (formData.get('customSource') as string) : (formData.get('source') as string),
-            gstNumber: formData.get('gstNumber') as string,
+            gstin: formData.get('gstNumber') as string,
             requirements: formData.get('requirements') as string,
         };
 
